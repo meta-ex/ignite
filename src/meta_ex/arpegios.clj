@@ -12,9 +12,12 @@
 (comment
   (baroque :tgt cellos-g :rate 0.5 :out-bus 10 :vol 1)
   (cello-c :tgt cellos-g :rate (* 1) :vol 2 :loop? false :out-bus 10)
-  (ctl  cellos-g :vol 0.5))
-(def s (arpeg-click :out-bus 10 :rate 1))
-(ctl s :rate 10)
+  (ctl  cellos-g :vol 0.5)
+
+  (def s (arpeg-click :out-bus 10 :rate 1))
+  (ctl s :rate 20)
+  (stop)
+  )
 
 
 
@@ -118,4 +121,5 @@
     ((speech-buffer "open source" :voice :boing) :rate 1 :loop? true :out-bus 10))
 
   (ctl mx :vol 3)
-  (kill mx))
+  (kill mx)
+  (kill s))

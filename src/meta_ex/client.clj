@@ -5,11 +5,17 @@
         gloss.core
         lamina.core
         clojure.data.json
-        clojure.pprint))
+        clojure.pprint
+        meta-ex.client-fn))
 
-(def client (tcp-client {:host "sam.aaron.name", :port 9901, :frame (string :utf-8 :delimiters ["\n"])}))
+(defonce client (tcp-client {:host "sam.aaron.name", :port 9901, :frame (string :utf-8 :delimiters ["\n"])}))
 
-(let [out *out*]
-  (receive-all @client (fn [msg]
-                         (binding [*out* out]
-                           (println msg)))))
+(defn received [msg]
+  (do-action (second (read-string msg)))
+)
+(defonce __LISTEN__
+  (let [out *out*]
+    (receive-all @client (fn [msg]
+                           (binding [*out* out]
+                             (apply #'received [msg])
+                             )))))

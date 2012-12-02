@@ -3,11 +3,13 @@
              ])
   (:use [quil.core]))
 
-(def viz-state* (atom {:squares false
-                       :petals false
-                       :sphere false
-                       :lines false
-                       :monome false}))
+(defonce viz-state* (atom {:squares false
+                           :petals false
+                           :sphere false
+                           :lines false
+                           :monome false
+                           :names false
+                           :meters false}))
 
 (defn show
   [viz]
@@ -24,7 +26,13 @@
 (defn draw []
 ;;  (background 0)
   (let [viz-state @viz-state*]
-    (when-not (:petals viz-state)
+    (if (or (:petals viz-state)
+            (:names viz-state))
+      (do
+        (stroke 0)
+        (fill 0 5)
+        (rect 0 0 (width) (height))
+        )
       (background 0))
 ;;(frame-rate 5)
     (when (:squares viz-state)
@@ -32,12 +40,18 @@
 
     (when (:petals viz-state)
       (meta-ex.petals/draw))
-(frame-rate 24)
+    (frame-rate 24)
     (when (:sphere viz-state)
       (meta-ex.sphere/draw))
 ;;    (frame-rate 10)
     (when (:lines viz-state)
       (meta-ex.lines/draw))
+
+    (when (:names viz-state)
+      (meta-ex.names/draw))
+
+    (when (:meters viz-state)
+      (meta-ex.meters/draw))
 
     (when (:monome viz-state)
       ;;(meta-ex.quilome/draw)
@@ -55,7 +69,7 @@
 (hide :squares)
 (hide :petals)
 (hide :lines)
-(show :sphere)
+(show :names)
 (hide :monome)
 
 

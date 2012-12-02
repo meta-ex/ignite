@@ -84,8 +84,6 @@
 (defn draw []
 ;;  (background 0)
   (no-stroke)
-  (fill 0 2 )
-  (rect 0 0 (width) (height))
 
   (let [[n-petals _] (swap-returning-prev! num-petals-to-draw*
                                            (fn [x] 0))]

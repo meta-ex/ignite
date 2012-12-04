@@ -34,15 +34,11 @@
          (steps (random 10) 0.01)
          noise-tally)))
 
-(defn setup []
-  (smooth)
-  (background 255)
-  (frame-rate 60)
-
+(defn state-map []
   (let [x-starts      (starts-seq)
         y-starts      (starts-seq)
         starts-str    (seq->stream (map list x-starts y-starts))]
-    (set-state! :starts-str starts-str)))
+    {:starts-str starts-str}))
 
 (defn draw []
   (background 0)

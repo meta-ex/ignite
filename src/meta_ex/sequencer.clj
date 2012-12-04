@@ -182,7 +182,7 @@
 
 (defn start-system
   []
-  (meta-ex.quilome/clear suse.quilome/global-monome)
+  (meta-ex.quilome/clear meta-ex.quilome/global-monome)
   (buffer-write! buf-0 [0 0 0 0 0 0 0 0])
   (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
   (buffer-write! buf-2 [0 0 0 0 0 0 0 0])

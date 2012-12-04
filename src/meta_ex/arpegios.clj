@@ -7,14 +7,14 @@
 
 (def baroque (sample (freesound-path 49325)))
 (def cello-c (sample (freesound-path 48025)))
-
 (def cellos-g (group))
+
 (comment
   (baroque :tgt cellos-g :rate 0.5 :out-bus 10 :vol 1)
   (cello-c :tgt cellos-g :rate (* 1) :vol 2 :loop? false :out-bus 10)
   (ctl  cellos-g :vol 0.5)
 
-  (def s (arpeg-click :out-bus 10 :rate 1))
+  (def s (arpeg-click :out-bus 10 :rate 20))
   (ctl s :rate 20)
   (stop)
   )
@@ -122,4 +122,6 @@
 
   (ctl mx :vol 3)
   (kill mx)
-  (kill s))
+  (kill s)
+  (stop)
+  )

@@ -8,12 +8,14 @@
         clojure.pprint
         meta-ex.client-fn))
 
-(defonce client (tcp-client {:host "sam.aaron.name", :port 9901, :frame (string :utf-8 :delimiters ["\n"])}))
+(def client (tcp-client {:host "sam.aaron.name", :port 9901, :frame (string :utf-8 :delimiters ["\n"])}))
 
 (defn received [msg]
   (do-action (second (read-string msg)))
-)
-(defonce __LISTEN__
+  )
+
+
+(def __LISTEN__
   (let [out *out*]
     (receive-all @client (fn [msg]
                            (binding [*out* out]

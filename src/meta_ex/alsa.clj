@@ -1,8 +1,6 @@
-(ns meta-ex.alsa
-)
+(ns meta-ex.alsa)
 (demo (sin-os))
 
-sk
 
 (+ 1 2)
 

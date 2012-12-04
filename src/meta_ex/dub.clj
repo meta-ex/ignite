@@ -14,15 +14,15 @@
 ;;52 48 45
 ;; get the dubstep bass involved
 (dubstep :tgt dub-g
-         :note 52
-         :wobble (* BEAT-FRACTION 1)
-         :lo-man 1
-         :hi-man 0
+         :note 45
+          :wobble (* BEAT-FRACTION 1)
+         :lo-man 0
+         :hi-man 1
          :amp 1
          :out-bus 10)
 
 (ctl dubstep :out-bus 10)
-
+(kill dub-g)
 ;; go crazy - especially with the deci-man
 
 (defonce curr-note (atom 28))
@@ -32,8 +32,8 @@
      :wobble (* BEAT-FRACTION 1)
      :lag-delay 0.0001
 
-     :hi-man 0
-     :lo-man 0
+     :hi-man  0
+     :lo-man 1
      :deci-man 0
      :amp 1
      :out-bus 10)
@@ -42,7 +42,7 @@
 ;; Bring in the supersaws!
 
 (set-ssaw-rq 0.2)
-(set-ssaw-fil-mul 2)
+(set-ssaw-fil-mul 4)
 
 
 (supersaw2 (midi->hz (note :b2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)

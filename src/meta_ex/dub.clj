@@ -16,8 +16,8 @@
 (dubstep :tgt dub-g
          :note 45
           :wobble (* BEAT-FRACTION 1)
-         :lo-man 0
-         :hi-man 1
+         :lo-man 1
+         :hi-man 0
          :amp 1
          :out-bus 10)
 

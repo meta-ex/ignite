@@ -21,19 +21,23 @@
 (def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3)))
 
 (def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1))
+
+
 (ctl tibet1 :rate 1)
 (ctl tibet1 :rate 0.5)
 
 (ctl tibet2 :rate (/ 3 2))
 (ctl tibet2 :rate (/ 4 3))
-(stop)
+(ctl tibet2 :rate 2)
+(ctl tibet2 :rate 0.5)
+
 (defn honour-vote [colour]
   (cond
    (= "GREEN" colour) (do (ctl oc :vol 4)
                           (ctl nr :vol 0)
                           (ctl aw :vol 0))
-   (= "RED" colour) (do (ctl oc :vol 0)
-                        (ctl nr :vol 4)
+   (= "PINK" colour) (do (ctl oc :vol 0)
+                        (ctl nr :vol 6)
                         (ctl aw :vol 0))
    (= "BLUE" colour) (do (ctl oc :vol 0)
                          (ctl nr :vol 0)
@@ -42,7 +46,7 @@
 (defn honour-vote [colour]
   (cond
    (= "GREEN" colour) (do (ctl tibet2 :rate (/ 3 2)))
-   (= "RED" colour) (do (ctl tibet2 :rate (/ 4 3)))
+   (= "PINK" colour) (do (ctl tibet2 :rate (/ 4 3)))
    (= "BLUE" colour) (do (ctl tibet2 :rate 2))))
 
 
@@ -51,7 +55,7 @@
           ::honour-vote)
 
 (honour-vote "GREEN")
-(honour-vote "RED")
+(honour-vote "PINK")
 (honour-vote "BLUE")
 
 (ctl tibet2 :out-bus 0)

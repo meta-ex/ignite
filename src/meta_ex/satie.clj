@@ -105,7 +105,7 @@
     (if (sequential? pitch)
       (doseq [p pitch]
         (sampled-piano p (/ (vol-mul vol) 2) :out-bus 0))
-      (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus F0))))
+      (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus 0))))
 
 
 (on-event [:monome :press]
@@ -131,7 +131,6 @@
 
 
 (comment   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true :out-bus 10))
-
+           (def windy (sample-player (sample (freesound-path 17553)) :loop? true :out-bus 10))
            (ctl wwii :rate 0.5)
-
-           (kill wwii))
+           (stop))

@@ -1,5 +1,5 @@
 (ns meta-ex.viz
-  (:require [meta-ex squares petals sphere lines names meters ;;quilome
+ (:require [meta-ex squares petals sphere lines names meters quilome
              ])
   (:use [quil.core]))
 
@@ -57,7 +57,7 @@
       (meta-ex.meters/draw))
 
     (when (:monome viz-state)
-;;      (meta-ex.quilome/draw)
+      (meta-ex.quilome/draw)
       )))
 
 (defsketch meta-ex-viz

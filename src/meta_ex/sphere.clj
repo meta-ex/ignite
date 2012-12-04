@@ -15,6 +15,18 @@
   (background 255)
   (stroke 00))
 
+(defn draw-sphere [size]
+  (let [line-args (for [t (range 0 180)]
+                    (let [s        (* t 18)
+                          radian-s (radians s)
+                          radian-t (radians t)
+                          x (* (radius) size (cos radian-s) (sin radian-t))
+                          y (* (radius) size (sin radian-s) (sin radian-t))
+                          z (* (radius) size (cos radian-t))]
+                      [x y z]))]
+    (dorun
+     (map #(apply line %) (line-join-points line-args)))))
+
 (defn draw []
 ;;  (background 20)
   (stroke 255 (mod (frame-count) 255) 0)
@@ -22,16 +34,10 @@
   (translate (/ (width) 2) (/ (height) 2) 0)
   (rotate-y (* (frame-count) 0.03))
   (rotate-x (* (frame-count) 0.04))
-  (let [line-args (for [t (range 0 180)]
-                    (let [s        (* t 18)
-                          radian-s (radians s)
-                          radian-t (radians t)
-                          x (* (radius)  (cos radian-s) (sin radian-t))
-                          y (* (radius)  (sin radian-s) (sin radian-t))
-                          z (* (radius) (cos radian-t))]
-                      [x y z]))]
-    (dorun
-     (map #(apply line %) (line-join-points line-args))))
+  (draw-sphere 1)
+  (draw-sphere 0.5)
+  (stroke 200)
+  (draw-sphere 0.25)
   )
 
 

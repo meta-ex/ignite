@@ -7,11 +7,11 @@
 
 (def dub-g (group))
 (ctl dub-g :amp 2)
+
 (do
   (start-system)
   (ctl (get synths :r-trg) :rate 148))
 
-;;52 48 45
 ;; get the dubstep bass involved
 (dubstep :tgt dub-g
          :note 45

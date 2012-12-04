@@ -58,13 +58,13 @@
 
     (stroke 200)
 
-    (fill 0 255 0)
+    (fill 97 206 60)
     (rect  m-width 130 m-width (* 100 @green-m))
 
-    (fill 255 0 0)
+    (fill 255 0 128)
     (rect (* 2 m-width) 130 m-width (* 100 @pink-m))
 
 
 
-    (fill 0 0 255)
+    (fill 76 131 255)
     (rect (* 3 m-width) 130 m-width (* 100 @blue-m))))

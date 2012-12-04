@@ -7,20 +7,20 @@
 
 (defonce meters-pool (at-at/mk-pool))
 
-(defonce red-m (atom 0))
+(defonce pink-m (atom 0))
 (defonce green-m (atom 0))
 (defonce blue-m (atom 0))
-(defonce current-lead (atom "RED"))
+(defonce current-lead (atom "PINK"))
 
 (defn degrade-meters []
-  (doseq [r [red-m green-m blue-m]]
+  (doseq [r [pink-m green-m blue-m]]
     (swap! r (fn [v] (- v (* v 0.05))))))
 
 (defn calculate-lead []
   (cond
-   (and (> @red-m @green-m) (> @red-m @blue-m)) "RED"
-   (and (> @green-m @red-m) (> @green-m @blue-m)) "GREEN"
-   (and (> @red-m @green-m) (> @red-m @blue-m)) "BLUE"
+   (and (> @pink-m @green-m) (> @pink-m @blue-m)) "PINK"
+   (and (> @green-m @pink-m) (> @green-m @blue-m)) "GREEN"
+   (and (> @pink-m @green-m) (> @pink-m @blue-m)) "BLUE"
    :else "BLUE"))
 
 (defn handle-lead-change []
@@ -44,7 +44,7 @@
 
 (on-event [:vote] (fn [msg]
                     (cond
-                     (= "RED" (:choice msg))   (swap! red-m inc)
+                     (= "PINK" (:choice msg))   (swap! pink-m inc)
                      (= "GREEN" (:choice msg)) (swap! green-m inc)
                      (= "BLUE" (:choice msg))  (swap! blue-m inc)))
           ::register-votes)
@@ -62,7 +62,7 @@
     (rect  m-width 130 m-width (* 100 @green-m))
 
     (fill 255 0 0)
-    (rect (* 2 m-width) 130 m-width (* 100 @red-m))
+    (rect (* 2 m-width) 130 m-width (* 100 @pink-m))
 
 
 

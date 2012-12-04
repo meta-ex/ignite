@@ -4,7 +4,7 @@
         [overtone.helpers.ref :only [swap-returning-prev!]]))
 
 (defn state-map []
-  {:menlo-font (create-font "Menlo" 90)})
+  {:menlo-font (create-font "Menlo" 300)})
 
 (defonce votes (atom []))
 
@@ -46,9 +46,9 @@
     (text-size 50)
     (doseq [v latest-votes]
       (cond
-       (= "RED" (:choice v))   (do (fill 255 0 0) (reset! current-colour [255 0 0]))
-       (= "GREEN" (:choice v)) (do (fill 0 255 0) (reset! current-colour [0 255 0]))
-       (= "BLUE" (:choice v))  (do (fill 0 0 255) (reset! current-colour [0 0 255])))
+       (= "PINK" (:choice v))   (do (fill 255 0 0) (reset! current-colour [255 0 128]))
+       (= "GREEN" (:choice v)) (do (fill 0 255 0) (reset! current-colour [97 206 60]))
+       (= "BLUE" (:choice v))  (do (fill 0 0 255) (reset! current-colour [76 131 255])))
       (let [n (str "DJ " (:name v))]
         (reset! latest-voter n)
         (swap! expanding-names conj {:x 100

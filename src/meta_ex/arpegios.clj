@@ -14,12 +14,10 @@
   (cello-c :tgt cellos-g :rate (* 1) :vol 2 :loop? false :out-bus 10)
   (ctl  cellos-g :vol 0.5)
 
-  (def s (arpeg-click :out-bus 10 :rate 20))
+  (def s (arpeg-click :out-bus 10 :rate 1))
   (ctl s :rate 20)
   (stop)
   )
-
-
 
 
 (def buf-size 5)

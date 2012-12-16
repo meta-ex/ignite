@@ -1,21 +1,22 @@
 (ns meta-ex.dub
   (:use [overtone.live]
-        [meta-ex.sequencer]
-        [overtone.inst.synth :only [cs80lead simple-flute]])
+        [meta-ex.sequencer])
   (:require [polynome.core :as poly]
             [clojure.data :as data]))
 
 (def dub-g (group))
 (ctl dub-g :amp 2)
-
+(stop)
 (do
   (start-system)
-  (ctl (get synths :r-trg) :rate 148))
+  (ctl (get synths :r-trg) :rate 75 :out-bus 0)
+  (doseq [s (vals synths)]
+    (ctl s :out-bus 10)))
 
 ;; get the dubstep bass involved
 (dubstep :tgt dub-g
          :note 45
-          :wobble (* BEAT-FRACTION 1)
+         :wobble (* BEAT-FRACTION 1)
          :lo-man 1
          :hi-man 0
          :amp 1
@@ -32,25 +33,27 @@
      :wobble (* BEAT-FRACTION 1)
      :lag-delay 0.0001
 
-     :hi-man  0
+     :hi-man  1
      :lo-man 1
-     :deci-man 0
-     :amp 1
-     :out-bus 10)
+     :deci-man 1
+     :amp 0.5
+     :out-bus 0)
 ;;(kill dub-g)
 
 ;; Bring in the supersaws!
 
-(set-ssaw-rq 0.2)
-(set-ssaw-fil-mul 4)
+(set-ssaw-rq 0.1)
+(set-ssaw-fil-mul 8)
 
 
-(supersaw2 (midi->hz (note :b2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+(supersaw2 (midi->hz (note :c2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+
+
 ;; Fire at will...
-(supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+() (supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
 (supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
-(supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+(supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
+(supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
 (supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
 ;(supersaw2 (midi->hz 55) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
 (supersaw2 (midi->hz 57) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)

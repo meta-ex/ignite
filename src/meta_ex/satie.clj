@@ -1,7 +1,7 @@
 (ns satie
   (:use [clojure.core.match :only [match]]
         [overtone.live]
-        [overtone.inst sampled-piano]
+        [overtone.synth sampled-piano]
         [meta-ex.petals :only [num-petals-to-draw*]])
   (:require [meta-ex.monome-event]))
 

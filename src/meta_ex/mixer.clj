@@ -1,7 +1,6 @@
 (ns meta-ex.mixer
   (:use [overtone.live]
-        [overtone.inst.sampled-piano]
-        [overtone.inst.synth :only [simple-flute]]))
+        [overtone.synth.sampled-piano]))
 
 (defcgen wobble
   "wobble an input src"

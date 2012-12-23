@@ -5,6 +5,8 @@
               [clojure.data :as data]
               [meta-ex.quilome]))
 
+(defonce seq-g (group))
+
 ;; A fully server-side sample sequencer.
 ;; =====================================
 
@@ -150,25 +152,25 @@
         r-trg   (root-trg)
         kicks   (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf kick-s :beat-num x :sequencer buf-0)))
+                   (mono-sequencer :tgt seq-g :buf kick-s :beat-num x :sequencer buf-0)))
         clicks  (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf click-s :beat-num x :sequencer buf-1 :amp 1)))
+                   (mono-sequencer :tgt seq-g :buf click-s :beat-num x :sequencer buf-1 :amp 1)))
         booms   (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf boom-s :beat-num x :sequencer buf-2)))
+                   (mono-sequencer :tgt seq-g :buf boom-s :beat-num x :sequencer buf-2)))
 
         subbies (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3)))
+                   (mono-sequencer :tgt seq-g :buf subby-s :beat-num x :sequencer buf-3)))
 
         cyms (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf cym :beat-num x :sequencer buf-4 :amp 3)))
+                   (mono-sequencer :tgt seq-g :buf cym :beat-num x :sequencer buf-4 :amp 3)))
 
         crashes (doall
                  (for [x (range 8)]
-                   (mono-sequencer :buf crash :beat-num x :sequencer buf-5 :amp 1)))]
+                   (mono-sequencer :tgt seq-g :buf crash :beat-num x :sequencer buf-5 :amp 1)))]
     {:r-cnt r-cnt
      :b-cnt b-cnt
      :r-trg r-trg
@@ -182,6 +184,7 @@
 
 (defn start-system
   []
+  (kill seq-g)
   (meta-ex.quilome/clear meta-ex.quilome/global-monome)
   (buffer-write! buf-0 [0 0 0 0 0 0 0 0])
   (buffer-write! buf-1 [0 0 0 0 0 0 0 0])

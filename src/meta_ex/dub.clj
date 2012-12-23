@@ -1,6 +1,7 @@
 (ns meta-ex.dub
   (:use [overtone.live]
-        [meta-ex.sequencer])
+        [meta-ex.sequencer]
+        [meta-ex.mixer])
   (:require [polynome.core :as poly]
             [clojure.data :as data]))
 

@@ -9,22 +9,28 @@
 (def cello-c (sample (freesound-path 48025)))
 (def cellos-g (group))
 
+(def buf-size 5)
+
+(defonce notes-b (buffer buf-size))
+
 (comment
   (baroque :tgt cellos-g :rate 0.5 :out-bus 10 :vol 1)
   (cello-c :tgt cellos-g :rate (* 1) :vol 2 :loop? false :out-bus 10)
   (ctl  cellos-g :vol 0.5)
 
-  (def s (arpeg-click :out-bus 10 :rate 1))
-  (ctl s :rate 20)
+  (def s (arpeg-click :out-bus 10 :rate 1 :buf notes-b))
+  (ctl s :rate 15)
   (stop)
   )
 
 
-(def buf-size 5)
+
 
 
 ;; create a buffer for the notes
-(def notes-b (buffer buf-size))
+
+
+
 
 ;; fill the buffer with a nice chord
 (buffer-write! notes-b (take buf-size (cycle [-200])) )
@@ -36,7 +42,7 @@
         a-tik (pulse-divider tik arp-div)
         b-tik (pulse-divider tik beat-div)
         cnt   (mod (pulse-count a-tik) (buf-frames buf))
-        note  (buf-rd:kr 1 notes-b cnt)
+        note  (buf-rd:kr 1 buf  cnt)
         freq  (midicps note)
         snd   (white-noise)
         snd   (rhpf snd 2000 0.4)
@@ -94,7 +100,7 @@
 (on-event [:midi :note-on]
           (fn [{:keys [note]}]
             (swap! curr-notes conj note)
-            (println "note on!" note))
+            (println "note on!" @curr-notes))
           ::note-on)
 
 

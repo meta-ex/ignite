@@ -37,7 +37,7 @@
 (do
   (def ring-hat (freesound-sampler 12912))
   (def wind     (freesound-sampler 34338))
-  (def kick     (freesound-sampler 777))
+  (def kick1     (freesound-sampler 777))
   (def kick     (freesound-sampler 30669))
   (def snare    (freesound-sampler 26903))
   (def tom      (freesound-sampler 147418))
@@ -57,6 +57,7 @@
 ;;(wind)
 ;;(ring-hat)
 ;;(kick )
+(kick1 )
 ;;(tom)
 ;;(wind)
 
@@ -113,5 +114,9 @@
   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true))
   (def windy (sample-player (sample (freesound-path 17553)) :loop? true))
 
-  (ctl wwii :rate 0.5 :vol 2)
-  (ctl windy :rate 0.8 :vol 0))
+  (ctl wwii :rate 0.5 :vol 2 :out-bus 10)
+  (ctl windy :rate 0.8 :vol 0 :out-bus 10)
+
+
+  (kill wwii)
+  (kill windy))

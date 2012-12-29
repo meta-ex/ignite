@@ -1,114 +1,122 @@
 (ns meta-ex.dub
   (:use [overtone.live]
-        [meta-ex.sequencer]
         [meta-ex.mixer])
-  (:require [polynome.core :as poly]
-            [clojure.data :as data]))
+  (:require [meta-ex.monome-sequencer :as ms]
+            [meta-ex.triggers :as trg]))
 
-(def dub-g (group))
-(ctl dub-g :amp 2)
-(stop)
-(do
-  (start-system)
-  (ctl (get synths :r-trg) :rate 75 :out-bus 0)
-  (doseq [s (vals synths)]
-    (ctl s :out-bus 10)))
+(defonce dub-g (group))
 
-;; get the dubstep bass involved
-(dubstep :tgt dub-g
-         :note 45
-         :wobble (* BEAT-FRACTION 1)
-         :lo-man 1
-         :hi-man 0
-         :amp 1
-         :out-bus 10)
+(def samples [(sample (freesound-path 777))           ;;kick
+              (sample (freesound-path 406))           ;;click
+              (sample (freesound-path 33637))         ;;boom
+              (sample (freesound-path 25649))         ;;subby
+              (sample (freesound-path 436))           ;;cym
+              (sample (freesound-path 45102))
+              (sample (freesound-path 172385))])
 
-(ctl dubstep :out-bus 10)
-(kill dub-g)
-;; go crazy - especially with the deci-man
+(def sequencer (ms/mk-monome-sequencer samples))
 
-(defonce curr-note (atom 28))
+;;(stop)
+;;(ms/stop-sequencer sequencer)
 
-(ctl dub-g
-     :note 28
-     :wobble (* BEAT-FRACTION 1)
-     :lag-delay 0.0001
+(defsynth dubstep [note 40 wobble 32 hi-man 0 lo-man 0 sweep-man 0 deci-man 0 tan-man 0 shape 0 sweep-max-freq 3000 hi-man-max 1000 lo-man-max 500 beat-vol 0 lag-delay 0.5 amp 1 out-bus 0]
+  (let [bpm     300
+        wob     (pulse-divider (in:kr trg/trg-b) wobble)
+        sweep   (lin-lin:kr (lag-ud wob 0.01 lag-delay) 0 1 400 sweep-max-freq)
+        snd     (mix (saw (* (midicps note) [0.99 1.01])))
+        snd     (lpf snd sweep)
+        snd     (normalizer snd)
 
-     :hi-man  1
-     :lo-man 1
-     :deci-man 1
-     :amp 0.5
-     :out-bus 0)
-;;(kill dub-g)
+        snd     (bpf snd 1500 2)
+        ;;special flavours
+        ;;hi manster
+        snd     (select (> hi-man 0.05) [snd (* 4 (hpf snd hi-man-max))])
 
-;; Bring in the supersaws!
+        ;;sweep manster
+        snd     (select (> sweep-man 0.05) [snd (* 4 (hpf snd sweep))])
 
-(set-ssaw-rq 0.1)
-(set-ssaw-fil-mul 8)
+        ;;lo manster
+        snd     (select (> lo-man 0.05) [snd (lpf snd lo-man-max)])
+
+        ;;decimate
+        snd     (select (> deci-man 0.05) [snd (round snd 0.1)])
+
+        ;;crunch
+        snd     (select (> tan-man 0.05) [snd (tanh (* snd 5))])
+
+        snd     (* 0.5 (+ (* 0.8 snd) (* 0.3 (g-verb snd 100 0.7 0.7))))
+        ]
+    (out out-bus (pan2 (* amp (normalizer snd))))))
+
+(definst supersaw2 [freq 440 amp 2.5 fil-mul 2 rq 0.3]
+  (let [input  (lf-saw freq)
+        shift1 (lf-saw 4)
+        shift2 (lf-saw 7)
+        shift3 (lf-saw 5)
+        shift4 (lf-saw 2)
+        comp1  (> input shift1)
+        comp2  (> input shift2)
+        comp3  (> input shift3)
+        comp4  (> input shift4)
+        output (+ (- input comp1)
+                  (- input comp2)
+                  (- input comp3)
+                  (- input comp4))
+        output (- output input)
+        output (leak-dc:ar (* output 0.25))
+        output (normalizer (rlpf output (* freq fil-mul) rq))]
+
+    (* amp output (line 1 0 10 FREE))))
+(comment
+  ;; get the dubstep bass involved
+  (dubstep :tgt dub-g
+           :note 45
+           :wobble 32
+           :lo-man 1
+           :hi-man 0
+           :amp 1
+           :out-bus 0)
+
+  ;;(ctl dubstep :out-bus 10)
+  ;;(kill dub-g)
+  ;; go crazy - especially with the deci-man
+
+  (ctl dub-g
+       :note 28
+       :wobble 16
+       :lag-delay 0.0001
+
+       :hi-man  0
+       :lo-man 0
+       :deci-man 0
+       :amp 0.5
+       :out-bus 10)
+  ;;(kill dub-g)
+
+  ;; Bring in the supersaws!
+
+  (def ssaw-rq 0.5)
+  (def ssaw-fil-mul 3)
 
 
-(supersaw2 (midi->hz (note :c2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz (note :c2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
 
 
-;; Fire at will...
-() (supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
-(supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
-(supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
-(supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
-;(supersaw2 (midi->hz 55) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 57) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 64) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
+  ;; Fire at will...
+  (supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+  (supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+  (supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+  (supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
+                                        ;(supersaw2 (midi->hz 55) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 57) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 64) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 10)
 
-(supersaw2 (midi->hz 67) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 69) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
-(supersaw2 (midi->hz 91) :amp 0.4 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 67) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 69) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
+  (supersaw2 (midi->hz 91) :amp 0.4 :fil-mul ssaw-fil-mul :rq ssaw-rq)
 
-;; modify saw params on the fly too...
-(ctl supersaw2 :fil-mul 4 :rq 0.8)
-(volume 1)
-
-
-
-
-
-
-
-
-
-  ;;  (poly/clear m)
-
-  ;;(poly/disconnect m))
-;;(use 'clojure.pprint)
-;;(pprint @leds*)
-
-;; (data/diff {[0 1] 1 [0 0] 0 [1 1] 0} {[0 1] 1 [0 0] 0 [1 1] 1})
-
-
-
-;; ;; An empty palatte to play with:
-;; (do
-;;   (buffer-write! buf-0 [1 0 0 0 1 1 1 0])  ;; kick
-;;   (buffer-write! buf-1 [0 0 1 0 1 1 0 1])  ;; click
-;;   (buffer-write! buf-2 [1 0 0 1 0 0 1 0])  ;; boom
-;;   (buffer-write! buf-3 [0 0 0 0 1 0 0 0])) ;; subby
-
-;; ;; try mixing up the sequences. Evaluate this a few times:
-;; (do
-;;   (buffer-write! buf-0 (repeatedly 8 #(choose [0 1])))
-;;   (buffer-write! buf-1 (repeatedly 8 #(choose [0 1])))
-;;   (buffer-write! buf-2 (repeatedly 8 #(choose [0 1])))
-;;   (buffer-write! buf-3 (repeatedly 8 #(choose [0 1]))))
-
-;; ;; and then to something interesting
-;; (do
-;;   (buffer-write! buf-0 [1 1 1 1 1 1 1 1])
-;;   (buffer-write! buf-1 [1 1 0 1 0 1 0 1])
-;;   (buffer-write! buf-2 [1 1 0 1 0 1 1 0])
-;;   (buffer-write! buf-3 [1 0 0 1 0 1 1 0]))
-
-;; ;; try changing the rate of the global pulse (everything else will
-;; ;; follow suit):
-;; (ctl (get synths :r-trg) :rate 75)
-;; (ctl (get synths :r-trg) :rate 300)
+  ;; modify saw params on the fly too...
+  (ctl supersaw2 :fil-mul 4 :rq 0.8)
+  )

@@ -5,8 +5,6 @@
   (:require [polynome.core :as poly]
             [meta-ex.triggers :as trg]))
 
-(defonce dub-g (group))
-
 (defn- get-row [grid y range-x]
   (for [x (range range-x)]
     (get grid [x y] 0)))
@@ -26,6 +24,8 @@
 (defn mk-monome-sequencer
   ([samples] (mk-monome-sequencer samples (first (monomes))))
   ([samples tgt-monome]
+     (when-not tgt-monome
+       (IllegalArgumentException. "Please pass a valid monome to mk-monome-sequencer"))
      (let [range-x   (poly/range-x tgt-monome)
            range-y   (poly/range-y tgt-monome)
            sequencer (mk-sequencer samples

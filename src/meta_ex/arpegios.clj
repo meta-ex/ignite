@@ -2,6 +2,7 @@
   (:use [overtone.live])
   (:require [clojure.set]
             [meta-ex.mixer]
+            [meta-ex.triggers :as trg]
             [meta-ex.sequencer :as s]))
 
 (defonce num-notes-bs (control-bus))
@@ -16,11 +17,11 @@
 (defonce notes-b (buffer buf-size))
 
 (comment
-  (baroque :tgt cellos-g :rate 0.5 :out-bus 10 :vol 1)
+  (baroque :tgt cellos-g :rate 0.5 :out-bus 50 :vol 1)
 
   (ctl  cellos-g :vol 0.5)
 
-  (def s (arpeg-click :out-bus 0 :rate 1 :buf notes-b :tik-b s/root-trg-bus))
+  (def s (arpeg-click :out-bus 50 :rate 1 :buf notes-b :tik-b trg/trg-b))
   (node-map-controls s [:num-notes num-notes-bs])
 
   (kill s)

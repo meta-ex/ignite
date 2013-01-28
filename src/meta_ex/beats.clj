@@ -1,22 +1,22 @@
 (ns meta-ex.beats
   (:use [overtone.core]
-;;        [meta-ex rhythm synths]
+        [meta-ex rhythm synths]
         ))
 
-(defonce beats-bus (audio-bus 2))
+(defonce beats-bus (audio-bus 2 "beats bus"))
 
 ;;(kill (:id synths))
 
 
 (do
-  (def mixers (group  "beat-mixers" :tail ))
+  (def mixers (group "beat-mixers" :tail))
   (def synths (group "beat-synths" :head)))
 
 
 (defn kill-beats
   []
-  (kill (:id synths))
-  (kill (:id mixers)))
+  (kill synths)
+  (kill mixers))
 
 ;;(kill-beats)
 
@@ -101,21 +101,17 @@
   (update-pat! :ring-hat [[_]])
 
   (meta-ex.rhythm/play-rhythm patterns* bar-dur)
-  (reset! bar-dur 250)
+  (reset! bar-dur 4000)
 
-
-
-  (volume 3)
+  (volume 1)
   (kick)
   (tom)
-
-  (ctl (:id beat-mixer) :amp 0)
 
   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true))
   (def windy (sample-player (sample (freesound-path 17553)) :loop? true))
 
-  (ctl wwii :rate 0.5 :vol 2 :out-bus 10)
-  (ctl windy :rate 0.8 :vol 0 :out-bus 10)
+  (ctl wwii :rate 0.5 :vol 2 :out-bus 0)
+  (ctl windy :rate 0.8 :vol 0 :out-bus 50)
 
 
   (kill wwii)

@@ -1,5 +1,6 @@
->(ns meta-ex.mixer
-  (:use [overtone.live]))
+(ns meta-ex.mixer
+  (:use [overtone.live])
+  (:require [meta-ex.nk :as nk]))
 
 (defcgen wobble
   "wobble an input src"
@@ -100,12 +101,13 @@
                 :pot5    (fn [v mixer-g] (ctl mixer-g :hpf-freq (+ 60 (* 2000 (/ v 127)))))
                 :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq (/ v 127)))})
 
-(defn mk-mixer [midi-device]
-  (let [bufff     (buffer (* 2 44100))
-        in-bus    (audio-bus 2)
-        mixer-g   (group "m-x-synths" :tgt (foundation-safe-post-default-group))
-        mixer     (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
-        event-key (str "m-x mixer - "(midi-mk-full-device-key midi-device))]
+(defn mk-mixer [nk-rcv]
+  (let [midi-device (:out nk-rcv)
+        bufff       (buffer (* 2 44100))
+        in-bus      (audio-bus 2)
+        mixer-g     (group "m-x-synths" :tgt (foundation-safe-post-default-group))
+        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
+        event-key   (str "m-x mixer - "(midi-mk-full-device-key midi-device))]
     (on-latest-event (midi-mk-full-device-event-key midi-device :control-change)
                      (fn [msg]
                        (let [note (:note msg)
@@ -121,9 +123,7 @@
      :in-bus in-bus}))
 
 (def korg-nano-kontrol-mixers
-  (map mk-mixer (midi-find-connected-devices "nanoKONTROL2")))
-
-
+  (doall (map mk-mixer nk/nano-k-devs)))
 
 (defn mx
   "Returns the group of the mixer at idx. Tries to be smart when idx is

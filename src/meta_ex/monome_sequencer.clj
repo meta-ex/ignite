@@ -13,8 +13,6 @@
   (let [rows (map (fn [y]
                     (get-row n y range-x))
                   (range range-y))]
-    (pprint rows)
-    (println "")
     (doall
      (map-indexed (fn [idx row]
                     (when-not (>= idx (count (:samples sequencer)))

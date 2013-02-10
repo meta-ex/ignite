@@ -1,5 +1,5 @@
 (ns meta-ex.drums
-  (:use [overtone.core]
+  (:use [overtone.live]
         [meta-ex.mixer])
   (:require [meta-ex.monome-sequencer :as ms]
             [meta-ex.triggers :as trg]
@@ -27,6 +27,6 @@
 (volume 2)
 (ctl (:group c-sequencer) :out-bus b)
 
-(ctl (-> sequencer :sequencer :group) :out-bus (mx 1))
+(ctl (-> sequencer :sequencer :group) :out-bus (mx 0))
 
 (mx)

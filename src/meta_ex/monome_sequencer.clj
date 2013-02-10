@@ -57,3 +57,9 @@
 
 (defn stop-sequencer [seq]
   (sequencer-kill (:sequencer seq)))
+
+(on-trigger trg/count-trig-id
+            (fn [beat]
+              (poly/col (first (monomes)) 7 [0 0 0 0 0 0 0 0])
+              (poly/led-on (first (monomes))  (mod beat 8) 7))
+            ::count-beat)

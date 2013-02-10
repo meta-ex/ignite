@@ -1,12 +1,9 @@
 (ns meta-ex.nk
-  (:use [overtone.midi]
-        [overtone.libs.event :only [event on-event on-latest-event]]
-        [overtone.core :only [control-bus bus-set! midi-find-connected-receivers
-                              midi-find-connected-devices]]))
+  (:use [overtone.core]
+        [overtone.helpers.doc :only [fs]]
+        [overtone.helpers.lib :only [uuid]]))
 
-(defrecord NanoKontrol2 [out interfaces state busses])
-
-(def event-handle [:midi-device "KORG INC." "SLIDER/KNOB" "nanoKONTROL2 SLIDER/KNOB" 0 :control-change])
+(defrecord NanoKontrol2 [rcv dev interfaces state busses])
 
 (defn- merge-control-defaults
   "Returns config map where control info maps are merged
@@ -29,7 +26,7 @@
    :slider :on-latest-event
    :pot    :on-latest-event})
 
-(def config
+(def nk-config
   (merge-control-defaults
    {:name "nanoKONTROL2"
     :interfaces {:input-controls {:name "Input Controls"
@@ -129,132 +126,210 @@
                                    :m7 {:note 55}
                                    :r7 {:note 71}}}}}))
 
+(defn- led-on*
+  [rcvr id]
+  (let [led-id (-> nk-config :interfaces :leds :controls id :note)]
+    (midi-control rcvr led-id 127)))
+
 (defn led-on
   "Turn a led on. Usage: (led-on nk :r2)"
+  [nk id]
+  (let [rcvr   (-> nk :rcv)]
+    (led-on* rcvr id)))
+
+(defn- led-off*
   [rcvr id]
-  (let [led-id (-> config :interfaces :leds :controls id :note)]
-    (println led-id)
-    (midi-control rcvr led-id 127)))
+  (let [led-id (-> nk-config :interfaces :leds :controls id :note)]
+    (midi-control rcvr led-id 0)))
 
 (defn led-off
   "Turn a led off. Usage: (led-off nk :r2)"
-  [rcvr id]
-  (let [led-id (-> config :interfaces :leds :controls id :note)]
-    (midi-control rcvr led-id 0)))
+  [nk id]
+  (let [rcvr   (-> nk :rcv)]
+    (led-off* rcvr id)))
 
-;; (defn- smr-col-on
-;;   [out col-num]
-;;   (let [s (keyword (str "s" col-num))
-;;         m (keyword (str "m" col-num))
-;;         r (keyword (str "r" col-num))]
-;;     (led-on- out s)
-;;     (led-on- out m)
-;;     (led-on- out r)))
+(defn- button-col-ids
+  [idx]
+  (map #(keyword (str % idx)) ["s" "m" "r"]))
 
-;; (defn- smr-col-off
-;;   [out col-num]
-;;   (let [s (keyword (str "s" col-num))
-;;         m (keyword (str "m" col-num))
-;;         r (keyword (str "r" col-num))]
-;;     (led-off- out s)
-;;     (led-off- out m)
-;;     (led-off- out r)))
+(defn- smr-col-on
+  [rcv idx]
+  (doseq [id (button-col-ids idx)]
+    (led-on* rcv id)))
 
-;; (defn intromation
-;;   ([out]
-;;      (let [intro-times (repeat 75)]
-;;        (doseq [id (range 8)]
-;;          (smr-col-on out id)
-;;          (Thread/sleep (nth intro-times id)))
-;;        (Thread/sleep 750)
-;;        (doseq [id (reverse (range 8))]
-;;          (smr-col-off out id)
-;;          (Thread/sleep (nth intro-times id))))))
+(defn- smr-col-off
+  [rcv idx]
+  (doseq [id (button-col-ids idx)]
+    (led-off* rcv id)))
 
-(defn note-controls-map
+(defn- intromation
+  [rcvr]
+  (let [intro-times (repeat 75)]
+    (doseq [id (range 8)]
+      (smr-col-on rcvr id)
+      (Thread/sleep (nth intro-times id)))
+    (Thread/sleep 750)
+    (doseq [id (reverse (range 8))]
+      (smr-col-off rcvr id)
+      (Thread/sleep (nth intro-times id)))))
+
+(defn- note-controls-map
   [config]
   (let [controls (-> config :interfaces :input-controls :controls)]
     (into {}
           (map (fn [[k v]] [(:note v) k])
                controls))))
 
-(defn connect
-  "Connect to a connected nanoKONTROL2 midi device. By default, it
-  places the deviced into 'external led mode' which allows you to
-  control the leds remotely giving you more control. If your device
-  doesn't have the midi-handle \"nanoKONTROL2\" for both the input
-  controls and leds (perhaps if you are connecting more than one
-  simulataneously) you may also specify these identifiers directly."
-  ([] (connect true))
-  ([force-external-led-mode?]
-     (connect force-external-led-mode?
-              (-> config :interfaces :input-controls :midi-handle)
-              (-> config :interfaces :leds :midi-handle)))
-  ([midi-in-str midi-out-str] (connect true midi-in-str midi-out-str))
-  ([force-external-led-mode? midi-in-str midi-out-str]
-     (let [out        (midi-out midi-out-str)
-           interfaces (-> config :interfaces)
-           state      (into {}
-                            (map (fn [[k v]] [k (atom nil)])
-                                 (-> config :interfaces :input-controls :controls)))
-           busses     (into {}
-                            (map (fn [[k v]] [k (control-bus)])
-                                 (-> config :interfaces :input-controls :controls)))]
-
-
-       (doseq [[k v] (-> config :interfaces :input-controls :controls)]
-         (let [type      (:type v)
-               note      (:note v)
-               handle    (concat event-handle [note])
-               update-fn (fn [{:keys [data2-f]}]
-                           (bus-set! (busses k) data2-f)
-
-                           (reset! (state k) data2-f))]
-           (cond
-            (= :on-event (default-event-type type))
-            (on-event handle update-fn (str "update-state-for" handle))
-
-            (= :on-latest-event (default-event-type type))
-            (on-latest-event handle update-fn (str "update-state-for" handle)))))
-
-;;       (intromation out)
-;;       (NanoKontrol2. (:name config) out interfaces state busses)
-       )))
-
-(defn connect-simple
+(defn connect-nk
   ""
   [dev]
-  (let [interfaces (-> config :interfaces)
-        state      (into {}
-                         (map (fn [[k v]] [k (atom nil)])
-                              (-> config :interfaces :input-controls :controls)))
+  (let [interfaces (-> nk-config :interfaces)
+        dev-key    (midi-full-device-key dev)
+        dev-num    (midi-device-num dev)
+        state-map  (into {}
+                         (map (fn [[k v]] [k nil])
+                              (-> nk-config :interfaces :input-controls :controls)))
         busses     (into {}
-                         (map (fn [[k v]] [k (control-bus)])
-                              (-> config :interfaces :input-controls :controls)))]
-
-
-    (doseq [[k v] (-> config :interfaces :input-controls :controls)]
+                         (map (fn [[k v]] [k (control-bus 1 (str "NK " dev-num " " k))])
+                              (-> nk-config :interfaces :input-controls :controls)))
+        state      (atom state-map)]
+    (doseq [[k v] (-> nk-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
-            handle    (concat event-handle [note])
+            handle    (concat dev-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
                         (bus-set! (busses k) data2-f)
-
-                        (reset! (state k) data2-f))]
+                        (swap! state assoc k data2-f))]
         (cond
          (= :on-event (default-event-type type))
          (on-event handle update-fn (str "update-state-for" handle))
 
          (= :on-latest-event (default-event-type type))
          (on-latest-event handle update-fn (str "update-state-for" handle)))))
-    (NanoKontrol2. dev interfaces state busses)))
+    {:dev        dev
+     :interfaces interfaces
+     :state      state
+     :busses     busses}))
 
 
 ;; (:device (first (midi-find-connected-receivers "nanoKONTROL2")))
 ;; ;;
 
-(defonce nano-k-rcvs
-  (doall (midi-find-connected-receivers "nanoKONTROL2")))
 
-(defonce nano-k-devs
-  (doall (map connect-simple (midi-find-connected-devices "nanoKONTROL2"))))
+(defn- match-button-pattern
+  "Returns true if all the buttons specified by the sequence of button
+   ids bts are currently pressed."
+  [state bts]
+  (= (count bts)
+     (long (reduce + (filter identity (vals (select-keys state bts)))))))
+
+(defn- match-button-col
+  "Returns the row if it's currently pressed, nil otherwise"
+  [state col]
+  (let [bts (button-col-ids col)]
+    (when (match-button-pattern state bts)
+      col)))
+
+(defn- watch-for-col
+  [nk idx f]
+  (add-watch (:state nk)
+             ::challenge-col
+             (fn [k r o n]
+               (let [match (match-button-col n idx)]
+                 (when match
+                   (f nk)
+                   (remove-watch r k))))))
+
+(defn- flash-col
+  [rcv idx]
+  (periodic 150 (cycle-fn (fn [] (smr-col-on rcv idx))
+                          (fn [] (smr-col-off rcv idx)))))
+
+(defn- pair-nano-kons
+  "We are in the situation where we have multiple nanoKONTROL2 devices
+   connected. Unfortunately, we dont' have enough information to pair
+   the dev and rcvr objects for each physical MIDI device. We therefore
+   need to get the user to pair the devices for us. In order to achieve
+   this, we will display a different set of lights on each device and
+   wait for the user to press the lit buttons. We may then pair the
+   matching dev and rcvr objects correctly."
+  [rcvs devs]
+  (let [idxd-rcvs (map-indexed (fn [idx rcv]
+                                 (let [dev-prom (promise)]
+                                   (doseq [dev devs]
+                                     (watch-for-col dev
+                                                    idx
+                                                    (fn [m-dev]
+                                                      (deliver dev-prom m-dev))))
+                                   {:rcv      rcv
+                                    :idx      idx
+                                    :flasher  (flash-col rcv idx)
+                                    :dev      dev-prom}))
+                               rcvs)]
+    ;; wait for all devs to be paired:
+    (doall
+     (map (fn [i-rcv]
+            (let [dev (deref (:dev i-rcv))]
+              (stop-player (:flasher i-rcv))
+              (remove-watch (:state dev) ::challenge-row)
+              (intromation (:rcv i-rcv))
+              (map->NanoKontrol2 (assoc dev :rcv (:rcv i-rcv)))))
+          idxd-rcvs))))
+
+(defn- merge-nano-kons
+  [rcvs devs]
+  (assert (= (count rcvs) (count devs))
+          (fs "Cannot merge nano kontrollers - number of nanoKONTROL2
+               MIDI recevers and devices is not the same."))
+  (if (= 1 (count rcvs))
+    (do
+      (intromation (first rcvs))
+      [(map->NanoKontrol2  (assoc (first devs) :rcv (first rcvs)))])
+    (pair-nano-kons rcvs devs)))
+
+(defonce nk-connected-rcvs (midi-find-connected-receivers "nanoKONTROL2"))
+(defonce nk-connected-devs (map connect-nk (midi-find-connected-devices "nanoKONTROL2")))
+(defonce nano-kons (merge-nano-kons nk-connected-rcvs nk-connected-devs))
+
+
+
+;; (issue-challenge n 4)
+;; (def j *1)
+;; (:obs-ref j)
+;; (kill-player j)
+;; (stop-player j)
+
+;; (use 'clojure.pprint)
+
+;; (def n (first nano-kons))
+;; (pprint n)
+
+
+
+;;(led-off n :s0)
+;; (led-off* (first nk-connected-rcvs) :s0)
+;; (smr-col-on (first nk-connected-rcvs) 0)
+;; (smr-col-off (first nk-connected-rcvs) 0)
+;; (intromation (first nk-connected-rcvs ))
+;; (led-off n :s0)
+
+;; (def rcvs (midi-find-connected-receivers "nanoKONTROL2"))
+
+;; (led-off* (first rcvs) :r1)
+;; (light-combo (first rcvs) 1)
+;; (unlight-combo (first rcvs) 1)
+;; f
+
+
+;; The way this will work is as follows:
+
+;; * all recvs and devs are found
+;; * if the count of both doesn't match - error
+;; * if the count of both is 1 then combine them
+;; * if the count of both is > 1 then issue challenge and combine them based on result
+;;   - for challenge:
+;;     + index each rcvr
+;;     + light up the col of each rcvr matchin idx
+;;     + listen for col presses on devs
+;;     + when a dev col press is detected, fire off an event with the idx and the dev
+;;     + on event, match dev + idx with recvr

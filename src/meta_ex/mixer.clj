@@ -101,8 +101,8 @@
                 :pot5    (fn [v mixer-g] (ctl mixer-g :hpf-freq (+ 60 (* 2000 (/ v 127)))))
                 :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq (/ v 127)))})
 
-(defn mk-mixer [nk-rcv]
-  (let [midi-device (:out nk-rcv)
+(defn mk-mixer [nk]
+ (let [midi-device (:dev nk)
         bufff       (buffer (* 2 44100))
         in-bus      (audio-bus 2)
         mixer-g     (group "m-x-synths" :tgt (foundation-safe-post-default-group))
@@ -123,7 +123,7 @@
      :in-bus in-bus}))
 
 (def korg-nano-kontrol-mixers
-  (doall (map mk-mixer nk/nano-k-devs)))
+  (doall (map mk-mixer nk/nano-kons)))
 
 (defn mx
   "Returns the group of the mixer at idx. Tries to be smart when idx is

@@ -33,7 +33,8 @@
                                    trg/cnt-b
                                    "monome sequencer")
            key1      (gensym)
-           key2      (gensym)]
+           key2      (gensym)
+           key3      (gensym)]
 
        (on-event [:monome :led-change]
                  (fn [{:keys [monome old-led new-led]}]
@@ -47,19 +48,23 @@
                      (poly/toggle-led monome x y)))
                  key2)
 
+       (on-trigger trg/count-trig-id
+            (fn [beat]
+              (poly/col monome (poly/max-y) (repeat (poly/range-x) 0))
+              (poly/led-on monome  (mod beat range-x) (poly/max-y)))
+            key3)
+
        (led-change sequencer range-x range-y {} (poly/led-state tgt-monome))
        (oneshot-event :reset (fn [_] (remove-handler key1) (remove-handler key2)) (gensym))
 
        {:sequencer      sequencer
         :led-change-key key1
         :press-key      key2
+        :beat-key       key3
         :monome         tgt-monome})))
 
 (defn stop-sequencer [seq]
-  (sequencer-kill (:sequencer seq)))
-
-(on-trigger trg/count-trig-id
-            (fn [beat]
-              (poly/col (first (monomes)) 7 [0 0 0 0 0 0 0 0])
-              (poly/led-on (first (monomes))  (mod beat 8) 7))
-            ::count-beat)
+  (sequencer-kill (:sequencer seq))
+  (remove-handler (:led-change-key seq))
+  (remove-handler (:press-key seq))
+  (remove-handler (:beat-key seq)))

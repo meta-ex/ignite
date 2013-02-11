@@ -333,3 +333,95 @@
 ;;     + listen for col presses on devs
 ;;     + when a dev col press is detected, fire off an event with the idx and the dev
 ;;     + on event, match dev + idx with recvr
+
+
+;; Handling multiple states:
+
+;; It would be nice if a single nk could have swappable state and behaviour:
+
+;; GOALS
+;; -----
+
+;; There should be state representing the raw values of the nk
+
+;; It should be made clear to the user when raw state for a specific
+;; slider or pot isn't available (i.e. on connection). The user should
+;; then twiddle and slide the controls until all control values are
+;; known. This could be achieved by flashing nearby buttons.
+
+;; Moving a slider should update the raw nk state.
+
+;; There should be a way of associating an external state and set of
+;; behaviours with a nk.
+
+;; The differences between the raw state and external state should be
+;; communicated to the user. This could be achieved by flashing nearby
+;; buttons.
+
+;; There should be a way of locking-in the matching part of the raw
+;; state to the external state such that updates to that part of the raw
+;; state are mirrored in the external state - firing off associated events
+
+;; When a part of the raw state is not locked-in to the exteral state,
+;; modification of the raw state should not affect the external state and
+;; no associated events should be fired.
+
+;; It should be possible to manually disconnect raw and external state
+
+;; It should be possible to manually sync raw and external state. In
+;; this case, the external state should 'jump' directly to the raw state
+;; and an event with the new raw state value should be fired.
+
+;; External state should be named with a keyword
+
+;; on-latest-event should be preferred to reduce latency.
+
+;; It should be possible to modify the external state independently of
+;; the nk
+
+
+;; Current Situation
+;; -----------------
+
+;; The nk record represents both the midi dev and rcv objects - so
+;; reading values and illuminating leds is now paired.
+
+;; The nk record contains a state atom containing a map with keywords
+;; for all controls and their current value. The default non-synced raw
+;; value is nil.
+
+;; Events are fired when the raw device is manipulated
+
+;; The event system is used to detect updates to state and automatically
+;; updates the nk's raw state atom. This achieved with an
+;; on-latest-event handler for sliders and pots and on-event handler for
+;; buttons.
+
+
+;; Plan of Action
+;; --------------
+
+;; Define some schema for the external state perhaps something as simple
+;; as {:name :foo, :state { .. } }
+
+;; Define a way of creating new external state information i.e. a
+;; mk-nk-state fn.
+
+;; Add some way of associating external state with the nk - perhaps this
+;; is just an atom.
+
+;; Store a map of the differences between the raw and external state
+
+;; On raw state update, update differences map
+;; On external state update, update differences map
+
+;; Differences map should drive comms to use via LED flashing
+
+;; Define a way of flashing a button at a rate proportional to the
+;; distance of the raw and current state values.
+
+;; Figure out the right communication strategy via LEDs
+;; i.e.
+;; S - Flashing the current position of the pot (on if synced)
+;; M - Flashing the current position of the last moved control (on if synced)
+;; R - Flashing the current position of the slider (on if synced)

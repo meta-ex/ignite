@@ -3,7 +3,7 @@
         [overtone.helpers.doc :only [fs]]
         [overtone.helpers.lib :only [uuid]]))
 
-(defrecord NanoKontrol2 [rcv dev interfaces state busses])
+(defrecord NanoKontrol2 [rcv dev interfaces state])
 
 (defn- merge-control-defaults
   "Returns config map where control info maps are merged
@@ -148,6 +148,13 @@
   (let [rcvr   (-> nk :rcv)]
     (led-off* rcvr id)))
 
+(defn led
+  [nk id val]
+  (if (= 1 (long val))
+    (led-on nk id)
+    (led-off nk id)))
+
+
 (defn- button-col-ids
   [idx]
   (map #(keyword (str % idx)) ["s" "m" "r"]))
@@ -180,25 +187,24 @@
           (map (fn [[k v]] [(:note v) k])
                controls))))
 
+(defn- nk-state-map
+  [default]
+  (into {}
+        (map (fn [[k v]] [k default])
+             (-> nk-config :interfaces :input-controls :controls))))
+
 (defn connect-nk
   ""
   [dev]
   (let [interfaces (-> nk-config :interfaces)
         dev-key    (midi-full-device-key dev)
         dev-num    (midi-device-num dev)
-        state-map  (into {}
-                         (map (fn [[k v]] [k nil])
-                              (-> nk-config :interfaces :input-controls :controls)))
-        busses     (into {}
-                         (map (fn [[k v]] [k (control-bus 1 (str "NK " dev-num " " k))])
-                              (-> nk-config :interfaces :input-controls :controls)))
-        state      (atom state-map)]
+        state      (atom (nk-state-map nil))]
     (doseq [[k v] (-> nk-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
             handle    (concat dev-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
-                        (bus-set! (busses k) data2-f)
                         (swap! state assoc k data2-f))]
         (cond
          (= :on-event (default-event-type type))
@@ -206,11 +212,35 @@
 
          (= :on-latest-event (default-event-type type))
          (on-latest-event handle update-fn (str "update-state-for" handle)))))
+
     {:dev        dev
      :interfaces interfaces
-     :state      state
-     :busses     busses}))
+     :state      state}))
 
+(defn- mk-nk
+  [dev rcv idx]
+  (let [nk (map->NanoKontrol2 (assoc dev :rcv rcv))
+        interfaces (:interfaces dev)
+        dev-key    (midi-full-device-key (:dev dev))
+        dev-num    (midi-device-num (:dev dev))
+        state      (:state dev)]
+    (doseq [[k v] (-> nk-config :interfaces :input-controls :controls)]
+      (let [type      (:type v)
+            note      (:note v)
+            handle    (concat dev-key [:control-change note])
+            update-fn (fn [{:keys [data2-f]}]
+                        (let [s (swap! state assoc k data2-f)]
+                          (event [:nanoKON2 :control-change idx k]
+                                 :val data2-f
+                                 :state s
+                                 :nk nk)))]
+        (cond
+         (= :on-event (default-event-type type))
+         (on-event handle update-fn (str "update-state-for" handle))
+
+         (= :on-latest-event (default-event-type type))
+         (on-latest-event handle update-fn (str "update-state-for" handle)))))
+    nk))
 
 ;; (:device (first (midi-find-connected-receivers "nanoKONTROL2")))
 ;; ;;
@@ -273,7 +303,7 @@
               (stop-player (:flasher i-rcv))
               (remove-watch (:state dev) ::challenge-row)
               (intromation (:rcv i-rcv))
-              (map->NanoKontrol2 (assoc dev :rcv (:rcv i-rcv)))))
+              (mk-nk dev (:rcv i-rcv) (:idx i-rcv))))
           idxd-rcvs))))
 
 (defn- merge-nano-kons
@@ -284,29 +314,50 @@
   (if (= 1 (count rcvs))
     (do
       (intromation (first rcvs))
-      [(map->NanoKontrol2  (assoc (first devs) :rcv (first rcvs)))])
+      [(mk-nk (first devs (first rcvs) 0))])
     (pair-nano-kons rcvs devs)))
 
 (defonce nk-connected-rcvs (midi-find-connected-receivers "nanoKONTROL2"))
 (defonce nk-connected-devs (map connect-nk (midi-find-connected-devices "nanoKONTROL2")))
 (defonce nano-kons (merge-nano-kons nk-connected-rcvs nk-connected-devs))
 
+;; ;; (issue-challenge n 4)
+;; ;; (def j *1)
+;; ;; (:obs-ref j)
+;; ;; (kill-player j)
+;; ;; (stop-player j)
 
-
-;; (issue-challenge n 4)
-;; (def j *1)
-;; (:obs-ref j)
-;; (kill-player j)
-;; (stop-player j)
-
-;; (use 'clojure.pprint)
+;; ;; (use 'clojure.pprint)
 
 ;; (def n (first nano-kons))
-;; (pprint n)
+;; (:slider0 @(:state n))
+
+;;(def s (add-external-nk-state! n :foo))
 
 
+;; (set-current-state! n :foo)
+;; (:slider0 (:state n))
+;; (:slider0 @s)
+;; ;; (pprint n)
 
-;;(led-off n :s0)
+;; (def e (atom (nk-state-map 0)))
+
+;; (swap! (:externals n) assoc :foo e)
+;; (reset! (:cur-ext n) :foo)
+
+;; (:slider0 @e)
+;; (led-off n :s0)
+;; (-> n :diff :diff)
+;; (:slider0 (:sync-flags @(:diff n)))
+;; (:slider0 (:diff @(:diff n)))
+;; (:slider0 @(:state n))
+
+;; (:slider7 (:sync-flags @(:diff n)))
+;; (:slider7 (:diff @(:diff n)))
+;; (:slider0 @(:state n))
+
+;; (synced? @(:diff n) :slider0)
+;; (swap! (:diff n) assoc-in [:sync-flags :slider0] true)
 ;; (led-off* (first nk-connected-rcvs) :s0)
 ;; (smr-col-on (first nk-connected-rcvs) 0)
 ;; (smr-col-off (first nk-connected-rcvs) 0)
@@ -425,3 +476,8 @@
 ;; S - Flashing the current position of the pot (on if synced)
 ;; M - Flashing the current position of the last moved control (on if synced)
 ;; R - Flashing the current position of the slider (on if synced)
+
+;; (on-latest-event [:nanoKON2 :control-change 0 :s0]
+;;                  (fn [m]
+;;                    (println "yo" (:val m))
+;;                    (led (:nk m) :s0 (:val m))) :foo)

@@ -1,13 +1,44 @@
 (ns meta-ex.timed
-  (:use [overtone.core]))
+  (:use [overtone.core]
+        [overtone.helpers.ref]))
 
 (defonce running-patterns* (atom #{}))
 
-(defrecord ScheduledPattern [desc continue? fun]
+(defn kill-all-running-patterns
+  []
+  (let [[ops _] (reset-returning-prev! running-patterns* #{})]
+    (doseq [p ops]
+      (kill p))))
+
+;;(kill-all-running-patterns)
+
+(defprotocol IDelaySet
+  (delay-set! [this t] "Set the delay for a scheduled fn to t ms"))
+
+(defprotocol ILive
+  (live? [this] "Returns true if this object is live"))
+
+(defrecord ScheduledTimedRange [desc continue? fun]
   IKillable
   (kill* [this]
-    (swap! disj running-patterns* this)
-    (reset! (:continue? this) false)))
+    (swap! running-patterns* disj this)
+    (reset! (:continue? this) false)
+    this)
+  ILive
+  (live? [this] @(:continue? this)))
+
+(defrecord ScheduledPattern [desc continue? delay]
+  IKillable
+  (kill* [this]
+    (swap! running-patterns* disj this)
+    (reset! (:continue? this) false)
+    this)
+  IDelaySet
+  (delay-set! [this t]
+    (reset! (:delay this) t)
+    this)
+  ILive
+  (live? [this] @(:continue? this)))
 
 (defn timed-range
   "Linear range through time. Schedules f to be called frequently with a
@@ -34,7 +65,9 @@
            diff        (- end start)
            val-inc     (/ diff (/ (* time 1000) time-diff))
            cont?       (atom true)
-           current-val (atom true)]
+           current-val (atom true)
+           pattern     (ScheduledTimedRange. desc cont? f)]
+       (swap! running-patterns* conj pattern)
        (apply
         (fn t-rec [t val val-inc end]
           (when (and
@@ -49,9 +82,23 @@
                 (.printStackTrace e)))
             (apply-at  (+ t time-diff) t-rec [(+ t time-diff) (+ val val-inc) val-inc end])))
         [(now) start val-inc end])
-       (ScheduledPattern. desc cont? f))))
+       pattern)))
 
-(dissoc #{1 2 3} 3)
-
-(use 'clojure.set)
-(disj #{1 2 3} 3)
+(defn temporal
+  ([f delay] (temporal f delay []))
+  ([f delay args] (temporal f delay args "Temporal fn"))
+  ([f delay args desc]
+     (let [cont?    (atom true)
+           delay-a  (atom delay)
+           t        (now)
+           pattern  (ScheduledPattern. desc cont? delay-a)
+           recur-fn (fn rf [t & args]
+                      (when @cont?
+                        (let [res (apply f args)
+                              res (if (sequential? res) res [])]
+                          (let [d  @delay-a
+                                nt (+ d t)]
+                            (apply-at nt rf nt args)))))]
+       (apply-at (+ t delay) recur-fn (+ t delay) args)
+       (swap! running-patterns* conj pattern)
+       pattern)))

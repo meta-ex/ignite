@@ -3,7 +3,8 @@
         [meta-ex.mixer])
   (:require [meta-ex.monome-sequencer :as ms]
             [meta-ex.triggers :as trg]
-            [meta-ex.sequencer :as seq]))
+            [meta-ex.sequencer :as seq]
+            [meta-ex.nk :as nk]))
 
 (defonce drum-g (group))
 
@@ -16,16 +17,16 @@
               (sample (freesound-path 172385))])
 
 (def sequencer (ms/mk-monome-sequencer samples))
-(def c-sequencer (seq/mk-sequencer samples 8 dub-seq-g trg/beat-b trg/cnt-b))
+(def c-sequencer (seq/mk-sequencer samples 8 drum-g trg/beat-b trg/cnt-b))
 
 (seq/sequencer-write! c-sequencer 1 [1 0 1 0 1 0 1 0])
-(SEQ/sequencer-write! c-sequencer 0 [1 0 0 0 1 1 0 0])
+(seq/sequencer-write! c-sequencer 0 [1 0 0 0 1 1 0 0])
 (seq/sequencer-write! c-sequencer 2 [1 0 0 0 0 0 0 0])
 
 
 (def b (audio-bus))
 (volume 2)
-(ctl (:group c-sequencer) :out-bus b)
+(ctl (:group c-sequencer) :out-bus (mx 0))
 
 (ctl (-> sequencer :sequencer :group) :out-bus (mx 0))
 

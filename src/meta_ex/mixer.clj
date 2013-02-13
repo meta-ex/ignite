@@ -64,55 +64,37 @@
     (buf-wr:ar [(mix src)] delay-buf pos :loop true)
     (out out-bus (pan2 (* amp src) pan))))
 
-(def nano2-key
-  {0 :slider0
-   1 :slider1
-   2 :slider2
-   3 :slider3
-   4 :slider4
-   5 :slider5
-   6 :slider6
-   7 :slider7
+(def nano2-fns {:slider0 (fn [v mixer-g] (ctl mixer-g :rev-mix v))
+                :slider1 (fn [v mixer-g] (ctl mixer-g :delay-decay v))
+                :slider2 (fn [v mixer-g] (ctl mixer-g :dec-mix v))
+                :slider3 (fn [v mixer-g] (ctl mixer-g :wobble-mix v))
+                :slider4 (fn [v mixer-g] (ctl mixer-g :delay-mix v))
+                :slider5 (fn [v mixer-g] (ctl mixer-g :hpf-mix v))
+                :slider6 (fn [v mixer-g] (ctl mixer-g :wobble-factor (scale-range v 0 1 0 15)))
+                :slider7 (fn [v mixer-g] (ctl mixer-g :amp (scale-range v 0 1 0 3)))
+                :pot7    (fn [v mixer-g] (ctl mixer-g :pan (scale-range v 0 1 -1 1)))
 
-   16 :pot0
-   17 :pot1
-   18 :pot2
-   19 :pot3
-   20 :pot4
-   21 :pot5
-   22 :pot6
-   23 :pot7})
+                :pot0    (fn [v mixer-g] (ctl mixer-g :rev-damp v))
+                :pot1    (fn [v mixer-g] (ctl mixer-g :rev-room v))
+                :pot2    (fn [v mixer-g] (ctl mixer-g :samp-rate (* 22000 v)))
+                :pot3    (fn [v mixer-g] (ctl mixer-g :bit-rate (* 32 v)))
+                :pot4    (fn [v mixer-g] (ctl mixer-g :delay-rate v))
+                :pot5    (fn [v mixer-g] (ctl mixer-g :hpf-freq (+ 60 (* 2000 v))))
+                :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq v))})
 
-(def nano2-fns {:slider0 (fn [v mixer-g] (ctl mixer-g :rev-mix (/ v 127)))
-                :slider1 (fn [v mixer-g] (ctl mixer-g :delay-decay (/ v 127)))
-                :slider2 (fn [v mixer-g] (ctl mixer-g :dec-mix (/ v 127)))
-                :slider3 (fn [v mixer-g] (ctl mixer-g :wobble-mix (/ v 127)))
-                :slider4 (fn [v mixer-g] (ctl mixer-g :delay-mix (/ v 127)))
-                :slider5 (fn [v mixer-g] (ctl mixer-g :hpf-mix (/ v 127)))
-                :slider6 (fn [v mixer-g] (ctl mixer-g :wobble-factor (scale-range v 0 127 0 15)))
-                :slider7 (fn [v mixer-g] (ctl mixer-g :amp (scale-range v 0 127 0 3)))
-                :pot7    (fn [v mixer-g] (ctl mixer-g :pan (scale-range v 0 127 -1 1)))
-
-                :pot0    (fn [v mixer-g] (ctl mixer-g :rev-damp (/ v 127)))
-                :pot1    (fn [v mixer-g] (ctl mixer-g :rev-room (/ v 127)))
-                :pot2    (fn [v mixer-g] (ctl mixer-g :samp-rate (* 22000 (/ v 127))))
-                :pot3    (fn [v mixer-g] (ctl mixer-g :bit-rate (* 32 (/ v 127))))
-                :pot4    (fn [v mixer-g] (ctl mixer-g :delay-rate (/ v 127)))
-                :pot5    (fn [v mixer-g] (ctl mixer-g :hpf-freq (+ 60 (* 2000 (/ v 127)))))
-                :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq (/ v 127)))})
-
-(defn mk-mixer [nk]
- (let [midi-device (:dev nk)
-        bufff       (buffer (* 2 44100))
-        in-bus      (audio-bus 2)
-        mixer-g     (group "m-x-synths" :tgt (foundation-safe-post-default-group))
-        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
-        event-key   (str "m-x mixer - "(midi-mk-full-device-key midi-device))]
-    (on-latest-event (midi-mk-full-device-event-key midi-device :control-change)
+(defn mk-mixer
+  [mixer-k]
+ (let [bufff       (buffer (* 2 44100))
+       in-bus      (audio-bus 2)
+       mixer-g     (group "m-x-synths" :tgt (foundation-safe-post-default-group))
+       mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
+       event-key   (gensym)]
+    (on-latest-event [:nanoKON2 mixer-k :control-change]
                      (fn [msg]
-                       (let [note (:note msg)
-                             val  (:data2 msg)]
-                         (if-let [f (get nano2-fns (nano2-key note))]
+                       (println "hi")
+                       (let [id  (:id msg)
+                             val (:val msg)]
+                         (if-let [f (get nano2-fns id)]
                            (f val mixer-g)
                            (println "unbound: " note))))
                      event-key)
@@ -120,10 +102,11 @@
      :mixer-g   mixer-g
      :mixer     mixer
      :event-key event-key
-     :in-bus in-bus}))
+     :in-bus    in-bus
+     :key       mixer-k}))
 
 (def korg-nano-kontrol-mixers
-  (doall (map mk-mixer nk/nano-kons)))
+  (doall (map mk-mixer [:mixer :grumbles])))
 
 (defn mx
   "Returns the group of the mixer at idx. Tries to be smart when idx is

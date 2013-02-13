@@ -1,6 +1,8 @@
 (ns meta-ex.nk
-  (:use [overtone.core]
+  (:use [meta-ex.timed]
+        [overtone.core]
         [overtone.helpers.doc :only [fs]]
+        [overtone.helpers.ref :only [swap-returning-prev!]]
         [overtone.helpers.lib :only [uuid]]))
 
 (defrecord NanoKontrol2 [rcv dev interfaces state])
@@ -126,9 +128,21 @@
                                    :m7 {:note 55}
                                    :r7 {:note 71}}}}}))
 
+(defn control-type
+  [control-id]
+  (-> nk-config :interfaces :input-controls :controls control-id :type))
+
+(defn button?
+  [control-id]
+  (= :button (control-type control-id)))
+
+(defn led?
+  [control-id]
+  (boolean (-> nk-config :interfaces :leds :controls control-id)))
+
 (defn- led-on*
   [rcvr id]
-  (let [led-id (-> nk-config :interfaces :leds :controls id :note)]
+  (if-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
     (midi-control rcvr led-id 127)))
 
 (defn led-on
@@ -139,7 +153,7 @@
 
 (defn- led-off*
   [rcvr id]
-  (let [led-id (-> nk-config :interfaces :leds :controls id :note)]
+  (if-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
     (midi-control rcvr led-id 0)))
 
 (defn led-off
@@ -148,11 +162,37 @@
   (let [rcvr   (-> nk :rcv)]
     (led-off* rcvr id)))
 
+(defn- led*
+  [rcvr id val]
+  (if (= 1 (long val))
+    (led-on* rcvr id)
+    (led-off* rcvr id)))
+
 (defn led
   [nk id val]
   (if (= 1 (long val))
     (led-on nk id)
     (led-off nk id)))
+
+(defn- led-all*
+  ([rcvr] (led-all* rcvr 1))
+  ([rcvr val]
+     (doseq [id (keys (-> nk-config :interfaces :leds :controls))]
+       (led* rcvr id val))))
+
+(defn led-all
+  ([nk] (led-all nk 1))
+  ([nk val]
+     (doseq [id (keys (-> nk-config :interfaces :leds :controls))]
+       (led nk id val))))
+
+(defn- led-clear*
+  [rcvr]
+  (led-all* rcvr 0))
+
+(defn led-clear
+  [nk]
+  (led-all nk 0))
 
 
 (defn- button-col-ids
@@ -171,6 +211,7 @@
 
 (defn- intromation
   [rcvr]
+  (led-clear* rcvr)
   (let [intro-times (repeat 75)]
     (doseq [id (range 8)]
       (smr-col-on rcvr id)
@@ -187,7 +228,7 @@
           (map (fn [[k v]] [(:note v) k])
                controls))))
 
-(defn- nk-state-map
+(defn nk-state-map
   [default]
   (into {}
         (map (fn [[k v]] [k default])
@@ -229,11 +270,23 @@
             note      (:note v)
             handle    (concat dev-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
-                        (let [s (swap! state assoc k data2-f)]
+                        (let [[o n]   (swap-returning-prev! state assoc k data2-f)
+                              old-val (get o k)]
                           (event [:nanoKON2 :control-change idx k]
                                  :val data2-f
-                                 :state s
+                                 :old-val old-val
+                                 :id k
+                                 :old-state o
+                                 :state n
+                                 :nk nk)
+                          (event [:nanoKON2 :control-change idx]
+                                 :val data2-f
+                                 :old-val old-val
+                                 :id k
+                                 :old-state o
+                                 :state n
                                  :nk nk)))]
+
         (cond
          (= :on-event (default-event-type type))
          (on-event handle update-fn (str "update-state-for" handle))
@@ -314,170 +367,219 @@
   (if (= 1 (count rcvs))
     (do
       (intromation (first rcvs))
-      [(mk-nk (first devs (first rcvs) 0))])
+      [(mk-nk (first devs) (first rcvs) 0)])
     (pair-nano-kons rcvs devs)))
 
 (defonce nk-connected-rcvs (midi-find-connected-receivers "nanoKONTROL2"))
 (defonce nk-connected-devs (map connect-nk (midi-find-connected-devices "nanoKONTROL2")))
 (defonce nano-kons (merge-nano-kons nk-connected-rcvs nk-connected-devs))
 
-;; ;; (issue-challenge n 4)
-;; ;; (def j *1)
-;; ;; (:obs-ref j)
-;; ;; (kill-player j)
-;; ;; (stop-player j)
+(def states (agent {:current :mixer
+                    :states {:mixer {:state    (nk-state-map 0)
+                                     :syncs    (nk-state-map false)
+                                     :flashers (nk-state-map nil)}
+                             :grumbles {:state    (nk-state-map 0)
+                                        :syncs    (nk-state-map false)
+                                        :flashers (nk-state-map nil)}}}))
 
-;; ;; (use 'clojure.pprint)
+(defn update-states-button
+  [o nk k old-raw raw old-raw-state raw-state]
+  (println "button! " k)
+  o)
 
-;; (def n (first nano-kons))
-;; (:slider0 @(:state n))
+(defn- matching-sync-led
+  [k]
+  (let [n (name k)
+        idx (re-find #"[0-7]" n)
+        but (if (.startsWith n "slider")
+              "r"
+              "s")]
 
-;;(def s (add-external-nk-state! n :foo))
+    (keyword (str but idx))))
+
+(defn- matching-flash-val-led
+  [k]
+  (let [n (name k)
+        idx (re-find #"[0-7]" n)]
+    (keyword (str "m" idx))))
+
+(defn mk-blink-led
+  [nk id]
+  (cycle-fn (fn [] (led-on nk id))
+            (fn [] (led-off nk id))))
+
+(def delay-mul 1000)
+
+(defn kill-all-flashers*
+  [o nk]
+  (let [current-state (:current o)
+        state-info    (get-in o [:states current-state])
+        flashers      (:flashers state-info)
+        flashers      (reduce (fn [r [k v]]
+                                (when (and v (live? v))
+                                  (kill v)
+                                  (led-off nk k))
+                                (assoc r k nil))
+                              {}
+                              flashers)]
+    (doseq [i (range 8)]
+      (led-off nk (keyword (str "m" i))))
+    (merge o
+           {:states (merge (-> o :states)
+                           {current-state (merge state-info
+                                                 {:flashers flashers})})})))
+
+(defn- nk-update-states*
+  [o nk k old-raw raw old-raw-state raw-state]
+  (let [current-state (:current o)
+        state-info    (get-in o [:states current-state])
+        old-state     (:state state-info)
+        syncs         (:syncs state-info)
+        flashers      (:flashers state-info)
+        val           (get old-state k)
+        was-synced?   (get syncs k)
+        flasher-k     (matching-sync-led k)
+        warmer-k      (matching-flash-val-led k)
+        flasher       (get flashers flasher-k)
+        synced?       (or was-synced?
+                          (and old-raw (<= old-raw val raw))
+                          (and old-raw (>= old-raw val raw)))
+        syncs         (assoc syncs k synced?)
+        new-val       (if synced? raw val)
+        state         (assoc old-state k new-val)]
+
+    (when (and (not was-synced?) synced?)
+      (when flasher (kill flasher))
+      (led-on nk flasher-k)
+      (led-off nk warmer-k))
+
+    (let [flashers (if synced?
+                     (do
+                       (event [:nanoKON2 current-state :control-change k]
+                              :id k
+                              :old-state old-state
+                              :state state
+                              :old-val val
+                              :val new-val)
+                       (event [:nanoKON2 current-state :control-change]
+                              :id k
+                              :old-state old-state
+                              :state state
+                              :old-val val
+                              :val new-val)
+                       (assoc flashers flasher-k nil))
+                     (let [rate    (* (Math/abs (- val raw)) delay-mul)
+                           flasher (if (and flasher (live? flasher))
+                                     (delay-set! flasher rate)
+                                     (temporal (mk-blink-led nk flasher-k) rate))]
+                       (if (or (and old-raw raw val
+                                    (< old-raw raw val))
+                               (and old-raw raw val
+                                    (> old-raw raw val)))
+                         (led-on nk warmer-k)
+                         (led-off nk warmer-k))
+                       (assoc flashers flasher-k flasher)))]
+
+      (merge o
+             {:states (merge (-> o :states)
+                             {current-state {:state    state
+                                             :syncs    syncs
+                                             :flashers flashers}})}))))
+
+(defn nk-update-states
+  "update states asynchronously with an agent, however make it 'more'
+   synchronous by syncing with a promise. This is useful as this fn is
+   designed to be used within an on-latest-event handler which works
+   better with synchronous fns. However, we also want the sequential
+   no-retry property of agents which is why we're using them here."
+  [state-a nk k old-raw raw old-raw-state raw-state]
+  (let [p (promise)]
+    (send states
+          (fn [o p]
+            (let [res (if (button? k)
+                        (update-states-button o nk k old-raw raw old-raw-state raw-state)
+                        (update-states-range o nk k old-raw raw old-raw-state raw-state))]
+              (deliver p true)
+              res))
+          p)
+    @p))
+
+(defn switch-state*
+  [o nk state-k]
+  (if (contains? (:states o) state-k)
+    (let [o          (kill-all-flashers* o nk)
+          latest-raw @(:state nk)
+          state-info (get-in o [:states state-k])
+          state      (:state state-info)
+          syncs      (:syncs state-info)
+          syncs      (reduce (fn [r [k v]]
+                               (let [synced? (= (get state k)
+                                                (get latest-raw k)) ]
+                                 (assoc r k synced?)))
+                             {}
+                             syncs)]
+
+      ;; switch off all s m r leds
+      (doseq [i (range 8)]
+        (led-off nk (keyword (str "s" i)))
+        (led-off nk (keyword (str "m" i)))
+        (led-off nk (keyword (str "r" i))))
 
 
-;; (set-current-state! n :foo)
-;; (:slider0 (:state n))
-;; (:slider0 @s)
-;; ;; (pprint n)
-
-;; (def e (atom (nk-state-map 0)))
-
-;; (swap! (:externals n) assoc :foo e)
-;; (reset! (:cur-ext n) :foo)
-
-;; (:slider0 @e)
-;; (led-off n :s0)
-;; (-> n :diff :diff)
-;; (:slider0 (:sync-flags @(:diff n)))
-;; (:slider0 (:diff @(:diff n)))
-;; (:slider0 @(:state n))
-
-;; (:slider7 (:sync-flags @(:diff n)))
-;; (:slider7 (:diff @(:diff n)))
-;; (:slider0 @(:state n))
-
-;; (synced? @(:diff n) :slider0)
-;; (swap! (:diff n) assoc-in [:sync-flags :slider0] true)
-;; (led-off* (first nk-connected-rcvs) :s0)
-;; (smr-col-on (first nk-connected-rcvs) 0)
-;; (smr-col-off (first nk-connected-rcvs) 0)
-;; (intromation (first nk-connected-rcvs ))
-;; (led-off n :s0)
-
-;; (def rcvs (midi-find-connected-receivers "nanoKONTROL2"))
-
-;; (led-off* (first rcvs) :r1)
-;; (light-combo (first rcvs) 1)
-;; (unlight-combo (first rcvs) 1)
-;; f
 
 
-;; The way this will work is as follows:
+      (merge o
+             {:current state-k
+              :states (merge (-> o :states)
+                             {state-k  (assoc state-info
+                                         :syncs syncs)})}))
+    o))
 
-;; * all recvs and devs are found
-;; * if the count of both doesn't match - error
-;; * if the count of both is 1 then combine them
-;; * if the count of both is > 1 then issue challenge and combine them based on result
-;;   - for challenge:
-;;     + index each rcvr
-;;     + light up the col of each rcvr matchin idx
-;;     + listen for col presses on devs
-;;     + when a dev col press is detected, fire off an event with the idx and the dev
-;;     + on event, match dev + idx with recvr
+(defn update-states-range
+  [state-a nk k v]
+  (when-not (button? k)))
 
+(defn switch-state*
+  [o nk state-k])
 
-;; Handling multiple states:
+(defn switch-state
+  [state-a nk state-k]
+  (send state-a switch-state* nk state-k))
 
-;; It would be nice if a single nk could have swappable state and behaviour:
+(defn kill-all-flashers
+  [state-a nk]
+  (send state-a kill-all-flashers* nk))
 
-;; GOALS
-;; -----
+(switch-state states (first nano-kons) :mixer)
 
-;; There should be state representing the raw values of the nk
+;;(kill-all-flashers states (first nano-kons ))
 
-;; It should be made clear to the user when raw state for a specific
-;; slider or pot isn't available (i.e. on connection). The user should
-;; then twiddle and slide the controls until all control values are
-;; known. This could be achieved by flashing nearby buttons.
+(on-event [:nanoKON2 :control-change 0 :marker-right]
+          (fn [m]
+            (when (< 0 (:val m))
+              (kill-all-flashers states (:nk m))))
+          ::kill-flashers)
 
-;; Moving a slider should update the raw nk state.
+(on-latest-event [:nanoKON2 :control-change 0]
+                 (fn [m]
+                   (nk-update-states states
+                                     (:nk m)
+                                     (:id m)
+                                     (:old-val m)
+                                     (:val m)
+                                     (:old-state m)
+                                     (:state m)))
+                 ::foo)
+;;(use 'clojure.pprint)
+;;(pprint (:state (first nano-kons)))
 
-;; There should be a way of associating an external state and set of
-;; behaviours with a nk.
-
-;; The differences between the raw state and external state should be
-;; communicated to the user. This could be achieved by flashing nearby
-;; buttons.
-
-;; There should be a way of locking-in the matching part of the raw
-;; state to the external state such that updates to that part of the raw
-;; state are mirrored in the external state - firing off associated events
-
-;; When a part of the raw state is not locked-in to the exteral state,
-;; modification of the raw state should not affect the external state and
-;; no associated events should be fired.
-
-;; It should be possible to manually disconnect raw and external state
-
-;; It should be possible to manually sync raw and external state. In
-;; this case, the external state should 'jump' directly to the raw state
-;; and an event with the new raw state value should be fired.
-
-;; External state should be named with a keyword
-
-;; on-latest-event should be preferred to reduce latency.
-
-;; It should be possible to modify the external state independently of
-;; the nk
-
-
-;; Current Situation
-;; -----------------
-
-;; The nk record represents both the midi dev and rcv objects - so
-;; reading values and illuminating leds is now paired.
-
-;; The nk record contains a state atom containing a map with keywords
-;; for all controls and their current value. The default non-synced raw
-;; value is nil.
-
-;; Events are fired when the raw device is manipulated
-
-;; The event system is used to detect updates to state and automatically
-;; updates the nk's raw state atom. This achieved with an
-;; on-latest-event handler for sliders and pots and on-event handler for
-;; buttons.
-
-
-;; Plan of Action
-;; --------------
-
-;; Define some schema for the external state perhaps something as simple
-;; as {:name :foo, :state { .. } }
-
-;; Define a way of creating new external state information i.e. a
-;; mk-nk-state fn.
-
-;; Add some way of associating external state with the nk - perhaps this
-;; is just an atom.
-
-;; Store a map of the differences between the raw and external state
-
-;; On raw state update, update differences map
-;; On external state update, update differences map
-
-;; Differences map should drive comms to use via LED flashing
-
-;; Define a way of flashing a button at a rate proportional to the
-;; distance of the raw and current state values.
-
-;; Figure out the right communication strategy via LEDs
-;; i.e.
-;; S - Flashing the current position of the pot (on if synced)
-;; M - Flashing the current position of the last moved control (on if synced)
-;; R - Flashing the current position of the slider (on if synced)
-
-;; (on-latest-event [:nanoKON2 :control-change 0 :s0]
+;; (on-latest-event [:nanoKON2 :control-change 0 :s1]
 ;;                  (fn [m]
-;;                    (println "yo" (:val m))
-;;                    (led (:nk m) :s0 (:val m))) :foo)
+;;                    (led (:nk m) :s1 (:val m))) :foo2)
+
+;;(led-clear (first nano-kons))
+
+
+;; need to spend more time thinking about how to update state externally
+;; and how to handle multiple nks modifying the same state (likely to be
+;; the same problem)

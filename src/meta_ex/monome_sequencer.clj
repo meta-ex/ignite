@@ -50,8 +50,8 @@
 
        (on-trigger trg/count-trig-id
             (fn [beat]
-              (poly/col monome (poly/max-y) (repeat (poly/range-x) 0))
-              (poly/led-on monome  (mod beat range-x) (poly/max-y)))
+              (poly/col tgt-monome (poly/max-y) (repeat (poly/range-x) 0))
+              (poly/led-on tgt-monome  (mod beat range-x) (poly/max-y)))
             key3)
 
        (led-change sequencer range-x range-y {} (poly/led-state tgt-monome))

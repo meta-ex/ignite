@@ -583,3 +583,36 @@
 ;; need to spend more time thinking about how to update state externally
 ;; and how to handle multiple nks modifying the same state (likely to be
 ;; the same problem)
+
+;; We have the following moving parts:
+;; * n nk records representing physical devices
+;; * m state-maps representing virtual states (of the pots and sliders
+;;   of an nk)
+
+;; Typically (< n m) although that's not strictly always the case. We
+;; also want to be able to have the same state-map represented on
+;; multiple nks in addition to the ability to swap state-maps in and out
+;; of nks. Finally, we want the ability to be able to modify a state-map
+;; directly without having to mediate our interaction through an nk.
+
+;; We therefore need the following information and relationships therein:
+
+;; * records for each individual nk
+;; * maps for each individual state-map
+;; * the current state-map associated with each nk
+;; * the current nks (if any) associated with each state-map
+;; * the syncs and flashers for each nk (representing the relationship
+;;   for a speceific state-map)
+
+;; State modification
+;; ------------------
+
+;; When we slide a slider of a specifc nk, we get an event containing
+;; the nk record itself.
+
+;; We then need to look up the current state-map (if any) associated
+;; with that nk and update it
+
+;; When a state-map is updated, for all the connected nks (that didn't
+;; perform the update), we need to invalidate their associated syncs and
+;; update any associated flasher rates.

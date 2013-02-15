@@ -1,13 +1,15 @@
-(ns meta-ex.nk.state
+(ns meta-ex.nk.state-maps
   (:use [meta-ex.timed]
-        [meta-ex.nk.device]
+        [meta-ex.nk.stateful-device]
         [overtone.core]
         [overtone.helpers.doc :only [fs]]
         [overtone.helpers.ref :only [swap-returning-prev!]]))
 
 ;; example state-map
-;; (def state-maps (agent {:states {:mixer (nk-state-map 0)
-;;                                  :grumbles (nk-state-map 0)}
+;; (def state-maps (agent {:states {:mixer    {:state (nk-state-map 0)
+;;                                             :button-id :s0}
+;;                                  :grumbles {:state (nk-state-map 0)
+;;                                             :button-id :s1}}
 ;;                         :nks   {(first nano-kons) {:syncs    (nk-state-map false)
 ;;                                                    :flashers (nk-state-map nil)
 ;;                                                    :current  :mixer}}}))
@@ -20,7 +22,7 @@
 (defn- sm-state
   "Get the state for a specific key"
   [sm k]
-  (get-in sm [:states k]))
+  (get-in sm [:states k :state]))
 
 (defn- sm-nk-syncs
   "Get the syncs for a specific nk in the sm"
@@ -90,7 +92,7 @@
 (defn- sm-swap-state
   "Return a new sm with the state replaced"
   [sm k s]
-  (assoc-in sm [:states k] s))
+  (assoc-in sm [:states k :state] s))
 
 (defn- sm-nk-swap-state
   "Return a new sm with the state matching the nk replaced"
@@ -110,8 +112,9 @@
 
 (defn- sm-add-state
   "Return a new sm with the new state"
-  [sm k s]
-  (sm-swap-state sm k s))
+  [sm k s button-id]
+  (assoc-in sm [:states k] {:state s
+                            :button-id button-id}))
 
 (defn- sm-add-nk
   "Return a new sm with the new state"
@@ -130,7 +133,21 @@
                       sm
                       nks)))))
 
+(defn nk-smr-leds-off
+  "Turn off all smr leds on nk"
+  [nk]
+  (doseq [i (range 8)]
+    (led-off nk (keyword (str "s" i)))
+    (led-off nk (keyword (str "m" i)))
+    (led-off nk (keyword (str "r" i)))))
 
+(defn nk-smr-leds-on
+  "Turn on all smr leds on nk"
+  [nk]
+  (doseq [i (range 8)]
+    (led-on nk (keyword (str "s" i)))
+    (led-on nk (keyword (str "m" i)))
+    (led-on nk (keyword (str "r" i)))))
 
 (defn kill-all-flashers*
   [sm nk]
@@ -147,6 +164,16 @@
       (led-off nk (keyword (str "m" i))))
 
     (sm-nk-swap-flashers sm nk flashers)))
+
+(defn refresh*
+  [sm nk]
+  (let [sm    (kill-all-flashers* sm nk)
+        syncs (sm-nk-syncs sm nk)]
+    (nk-smr-leds-off nk)
+    (doseq [[k synced?] syncs]
+      (when synced?
+        (led-on nk (matching-sync-led k))))
+    sm))
 
 (defn- flasher-delay
   [val raw]
@@ -169,7 +196,6 @@
         syncs         (assoc syncs k synced?)
         new-val       (if synced? raw val)
         state         (assoc old-state k new-val)]
-
     (when (and (not was-synced?) synced?)
       (when flasher (kill flasher))
       (led-on nk flasher-k)
@@ -234,30 +260,22 @@
 (defn switch-state*
   [sm nk state-k]
   (if (sm-valid-state? sm state-k)
-    (do
-      (println "valid state")
-      ;; switch off all s m r leds
-      (doseq [i (range 8)]
-        (led-off nk (keyword (str "s" i)))
-        (led-off nk (keyword (str "m" i)))
-        (led-off nk (keyword (str "r" i))))
-      (println "leds off...")
-      (let [sm         (kill-all-flashers* sm nk)
-            latest-raw @(:state nk)
-            state      (sm-state sm state-k)
-            syncs      (sm-nk-syncs sm nk)
-            syncs      (reduce (fn [r [k v]]
-                                 (let [synced? (= (get state k)
-                                                  (get latest-raw k))]
-                                   (when synced?
-                                     (led-on nk (matching-sync-led k)))
-                                   (assoc r k synced?)))
-                               {}
-                               syncs)]
-
-        (-> sm
-            (sm-nk-swap-current nk state-k)
-            (sm-nk-swap-syncs nk syncs))))
+    (let [sm         (kill-all-flashers* sm nk)
+          latest-raw @(:state nk)
+          state      (sm-state sm state-k)
+          syncs      (sm-nk-syncs sm nk)
+          syncs      (reduce (fn [r [k v]]
+                               (let [synced? (= (get state k)
+                                                (get latest-raw k))]
+                                 (when synced?
+                                   (led-on nk (matching-sync-led k)))
+                                 (assoc r k synced?)))
+                             {}
+                             syncs)]
+      (nk-smr-leds-off nk)
+      (-> sm
+          (sm-nk-swap-current nk state-k)
+          (sm-nk-swap-syncs nk syncs)))
     sm))
 
 (defn update-states-range
@@ -271,6 +289,10 @@
 (defn kill-all-flashers
   [state-a nk]
   (send state-a kill-all-flashers* nk))
+
+(defn refresh
+  [state-a nk]
+  (send state-a refresh* nk))
 
 (defn update-syncs-and-flashers*
   [sm nk k v]
@@ -323,14 +345,14 @@
   (send state-a add-nk* nk))
 
 (defn- add-state*
-  [sm state-k state]
-  (sm-add-state sm state-k state))
+  [sm state-k state button-id]
+  (sm-add-state sm state-k state button-id))
 
 (defn add-state
-  [state-a state-k init-val]
+  [state-a state-k button-id init-val]
   (ensure-valid-val! init-val)
   (let [state (nk-state-map init-val)]
-    (send state-a add-state* state-k state)))
+    (send state-a add-state* state-k state button-id)))
 
 ;; (switch-state state-maps (first nano-kons) :grumbles)
 ;; (switch-state state-maps (first nano-kons) :mixer)

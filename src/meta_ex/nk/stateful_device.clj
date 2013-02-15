@@ -1,4 +1,4 @@
-(ns meta-ex.nk.device
+(ns meta-ex.nk.stateful-device
   (:use [meta-ex.timed]
         [overtone.core]
         [overtone.helpers.doc :only [fs]]
@@ -255,7 +255,8 @@
 
     {:dev        dev
      :interfaces interfaces
-     :state      state}))
+     :state      state
+     :type       ::stateful-nk}))
 
 (defn- mk-nk
   [dev rcv idx]
@@ -348,6 +349,13 @@
   (periodic 150 (cycle-fn (fn [] (smr-col-on rcv idx))
                           (fn [] (smr-col-off rcv idx)))))
 
+(defn- watch-for-id
+  [dev rcv]
+  (let [id-p (promise)]
+;    (oneshot-event )
+;    @id-p
+ nil   ))
+
 (defn- pair-nano-kons
   "We are in the situation where we have multiple nanoKONTROL2 devices
    connected. Unfortunately, we dont' have enough information to pair
@@ -372,7 +380,8 @@
     ;; wait for all devs to be paired:
     (doall
      (map (fn [i-rcv]
-            (let [dev (deref (:dev i-rcv))]
+            (let [dev (deref (:dev i-rcv))
+                  id  (watch-for-id dev (:rcv i-rcv))]
               (stop-player (:flasher i-rcv))
               (remove-watch (:state dev) ::challenge-row)
               (intromation (:rcv i-rcv))
@@ -380,12 +389,16 @@
           idxd-rcvs))))
 
 (defn merge-nano-kons
-  [rcvs devs]
-  (assert (= (count rcvs) (count devs))
+  [rcvs stateful-devs]
+  (assert (= (count rcvs) (count stateful-devs))
           (fs "Cannot merge nano kontrollers - number of nanoKONTROL2
                MIDI recevers and devices is not the same."))
-  (if (= 1 (count rcvs))
-    (do
-      (intromation (first rcvs))
-      [(mk-nk (first devs) (first rcvs) 0)])
-    (pair-nano-kons rcvs devs)))
+  (assert (every? #(= ::stateful-nk (:type %)) stateful-devs)
+          (fs "Your nk devices must be stateful-nks"))
+  (let [paired (if (= 1 (count rcvs))
+                 (do
+                   (intromation (first rcvs))
+                   [(mk-nk (first stateful-devs) (first rcvs) 0)])
+                 (pair-nano-kons rcvs stateful-devs))]
+
+    paired))

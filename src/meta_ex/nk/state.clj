@@ -287,9 +287,7 @@
 
     (when old-sync
       (led-off nk (matching-sync-led k)))
-
-    (-> sm
-        (sm-nk-swap-syncs nk syncs))))
+    (sm-nk-swap-syncs sm nk syncs)))
 
 (defn ensure-valid-val!
   [v]
@@ -300,13 +298,15 @@
 
 (defn update-state*
   [sm state-k k v]
-  (let [old-state (sm-state sm state-k)
-        state     (assoc old-state k v)]
-
-    (doseq [nk (sm-nks-with-state-k sm state-k)]
-      (update-syncs-and-flashers* sm nk k v))
-
-    (sm-swap-state sm state-k k)))
+  (if (contains? (:states sm) state-k)
+    (let [old-state (sm-state sm state-k)
+          state     (assoc old-state k v)
+          sm        (reduce (fn [r nk]
+                              (update-syncs-and-flashers* r nk k v))
+                            sm
+                            (sm-nks-with-state-k sm state-k))]
+      (sm-swap-state sm state-k state))
+    sm))
 
 (defn update-state
   [state-a state-k k v]

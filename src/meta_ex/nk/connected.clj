@@ -9,15 +9,17 @@
 (defonce nano-kons (nkd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
 (defonce state-maps (nks/mk-state-map nano-kons))
 
-;;(nks/add-state state-maps :grumbles 0.5)
+;; (nks/add-state state-maps :grumbles 0.5)
+;; (nks/add-state state-maps :mixer 0)
+;; (nks/add-state state-maps :cheese 1)
 
-;;(nks/switch-state state-maps (first nano-kons) :mixer)
+;; (nks/switch-state state-maps (first nano-kons) :grumbles)
+;; (nks/switch-state state-maps (first nano-kons) :mixer)
+;; (nks/switch-state state-maps (first nano-kons) :cheese)
 
 (defn update-state
   [state-k id val]
   (nks/update-state state-maps state-k id val))
-
-(update-state :mixer :slider7 0.5)
 
 (on-event [:nanoKON2 :control-change :marker-right]
           (fn [m]

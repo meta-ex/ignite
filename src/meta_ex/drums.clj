@@ -3,8 +3,7 @@
         [meta-ex.mixer])
   (:require [meta-ex.monome-sequencer :as ms]
             [meta-ex.triggers :as trg]
-            [meta-ex.sequencer :as seq]
-            [meta-ex.nk :as nk]))
+            [meta-ex.sequencer :as seq]))
 
 (defonce drum-g (group))
 
@@ -26,7 +25,7 @@
 
 (def b (audio-bus))
 (volume 2)
-(ctl (:group c-sequencer) :out-bus (mx 0))
+(ctl (:group c-sequencer) :out-bus (mx 1))
 
 (ctl (-> sequencer :sequencer :group) :out-bus (mx 0))
 

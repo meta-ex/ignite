@@ -9,8 +9,8 @@
 (def nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
 (def state-maps (nksm/mk-state-map nano-kons))
 
-(nksm/add-state state-maps :grumbles :s0 0.5)
-;; (nksm/add-state state-maps :mixer :s1 0)
+(nksm/add-state state-maps :grumbles :s0 0)
+(nksm/add-state state-maps :mixer :s1 0)
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
 (nksm/switch-state state-maps (first nano-kons) :grumbles)
@@ -26,8 +26,14 @@
 (on-event [:nanoKON2 :control-change :marker-right]
           (fn [m]
             (when (< 0 (:val m))
-              (nksm/kill-all-flashers state-maps (:nk m))))
-          ::kill-flashers)
+              (nksm/refresh state-maps (:nk m))))
+          ::refresh)
+
+(on-event [:nanoKON2 :control-change :cycle]
+          (fn [m]
+            (when (< 0 (:val m))
+              (nksm/nk-switch-state state-maps (:nk m))))
+          ::switch-state)
 
 (on-latest-event [:nanoKON2 :control-change]
                  (fn [m]
@@ -40,7 +46,12 @@
                                           (:state m)))
                  ::update-state)
 
-;;(nksm/refresh state-maps (first nano-kons))
-;; things to do
-;; add a 'refresh' fn
-;; teach stateful-devs to give themselves an id on connection
+;; things to do:
+
+;; in switcher mode - flash the state you're currently in
+
+;; in switcher mode - if you hit the cycle button again, go back to previous state
+
+;; have a way of recording states
+
+;; have a way of giving more bespoke starting vals

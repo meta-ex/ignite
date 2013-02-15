@@ -1,6 +1,6 @@
 (ns meta-ex.mixer
   (:use [overtone.live])
-  (:require [meta-ex.nk :as nk]))
+  (:require [meta-ex.nk.connected :as nk]))
 
 (defcgen wobble
   "wobble an input src"

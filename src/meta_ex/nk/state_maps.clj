@@ -58,6 +58,7 @@
             #{}
             nks)))
 
+(declare sm-nks-with-current-state)
 
 (defn available-states
   "Return a map of valid state button-ids to sequences of currently
@@ -85,7 +86,18 @@
   "Returns the state-k for state with button-id"
   [sm button-id]
   (ffirst (filter (fn [[k v]] (= button-id (:button-id v)))
-                 (:states sm))))
+                  (:states sm))))
+
+
+
+(defn- sm-nk-mode
+  "Return the current mode for nk"
+  [sm nk]
+  (get-in sm [:nks nk :mode]))
+
+(defn- sm-nk-switcher-mode?
+  [sm nk]
+  (= :switcher (sm-nk-mode sm nk)))
 
 (defn nk-update-states-button*
   [sm nk k old-raw raw old-raw-state raw-state]
@@ -156,15 +168,6 @@
   "Reterna a new sm with the mode replaced"
   [sm nk mode]
   (assoc-in sm [:nks nk :mode] mode))
-
-(defn- sm-nk-mode
-  "Return the current mode for nk"
-  [sm nk]
-  (get-in sm [:nks nk :mode]))
-
-(defn- sm-nk-switcher-mode?
-  [sm nk]
-  (= :switcher (sm-nk-mode sm nk)))
 
 (defn- sm-add-state
   "Return a new sm with the new state"

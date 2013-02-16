@@ -11,6 +11,7 @@
 
 (nksm/add-state state-maps :grumbles :s0 0)
 (nksm/add-state state-maps :mixer :s1 0)
+(nksm/add-state state-maps :master-drum :m0 0)
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
 (nksm/switch-state state-maps (first nano-kons) :grumbles)
@@ -55,3 +56,8 @@
 ;; have a way of recording states
 
 ;; have a way of giving more bespoke starting vals
+
+;; pressing the sync flasher led should force sync and make value jump
+;; to current raw val
+
+;; there should be a way of forcing an unsync

@@ -91,7 +91,6 @@
        event-key   (gensym)]
     (on-latest-event [:nanoKON2 mixer-k :control-change]
                      (fn [msg]
-                       (println "hi")
                        (let [id  (:id msg)
                              val (:val msg)]
                          (if-let [f (get nano2-fns id)]
@@ -105,8 +104,11 @@
      :in-bus    in-bus
      :key       mixer-k}))
 
-(def korg-nano-kontrol-mixers
-  (doall (map mk-mixer [:mixer :grumbles])))
+(defonce korg-nano-kontrol-mixers
+  (atom (reduce (fn [r k]
+                  (assoc r k (mk-mixer k)))
+                {}
+                [:master-drum :grumbles])))
 
 (defn mx
   "Returns the group of the mixer at idx. Tries to be smart when idx is
@@ -118,3 +120,7 @@
       (< idx 0) (mx 0)
       (>= idx (count korg-nano-kontrol-mixers)) (:in-bus (last korg-nano-kontrol-mixers))
       :else (:in-bus (nth korg-nano-kontrol-mixers idx)))))
+
+(defn mx
+  [k]
+  (get (get @korg-nano-kontrol-mixers k) :in-bus 0))

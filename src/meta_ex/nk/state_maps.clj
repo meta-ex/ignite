@@ -46,7 +46,6 @@
   (let [k (sm-nk-current sm nk) ]
     (sm-state sm k)))
 
-
 (defn- sm-nks-with-state-k
   "Get all the nks associated with a specific state-k"
   [sm state-k]
@@ -88,7 +87,11 @@
   (ffirst (filter (fn [[k v]] (= button-id (:button-id v)))
                   (:states sm))))
 
-
+(defn sm-nk->button-id
+  "Returns the button-id for the current state of the nk"
+  [sm nk]
+  (let [current (sm-nk-current sm nk)]
+    (get-in sm [:states current :button-id])))
 
 (defn- sm-nk-mode
   "Return the current mode for nk"
@@ -99,21 +102,26 @@
   [sm nk]
   (= :switcher (sm-nk-mode sm nk)))
 
-(defn nk-update-states-button*
-  [sm nk k old-raw raw old-raw-state raw-state]
-  (println "button" k raw)
-  (cond
-   (and (= 0.0 raw)
-        (sm-nk-switcher-mode? sm nk)
-        (switch-valid? sm k))
-   (let [state-k (sm-state-k-with-button-id sm k)]
-     (switch-state* sm nk state-k))
+(defn- sm-nk-controller-mode?
+  [sm nk]
+  (= :controller (sm-nk-mode sm nk)))
 
-   :else sm))
+(declare kill-all-flashers*)
+
+(defn- controller-id?
+  "Returns true if id is a controller"
+  [id]
+  (boolean (re-matches #"(slider|pot)[0-7]" (name id))))
+
+(defn- sync-id?
+  "Returns true if id is a controller"
+  [id]
+  (boolean (re-matches #"[smr][0-7]" (name id))))
 
 (defn- matching-sync-led
+  "Given a controller led - returns the matching sync led id"
   [k]
-  (let [n (name k)
+  (let [n   (name k)
         idx (re-find #"[0-7]" n)
         but (if (.startsWith n "slider")
               "r"
@@ -121,7 +129,18 @@
 
     (keyword (str but idx))))
 
-(defn- matching-flash-val-led
+(defn- matching-controller-id
+  "Given a sync led - returns the matching controller led id"
+  [k]
+  (let [n   (name k)
+        idx (re-find #"[0-7]" n)
+        but (if (.startsWith n "r")
+              "slider"
+              "pot")]
+
+    (keyword (str but idx))))
+
+(defn- matching-warmer-led
   [k]
   (let [n (name k)
         idx (re-find #"[0-7]" n)]
@@ -211,21 +230,20 @@
 
 (defn kill-all-flashers*
   [sm nk]
-  (if (not (sm-nk-switcher-mode? sm nk ))
-    (let [state-map       (sm-nk-state sm nk)
-          flashers        (sm-nk-flashers sm nk)
-          flashers        (reduce (fn [r [k v]]
-                                    (when (and v (live? v))
-                                      (kill v)
-                                      (led-off nk k))
-                                    (assoc r k nil))
-                                  {}
-                                  flashers)]
-      (doseq [i (range 8)]
-        (led-off nk (keyword (str "m" i))))
+  (let [state-map       (sm-nk-state sm nk)
+        flashers        (sm-nk-flashers sm nk)
+        flashers        (reduce (fn [r [k v]]
+                                  (when (and v (live? v))
+                                    (kill v)
+                                    (led-off nk k))
+                                  (assoc r k nil))
+                                {}
+                                flashers)]
+    (doseq [i (range 8)]
+      (led-off nk (keyword (str "m" i))))
 
-      (sm-nk-swap-flashers sm nk flashers))
-    sm))
+    (sm-nk-swap-flashers sm nk flashers))
+  sm)
 
 (defn refresh*
   [sm nk]
@@ -243,6 +261,10 @@
   [val raw]
   (* (Math/abs (- val raw)) delay-mul))
 
+(defn- mk-flasher
+  [nk k delay]
+  (temporal (mk-blink-led nk k) delay))
+
 (defn- nk-update-states-range*
   [sm nk k old-raw raw old-raw-state raw-state]
   (if (not (sm-nk-switcher-mode? sm nk ))
@@ -253,11 +275,13 @@
           val           (get old-state k)
           was-synced?   (get syncs k)
           flasher-k     (matching-sync-led k)
-          warmer-k      (matching-flash-val-led k)
+          warmer-k      (matching-warmer-led k)
           flasher       (get flashers flasher-k)
-          synced?       (or was-synced?
-                            (and old-raw (<= old-raw val raw))
-                            (and old-raw (>= old-raw val raw)))
+          synced?       (and
+                         (not= :clutch (sm-nk-mode sm nk))
+                         (or was-synced?
+                                 (and old-raw (<= old-raw val raw))
+                                 (and old-raw (>= old-raw val raw))))
           syncs         (assoc syncs k synced?)
           new-val       (if synced? raw val)
           state         (assoc old-state k new-val)]
@@ -285,8 +309,7 @@
                        (let [delay    (flasher-delay val raw)
                              flasher (if (and flasher (live? flasher))
                                        (delay-set! flasher delay)
-                                       (temporal (mk-blink-led nk flasher-k) delay))]
-
+                                       (mk-flasher nk flasher-k delay))]
                          (if (or (and old-raw raw val
                                       (< old-raw raw val))
                                  (and old-raw raw val
@@ -300,28 +323,6 @@
             (sm-nk-swap-state nk state))))
     sm))
 
-(defn nk-update-states
-  "update states asynchronously with an agent, however make it 'more'
-   synchronous by syncing with a promise. This is useful as this fn is
-   designed to be used within an on-latest-event handler which works
-   better with synchronous fns. However, we also want the sequential
-   no-retry property of agents which is why we're using them here."
-  [state-a nk k old-raw raw old-raw-state raw-state]
-  (let [p (promise)]
-    (send state-a
-          (fn [sm p]
-            (let [res (if (and (contains? (:nks sm) nk)
-                               (sm-nk-state sm nk))
-                        (if (button? k)
-                          (nk-update-states-button*
-                           sm nk k old-raw raw old-raw-state raw-state)
-                          (nk-update-states-range*
-                           sm nk k old-raw raw old-raw-state raw-state))
-                        sm)]
-              (deliver p true)
-              res))
-          p)
-    @p))
 
 (defn switch-state*
   [sm nk state-k]
@@ -347,6 +348,109 @@
             (sm-nk-swap-syncs nk syncs)
             (sm-nk-swap-mode nk :controller))))
     sm))
+
+(defn sm-nk-kill-flasher*
+  [sm nk id]
+  (let [flashers (sm-nk-flashers sm nk)
+        flasher  (get flashers id)
+        flashers (assoc flashers id nil)]
+
+    (when flasher
+      (kill flasher))
+
+    (sm-nk-swap-flashers sm nk flashers)))
+
+
+(defn nk-force-sync*
+  [sm nk k old-raw raw old-raw-state raw-state]
+  (cond
+   (and (controller-id? k)
+        (nil? raw))
+   (do
+     (dotimes [x 5]
+       (led-on nk (matching-sync-led k))
+       (Thread/sleep 50)
+       (led-off nk (matching-sync-led k))
+       (Thread/sleep 50))
+     sm)
+
+   (controller-id? k)
+   (let [current-state-k (sm-nk-current sm nk)
+         old-state       (sm-nk-state sm nk)
+         state           (assoc old-state k raw)
+         syncs           (sm-nk-syncs sm nk)
+         syncs           (assoc syncs k true)
+         sm              (sm-nk-kill-flasher* sm nk (matching-sync-led k))
+         val             (get old-state k)]
+     (led-on nk (matching-sync-led k))
+     (led-off nk (matching-warmer-led k))
+     (event [:nanoKON2 current-state-k :control-change k]
+            :id k
+            :old-state old-state
+            :state state
+            :old-val val
+            :val raw)
+     (event [:nanoKON2 current-state-k :control-change]
+            :id k
+            :old-state old-state
+            :state state
+            :old-val val
+            :val raw)
+     (-> sm
+         (sm-nk-swap-state nk state)
+         (sm-nk-swap-syncs nk syncs) ))
+
+   :else sm))
+
+(defn nk-update-states-button*
+  [sm nk k old-raw raw old-raw-state raw-state]
+  (println "button" k raw (matching-controller-id k))
+  (cond
+
+   ;; switch state
+   (and (= 0.0 raw)
+        (sm-nk-switcher-mode? sm nk)
+        (switch-valid? sm k))
+   (let [state-k (sm-state-k-with-button-id sm k)]
+     (println "switch state!")
+     (-> sm
+         (kill-all-flashers* nk)
+         (switch-state* nk state-k)))
+
+   ;; force sync
+   (and (= 1.0 raw)
+        (sm-nk-controller-mode? sm nk)
+        (sync-id? k))
+   (let [controller-id (matching-controller-id k)
+         raw           (get raw-state controller-id)
+         old-raw       (get old-raw-state controller-id)]
+     (println "force sync!")
+     (nk-force-sync* sm nk controller-id old-raw raw old-raw-state raw-state))
+
+   :else (do (println "nowt") sm)))
+
+(defn nk-update-states
+  "update states asynchronously with an agent, however make it 'more'
+   synchronous by syncing with a promise. This is useful as this fn is
+   designed to be used within an on-latest-event handler which works
+   better with synchronous fns. However, we also want the sequential
+   no-retry property of agents which is why we're using them here."
+  [state-a nk k old-raw raw old-raw-state raw-state]
+  (let [p (promise)]
+    (send state-a
+          (fn [sm p]
+            (let [res (if (and (contains? (:nks sm) nk)
+                               (sm-nk-state sm nk))
+                        (if (button? k)
+                          (nk-update-states-button*
+                           sm nk k old-raw raw old-raw-state raw-state)
+                          (nk-update-states-range*
+                           sm nk k old-raw raw old-raw-state raw-state))
+                        sm)]
+              (deliver p true)
+              res))
+          p)
+    @p))
 
 (defn update-states-range
   [state-a nk k v]
@@ -435,23 +539,70 @@
           #{}
           (:nks sm)))
 
-(defn nk-switch-state*
+(defn nk-enter-switcher-mode*
   [sm nk]
-  (let [sm        (kill-all-flashers* sm nk)
-        sm        (sm-nk-swap-mode sm nk :switcher)
-        available (available-states sm)]
-    (nk-smr-leds-off nk)
-    (doseq [[bid nks] available]
-      (if (empty? nks)
-        (led-on nk bid)
-        (led-on nk bid) ;;TODO Replace me
-        ;;need to create a flasher and store it in sm
-        ))
-    sm))
+    (let [sm             (kill-all-flashers* sm nk)
+        sm             (sm-nk-swap-mode sm nk :switcher)
+        available      (available-states sm)
+        flashers       (sm-nk-flashers sm nk)
+        curr-button-id (sm-nk->button-id sm nk)]
 
-(defn nk-switch-state
+    (nk-smr-leds-off nk)
+
+    (let [flashers (reduce (fn [r [k v]]
+                             (let [nks (get available k)]
+                               (cond
+                                (nil? nks) (assoc r k v)
+                                (empty? nks) (do
+                                               (led-on nk k)
+                                               (assoc r k v))
+                                :else (if (= curr-button-id k)
+                                        (assoc r k (mk-flasher nk k 250))
+                                        (assoc r k (mk-flasher nk k 50))))))
+                           {}
+                           flashers)]
+      (sm-nk-swap-flashers sm nk flashers))))
+
+(defn nk-force-sync
+  [state-a nk k old-raw raw old-raw-state raw-state]
+  (send state-a nk-force-sync* nk k old-raw raw old-raw-state raw-state))
+
+(defn nk-leave-switcher-mode*
+  [sm nk]
+  (let [state-k (sm-nk-current sm nk)]
+    (switch-state* sm nk state-k)))
+
+(defn nk-switcher-mode*
+  [sm nk]
+  (if (sm-nk-switcher-mode? sm nk)
+    (nk-leave-switcher-mode* sm nk)
+    (nk-enter-switcher-mode* sm nk)))
+
+(defn nk-switcher-mode
   [state-a nk]
-  (send state-a nk-switch-state* nk))
+  (send state-a nk-switcher-mode* nk))
+
+(defn- clutch-on*
+  [sm nk]
+  (let [mode (if (sm-nk-switcher-mode? sm nk)
+               :switcher
+               :clutch )]
+    (sm-nk-swap-mode sm nk mode)))
+
+(defn- clutch-off*
+  [sm nk]
+  (let [mode (if (sm-nk-switcher-mode? sm nk)
+               :switcher
+               :controller )]
+    (sm-nk-swap-mode sm nk mode)))
+
+(defn nk-clutch-on
+  [state-a nk]
+  (send state-a clutch-on* nk))
+
+(defn nk-clutch-off
+  [state-a nk]
+  (send state-a clutch-off* nk))
 
 ;; (switch-state state-maps (first nano-kons) :grumbles)
 ;; (switch-state state-maps (first nano-kons) :mixer)

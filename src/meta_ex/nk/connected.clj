@@ -48,7 +48,7 @@
           (fn [m]
             (when (< 0 (:val m))
               (nksm/nk-force-sync-all state-maps (:nk m) (:old-state m) (:state m))))
-          ::clutch)
+          ::force-sync-all)
 
 (on-event [:nanoKON2 :control-change :cycle]
           (fn [m]

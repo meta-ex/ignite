@@ -37,6 +37,13 @@
               (nksm/nk-clutch-off state-maps (:nk m))))
           ::clutch)
 
+(on-event [:nanoKON2 :control-change :marker-left]
+          (fn [m]
+            (if (< 0 (:val m))
+              (nksm/nk-absolute-val-viz-on state-maps (:nk m))
+              (nksm/nk-absolute-val-viz-off state-maps (:nk m))))
+          ::viz)
+
 (on-event [:nanoKON2 :control-change :marker-set]
           (fn [m]
             (when (< 0 (:val m))

@@ -3,6 +3,7 @@
         [meta-ex.nk.stateful-device]
         [overtone.core]
         [overtone.helpers.doc :only [fs]]
+
         [overtone.helpers.ref :only [swap-returning-prev!]]))
 
 ;; example state-map
@@ -119,7 +120,7 @@
   (boolean (re-matches #"[smr][0-7]" (name id))))
 
 (defn- matching-sync-led
-  "Given a controller led - returns the matching sync led id"
+  "Given a controller id - returns the matching sync led id"
   [k]
   (let [n   (name k)
         idx (re-find #"[0-7]" n)
@@ -542,7 +543,7 @@
 
 (defn nk-enter-switcher-mode*
   [sm nk]
-    (let [sm             (kill-all-flashers* sm nk)
+  (let [sm             (kill-all-flashers* sm nk)
         sm             (sm-nk-swap-mode sm nk :switcher)
         available      (available-states sm)
         flashers       (sm-nk-flashers sm nk)
@@ -563,6 +564,32 @@
                            {}
                            flashers)]
       (sm-nk-swap-flashers sm nk flashers))))
+
+(defn nk-absolute-val-viz-on*
+  [sm nk]
+  (let [sm       (kill-all-flashers* sm nk)
+        sm       (sm-nk-swap-mode sm nk :viz)
+        state    (sm-nk-state sm nk)
+        syncs    (sm-nk-syncs sm nk)
+        ctl-ids  (filter controller-id? (keys state))]
+
+    (nk-smr-leds-off nk)
+
+    (reduce (fn [r ctl-id]
+              (let [val      (get state ctl-id)
+                    sync-led (matching-sync-led ctl-id)
+                    synced?  (get syncs ctl-id)]
+                (if synced?
+                  (do
+                    (led-on nk sync-led)
+                    r)
+                  (let [flashers (sm-nk-flashers r nk)
+                        delay    (scale-range val 0 1 500 10)
+                        flasher  (mk-flasher nk sync-led delay)
+                        flashers (assoc flashers sync-led flasher)]
+                    (sm-nk-swap-flashers r nk flashers)))))
+            sm
+            ctl-ids)))
 
 (defn nk-force-sync
   [state-a nk k old-raw raw old-raw-state raw-state]
@@ -618,6 +645,14 @@
 (defn nk-clutch-off
   [state-a nk]
   (send state-a clutch-off* nk))
+
+(defn nk-absolute-val-viz-on
+  [state-a nk]
+  (send state-a nk-absolute-val-viz-on* nk))
+
+(defn nk-absolute-val-viz-off
+  [state-a nk]
+  (send state-a nk-leave-switcher-mode* nk))
 
 ;; (switch-state state-maps (first nano-kons) :grumbles)
 ;; (switch-state state-maps (first nano-kons) :mixer)

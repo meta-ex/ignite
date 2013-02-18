@@ -366,12 +366,13 @@
   (cond
    (and (controller-id? k)
         (nil? raw))
-   (do
-     (dotimes [x 5]
-       (led-on nk (matching-sync-led k))
-       (Thread/sleep 50)
-       (led-off nk (matching-sync-led k))
-       (Thread/sleep 50))
+
+   (do (future
+         (dotimes [x 5]
+           (led-on nk (matching-sync-led k))
+           (Thread/sleep 50)
+           (led-off nk (matching-sync-led k))
+           (Thread/sleep 50)))
      sm)
 
    (controller-id? k)
@@ -398,7 +399,7 @@
             :val raw)
      (-> sm
          (sm-nk-swap-state nk state)
-         (sm-nk-swap-syncs nk syncs) ))
+         (sm-nk-swap-syncs nk syncs)))
 
    :else sm))
 
@@ -566,6 +567,20 @@
 (defn nk-force-sync
   [state-a nk k old-raw raw old-raw-state raw-state]
   (send state-a nk-force-sync* nk k old-raw raw old-raw-state raw-state))
+
+(defn nk-force-sync-all*
+  [sm nk old-raw-state raw-state]
+  (let [ctl-keys (filter controller-id? (keys raw-state))]
+    (reduce (fn [r ctl-k]
+              (let [raw     (get raw-state ctl-k)
+                    old-raw (get old-raw-state ctl-k)]
+                (nk-force-sync* r nk ctl-k old-raw raw old-raw-state raw-state)))
+            sm
+            ctl-keys)))
+
+(defn nk-force-sync-all
+  [state-a nk old-raw-state raw-state]
+  (send state-a nk-force-sync-all* nk old-raw-state raw-state))
 
 (defn nk-leave-switcher-mode*
   [sm nk]

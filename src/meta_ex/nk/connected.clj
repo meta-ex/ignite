@@ -37,6 +37,12 @@
               (nksm/nk-clutch-off state-maps (:nk m))))
           ::clutch)
 
+(on-event [:nanoKON2 :control-change :marker-set]
+          (fn [m]
+            (when (< 0 (:val m))
+              (nksm/nk-force-sync-all state-maps (:nk m) (:old-state m) (:state m))))
+          ::clutch)
+
 (on-event [:nanoKON2 :control-change :cycle]
           (fn [m]
             (when (< 0 (:val m))

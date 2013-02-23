@@ -1,6 +1,6 @@
 (ns meta-ex.dnb
-  (:use [overtone.live])
-  (:require [meta-ex.mixer]))
+  (:use [overtone.live]
+        [meta-ex.mixer]))
 
 (do
   (defonce dnb-g (group))
@@ -18,7 +18,7 @@
 
 (def dnb (drumnbass :tgt dnb-g :loop? true :out-bus 0))
 
-(def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3)))
+(def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (mx :grumbles)))
 
 (def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1))
 

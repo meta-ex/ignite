@@ -7,3 +7,7 @@
   (tap "system-vol" 60 (lag (abs (in:ar 0)) 0.1)))
 
 (defonce v (vol :target g))
+
+(defn curr-vol
+  []
+  @(get-in v [:taps "system-vol"]))

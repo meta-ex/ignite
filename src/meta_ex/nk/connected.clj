@@ -5,9 +5,9 @@
 
 (defonce nk-connected-rcvs (midi-find-connected-receivers "nanoKONTROL2"))
 (defonce nk-connected-devs (midi-find-connected-devices "nanoKONTROL2"))
-(def nk-stateful-devs (map nksd/stateful-nk nk-connected-devs))
-(def nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
-(def state-maps (nksm/mk-state-map nano-kons))
+(defonce nk-stateful-devs (map nksd/stateful-nk nk-connected-devs))
+(defonce nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
+(defonce state-maps (nksm/mk-state-map nano-kons))
 
 (nksm/add-state state-maps :grumbles :s0 0)
 (nksm/add-state state-maps :mixer :s1 0)
@@ -15,6 +15,7 @@
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
 (nksm/switch-state state-maps (first nano-kons) :grumbles)
+(nksm/switch-state state-maps (second nano-kons) :grumbles)
 ;; (nksm/switch-state state-maps (first nano-kons) :mixer)
 ;; (nksm/switch-state state-maps (first nano-kons) :cheese)
 

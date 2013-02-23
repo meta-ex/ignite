@@ -9,7 +9,7 @@
 (defn radius
   []
   (+ 100
-     (* (* 1 (height)) @(get-in meta-ex.voltap/v [:taps "system-vol"]))))
+     (* (* 1 (height)) (meta-ex.voltap/curr-vol))))
 
 (defn setup []
   (background 255)

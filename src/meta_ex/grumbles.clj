@@ -13,9 +13,9 @@
 
 (def grumble-g (group))
 
-(def ob (:id (mx 0)))
+(def ob (mx :grumbles))
 (def ob 0)
-(volume 0.1)
+(volume 0.5)
 
 (grumble :tgt grumble-g :freq-mul 2 :out-bus ob :amp 1.5)
 (grumble :tgt grumble-g :freq-mul 2 :out-bus ob :amp 3)
@@ -23,9 +23,9 @@
 (grumble :tgt grumble-g :freq-mul 1.8 :out-bus ob :amp 2)
 (grumble :tgt grumble-g :freq-mul 1.5 :out-bus ob :amp 2)
 (grumble :tgt grumble-g :freq-mul 1.5 :out-bus 0 :amp 2)
-(grumble :tgt grumble-g :freq-mul 1 :out-bus ob :amp 2)
+(grumble :tgt grumble-g :freq-mul 1 :out-bus ob :amp 3)
 (grumble :tgt grumble-g :freq-mul 1 :out-bus 0 :amp 3)
-(grumble :tgt grumble-g :freq-mul 0.5 :out-bus 0 :amp 4)1
+(grumble :tgt grumble-g :freq-mul 0.5 :out-bus 0 :amp 4)
 (ctl grumble-g :speed 2000)
 
 (stop)

@@ -64,7 +64,7 @@
 
 ;; get the dubstep bass involved
 (dubstep :tgt dub-g
-         :note @meta-ex.arpegiator/freq
+         :note 45
          :wobble 32
          :lo-man 0
          :hi-man 1
@@ -76,7 +76,7 @@
 ;; go crazy - especially with the deci-man
 
 (ctl dub-g
-     :note (/ @meta-ex.arpegiator/freq 2)
+     :note 28
      :wobble 32
      :lag-delay 0.0001
 

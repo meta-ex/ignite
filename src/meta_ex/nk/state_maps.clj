@@ -266,6 +266,14 @@
   [nk k delay]
   (temporal (mk-blink-led nk k) delay))
 
+(defn- sm-nk-unsync-other-nks
+  [sm nk state-k k v]
+  (println k (sm-nks-with-state-k sm k))
+  (reduce (fn [r nk]
+            (update-syncs-and-flashers* r nk k v))
+          sm
+          (remove #{nk} (sm-nks-with-state-k sm state-k))))
+
 (defn- nk-update-states-range*
   [sm nk k old-raw raw old-raw-state raw-state]
   (if (not (sm-nk-switcher-mode? sm nk ))
@@ -321,13 +329,14 @@
         (-> sm
             (sm-nk-swap-syncs nk syncs)
             (sm-nk-swap-flashers nk flashers)
-            (sm-nk-swap-state nk state))))
+            (sm-nk-swap-state nk state)
+            (sm-nk-unsync-other-nks nk current-state k new-val))))
     sm))
 
 
 (defn switch-state*
   [sm nk state-k]
-  (println "switching state to " state-k)
+  (println "switching state to " state-k ", valid? " (sm-valid-state? sm state-k))
   (if (sm-valid-state? sm state-k)
     (do
       (nk-smr-leds-off nk)

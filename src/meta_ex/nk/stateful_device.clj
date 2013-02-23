@@ -365,6 +365,11 @@
    wait for the user to press the lit buttons. We may then pair the
    matching dev and rcvr objects correctly."
   [rcvs devs]
+
+  ;; clear all leds
+  (doseq [rcv rcvs]
+    (led-clear* rcv))
+
   (let [idxd-rcvs (map-indexed (fn [idx rcv]
                                  (let [dev-prom (promise)]
                                    (doseq [dev devs]

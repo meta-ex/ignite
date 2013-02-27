@@ -14,10 +14,8 @@
 (nksm/add-state state-maps :master-drum :m0 0)
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
-(nksm/switch-state state-maps (first nano-kons) :grumbles)
-(nksm/switch-state state-maps (second nano-kons) :grumbles)
-;; (nksm/switch-state state-maps (first nano-kons) :mixer)
-;; (nksm/switch-state state-maps (first nano-kons) :cheese)
+(doseq [nk nano-kons]
+  (nksm/switch-state state-maps nk :grumbles))
 
 (defn update-state
   [state-map-k id val]

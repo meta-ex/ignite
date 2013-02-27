@@ -2,7 +2,8 @@
   (:use [clojure.core.match :only [match]]
         [overtone.live]
         [overtone.synth sampled-piano]
-        [meta-ex.petals :only [num-petals-to-draw*]])
+        [meta-ex.petals :only [num-petals-to-draw*]]
+        [meta-ex.mixer])
   (:require [meta-ex.monome-event]))
 
 
@@ -130,7 +131,7 @@
 ;;(poly/disconnect m)
 
 
-(comment   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true :out-bus 10))
-           (def windy (sample-player (sample (freesound-path 17553)) :loop? true :out-bus 10))
+(comment   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true :out-bus (mx :grumbles)))
+           (def windy (sample-player (sample (freesound-path 17553)) :loop? true :out-bus (mx :grumbles)))
            (ctl wwii :rate 0.5)
            (stop))

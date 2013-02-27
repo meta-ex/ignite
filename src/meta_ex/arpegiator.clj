@@ -7,11 +7,13 @@
 (kill wo)
 (def wo (woah :tgt arp-g))
 (def wo2 (woah :tgt arp-g))
-(ctl wo :out-bus (mx ))
-(ctl wo :amp 2)
-(ctl wo :range 0.5)
-(ctl wo2 :x 1000)
-(kill wo2)
+(ctl wo :out-bus (mx :grumbles))
+(ctl wo :depth 0.5)
+(ctl wo :rate 0.5)
+(ctl wo :note 40)
+
+(ctl wo :x 1000)
+(kill wo)
 
 (def freq (atom 0))
 

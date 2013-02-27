@@ -21,9 +21,10 @@
 (def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (mx :grumbles)))
 
 (def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1))
-
-
-(ctl tibet1 :rate 1)
+(def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (mx :grumbles) :loop? true))
+(def oc (oceanwavescrushing :tgt dnb-g :out-bus (mx :grumbles) :loop? true :vol 1))
+(kill oc)
+(ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)
 
 (ctl tibet2 :rate (/ 3 2))
@@ -65,7 +66,8 @@
 (ctl dnb :vol 0)
 
 (def alien (alienwhisper :tgt dnb-g :rate 0.1))
-(grenade :amp 2)
+(ctl alien :out-bus (mx :grumbles))
+(grenade :amp 2 :rate 0.25 :out-bus (mx :grumbles))
 
 (def i (intro :rate 1))
 (grenade :vol 2 :rate 0.2)

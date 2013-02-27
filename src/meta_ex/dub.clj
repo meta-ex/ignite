@@ -69,7 +69,7 @@
          :lo-man 0
          :hi-man 1
          :amp 1
-         :out-bus 0)
+         :out-bus (mx :grumbles))
 
 ;;(ctl dubstep :out-bus 10)
 ;;(kill dub-g)
@@ -81,10 +81,10 @@
      :lag-delay 0.0001
 
      :hi-man  0
-     :lo-man 0
+     :lo-man 1
      :deci-man 0
      :amp 1
-     :out-bus (mx 0))
+     :out-bus (mx :grumbles))
 ;;(kill dub-g)
 (stop)
 ;; Bring in the supersaws!

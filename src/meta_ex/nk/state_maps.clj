@@ -266,9 +266,10 @@
   [nk k delay]
   (temporal (mk-blink-led nk k) delay))
 
+(declare update-syncs-and-flashers*)
+
 (defn- sm-nk-unsync-other-nks
   [sm nk state-k k v]
-  (println k (sm-nks-with-state-k sm k))
   (reduce (fn [r nk]
             (update-syncs-and-flashers* r nk k v))
           sm
@@ -289,11 +290,13 @@
           synced?       (and
                          (not= :clutch (sm-nk-mode sm nk))
                          (or was-synced?
-                                 (and old-raw (<= old-raw val raw))
-                                 (and old-raw (>= old-raw val raw))))
+                             (and old-raw (<= old-raw val raw))
+                             (and old-raw (>= old-raw val raw))))
           syncs         (assoc syncs k synced?)
           new-val       (if synced? raw val)
-          state         (assoc old-state k new-val)]
+          state         (assoc old-state k new-val)
+          sm            (if synced?             (sm-nk-unsync-other-nks sm nk current-state k new-val)
+                            sm)]
       (when (and (not was-synced?) synced?)
         (when flasher (kill flasher))
         (led-on nk flasher-k)
@@ -329,14 +332,11 @@
         (-> sm
             (sm-nk-swap-syncs nk syncs)
             (sm-nk-swap-flashers nk flashers)
-            (sm-nk-swap-state nk state)
-            (sm-nk-unsync-other-nks nk current-state k new-val))))
+            (sm-nk-swap-state nk state))))
     sm))
-
 
 (defn switch-state*
   [sm nk state-k]
-  (println "switching state to " state-k ", valid? " (sm-valid-state? sm state-k))
   (if (sm-valid-state? sm state-k)
     (do
       (nk-smr-leds-off nk)
@@ -415,7 +415,6 @@
 
 (defn nk-update-states-button*
   [sm nk k old-raw raw old-raw-state raw-state]
-  (println "button" k raw (matching-controller-id k))
   (cond
 
    ;; switch state
@@ -423,7 +422,6 @@
         (sm-nk-switcher-mode? sm nk)
         (switch-valid? sm k))
    (let [state-k (sm-state-k-with-button-id sm k)]
-     (println "switch state!")
      (-> sm
          (kill-all-flashers* nk)
          (switch-state* nk state-k)))
@@ -435,10 +433,9 @@
    (let [controller-id (matching-controller-id k)
          raw           (get raw-state controller-id)
          old-raw       (get old-raw-state controller-id)]
-     (println "force sync!")
      (nk-force-sync* sm nk controller-id old-raw raw old-raw-state raw-state))
 
-   :else (do (println "nowt") sm)))
+   :else sm))
 
 (defn nk-update-states
   "update states asynchronously with an agent, however make it 'more'
@@ -463,9 +460,9 @@
           p)
     @p))
 
-(defn update-states-range
-  [state-a nk k v]
-  (when-not (button? k)))
+;; (defn update-states-range
+;;   [state-a nk k v]
+;;   (when-not (button? k)))
 
 (defn switch-state
   [state-a nk state-k]
@@ -504,6 +501,7 @@
                (<= 0 v)
                (<= v 1))
           "State value must be a number between 0 and 1 inclusively"))
+
 
 (defn update-state*
   [sm state-k k v]
@@ -663,5 +661,12 @@
   [state-a nk]
   (send state-a nk-leave-switcher-mode* nk))
 
-;; (switch-state state-maps (first nano-kons) :grumbles)
-;; (switch-state state-maps (first nano-kons) :mixer)
+(defn nk-take-snapshot*
+  [sm nk snapshot]
+  (let [state (sm-nk-state sm nk)]
+    (swap! snapshot conj {:ts    (now)
+                          :state state})))
+
+(defn nk-take-snapshot
+  [state-a nk snapshot]
+  (send state-a nk-take-snapshot* nk snapshot))

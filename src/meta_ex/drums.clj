@@ -1,9 +1,11 @@
 (ns meta-ex.drums
   (:use [overtone.live]
-        [meta-ex.mixer])
+        [meta-ex.mixer]
+        [meta-ex.monomes])
   (:require [meta-ex.monome-sequencer :as ms]
             [meta-ex.triggers :as trg]
-            [meta-ex.sequencer :as seq]))
+            [meta-ex.sequencer :as seq]
+            ))
 
 (defonce drum-g (group))
 
@@ -17,6 +19,7 @@
               (sample (freesound-path 172385))])
 
 (def sequencer (ms/mk-monome-sequencer samples))
+(def sequencer2 (ms/mk-monome-sequencer samples (second (monomes))))
 (def c-sequencer (seq/mk-sequencer samples 8 drum-g trg/beat-b trg/cnt-b))
 (ms/stop-sequencer sequencer)
 (seq/sequencer-write! c-sequencer 1 [1 0 1 0 1 0 1 0])
@@ -29,5 +32,6 @@
 (ctl (:group c-sequencer) :out-bus (mx :master-drum))
 
 (ctl (-> sequencer :sequencer :group) :out-bus (mx :master-drum))
+(ctl (-> sequencer2 :sequencer :group) :out-bus (mx :drum-beats))
 
 (mx :master-drum)

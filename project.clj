@@ -3,14 +3,16 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.0-RC4"]
+  :dependencies [[org.clojure/clojure "1.5.0"]
                  [aleph "0.3.0-beta7"]
                  [overtone "0.8.1"]
                  [polynome "0.3.0-SNAPSHOT"]
                  [quil "1.6.0"]
                  [compojure "1.1.1"]
-                 [org.clojure/data.json "0.1.2"]]
-  :jvm-opts    ["-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
+                 [org.clojure/data.json "0.1.2"]
+                 [seesaw "1.4.3"]]
+  :jvm-opts [
+    "-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
     "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with
     "-XX:+UseConcMarkSweepGC"     ;  the concurrent garbage collector
     "-XX:+CMSConcurrentMTEnabled" ; Enable multi-threaded concurrent gc work (ParNewGC)

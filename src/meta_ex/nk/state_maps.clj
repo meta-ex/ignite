@@ -497,9 +497,11 @@
 
 (defn ensure-valid-val!
   [v]
-  (assert (and (number? v)
-               (<= 0 v)
-               (<= v 1))
+  (assert (or
+           (map? v)
+           (and (number? v)
+                   (<= 0 v)
+                   (<= v 1)))
           "State value must be a number between 0 and 1 inclusively"))
 
 
@@ -534,10 +536,14 @@
   (sm-add-state sm state-k state button-id))
 
 (defn add-state
-  [state-a state-k button-id init-val]
-  (ensure-valid-val! init-val)
-  (let [state (nk-state-map init-val)]
-    (send state-a add-state* state-k state button-id)))
+  ([state-a button-id init-val-or-state-map]
+     (add-state state-a button-id button-id init-val-or-state-map))
+  ([state-a state-k button-id init-val-or-state-map]
+     (ensure-valid-val! init-val-or-state-map)
+     (let [state (if (number? init-val-or-state-map)
+                   (nk-state-map init-val-or-state-map)
+                   init-val-or-state-map)]
+       (send state-a add-state* state-k state button-id))))
 
 (defn sm-nks-with-current-state
   [sm state-k]

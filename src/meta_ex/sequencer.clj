@@ -1,5 +1,6 @@
 (ns meta-ex.sequencer
-  (:use [overtone.core]))
+  (:use [overtone.core]
+        [meta-ex.mixer]))
 
 (defsynth mono-sequencer
   "Plays a single channel audio buffer."
@@ -26,36 +27,45 @@
                 {:type ::sequencer-sample}))
        samples))
 
-(defn- start-synths [samples num-steps tgt-group beat-cnt-bus beat-trg-bus]
-  (doall (map (fn [sample]
+(defn- start-synths [samples mixers num-steps tgt-group beat-cnt-bus beat-trg-bus]
+  (doall (map (fn [sample mx]
                 (doseq [x (range num-steps)]
                   (mono-sequencer :tgt tgt-group
                                   :buf (:sample sample)
                                   :beat-num x
                                   :pattern (:pattern sample)
                                   :beat-cnt-bus beat-cnt-bus
-                                  :beat-trg-bus beat-trg-bus)))
-              samples)))
+                                  :beat-trg-bus beat-trg-bus
+                                  :out-bus (:in-bus mx))
+                  (range num-steps)))
+              samples
+              mixers)))
 
 (defn mk-sequencer
   "Creates a sequencer that resides at the tail of the target group with
    synths to play each sample with the specified number of steps using
    clock busses"
-  ([samples num-steps tgt-group beat-trg-bus beat-cnt-bus]
-     (mk-sequencer samples num-steps tgt-group beat-trg-bus beat-cnt-bus ""))
-  ([samples num-steps tgt-group beat-trg-bus beat-cnt-bus desc]
-     (let [samples   (mk-sequencer-samples samples num-steps)
-           desc      (str "M-x Sequencer " desc)
-           seq-group (group desc :tail tgt-group)
-           synths    (start-synths samples num-steps seq-group beat-cnt-bus beat-trg-bus)]
-       (with-meta {:beat-trg-bus beat-trg-bus
-                   :beat-cnt-bus beat-cnt-bus
-                   :samples      samples
-                   :synths       synths
-                   :num-steps    num-steps
-                   :group        seq-group
-                   :desc         desc}
-         {:type ::sequencer}))))
+  [handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus]
+  (let [desc            (str "M-x Sequencer " handle)
+        container-group (group handle :tail tgt-group)
+        seq-group       (group "m-x-sequencer" :head container-group)
+        mixer-group     (group "m-x-mixers" :after seq-group)
+        samples         (mk-sequencer-samples samples num-steps)
+        mixer-handles   (map #(str handle "-" %) (range (count samples)))
+        mixers          (doall (map #(add-nk-mixer % mixer-group) mixer-handles))
+        synths          (start-synths samples mixers num-steps seq-group beat-cnt-bus beat-trg-bus)]
+    (with-meta {:beat-trg-bus  beat-trg-bus
+                :beat-cnt-bus  beat-cnt-bus
+                :samples       samples
+                :synths        synths
+                :num-steps     num-steps
+                :group         container-group
+                :seq-group     seq-group
+                :mixer-group   mixer-group
+                :desc          desc
+                :mixer-handles mixer-handles
+                :mixers        mixers}
+      {:type ::sequencer})))
 
 (defn sequencer-write!
   [sequencer idx pattern]

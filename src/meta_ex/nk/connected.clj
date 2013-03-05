@@ -9,13 +9,29 @@
 (defonce nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
 (defonce state-maps (nksm/mk-state-map nano-kons))
 
-(nksm/add-state state-maps :grumbles :s0 0)
-(nksm/add-state state-maps :mixer :s1 0)
-(nksm/add-state state-maps :master-drum :m0 0)
+(defonce mixer-init-state (merge (nksd/nk-state-map 0)
+                             {:slider7 0.5}
+                             {:pot5 0.5}))
+
+
+
+(nksm/add-state state-maps :s0  0)
+(nksm/add-state state-maps :s1 0)
+(nksm/add-state state-maps :m0 0)
+(nksm/add-state state-maps :master :r7 0)
+(nksm/add-state state-maps :master :r7 0)
+(nksm/add-state state-maps "mon-0" :s5 0)
+(nksm/add-state state-maps "mon-1" :s6 0)
+(nksm/add-state state-maps "mon-2" :m5 0)
+(nksm/add-state state-maps "mon-3" :m6 0)
+(nksm/add-state state-maps "mon-4" :r5 0)
+(nksm/add-state state-maps "mon-5" :r6 0)
+
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
+;; give each nk an initial state
 (doseq [nk nano-kons]
-  (nksm/switch-state state-maps nk :grumbles))
+  (nksm/switch-state state-maps nk :s0))
 
 (defn update-state
   [state-map-k id val]

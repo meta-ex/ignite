@@ -1,6 +1,7 @@
 (ns meta-ex.monome-sequencer
   (:use [clojure.pprint]
         [overtone.core]
+        [overtone.helpers.lib :only [uuid]]
         [meta-ex monomes sequencer])
   (:require [polynome.core :as poly]
             [meta-ex.triggers :as trg]))
@@ -20,21 +21,21 @@
                   rows))))
 
 (defn mk-monome-sequencer
-  ([samples] (mk-monome-sequencer samples (first (monomes))))
-  ([samples tgt-monome]
+  ([handle samples] (mk-monome-sequencer handle samples (first (monomes))))
+  ([handle samples tgt-monome]
      (when-not tgt-monome
        (IllegalArgumentException. "Please pass a valid monome to mk-monome-sequencer"))
      (let [range-x   (poly/range-x tgt-monome)
            range-y   (poly/range-y tgt-monome)
-           sequencer (mk-sequencer samples
+           sequencer (mk-sequencer handle
+                                   samples
                                    range-x
                                    (foundation-default-group)
                                    trg/beat-b
-                                   trg/cnt-b
-                                   "monome sequencer")
-           key1      (gensym)
-           key2      (gensym)
-           key3      (gensym)]
+                                   trg/cnt-b)
+           key1      (uuid)
+           key2      (uuid)
+           key3      (uuid)]
 
        (on-event [:monome :led-change]
                  (fn [{:keys [monome old-led new-led]}]
@@ -55,7 +56,7 @@
             key3)
 
        (led-change sequencer range-x range-y {} (poly/led-state tgt-monome))
-       (oneshot-event :reset (fn [_] (remove-handler key1) (remove-handler key2)) (gensym))
+       (oneshot-event :reset (fn [_] (remove-handler key1) (remove-handler key2)) (uuid))
 
        {:sequencer      sequencer
         :led-change-key key1

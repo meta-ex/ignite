@@ -1,6 +1,9 @@
 (ns meta-ex.mixer
-  (:use [overtone.live])
-  (:require [meta-ex.nk.connected :as nk]))
+  (:use [overtone.live]
+        [overtone.helpers.lib :only [uuid]]))
+
+(defonce korg-nano-kontrol-mixers
+  (atom {}))
 
 (defcgen wobble
   "wobble an input src"
@@ -13,7 +16,7 @@
          wob   (+ wob (bpf wob 1500 2))]
      (+ wob (* 0.2 (g-verb wob 9 0.7 0.7))))))
 
-(defsynth meta-mix [amp 1
+(defsynth meta-mix [amp 1.5
                     pan 0
                     in-bus 10
                     rev-mix 0
@@ -28,7 +31,7 @@
                     samp-rate 0
                     bit-rate 0
                     delay-rate 0
-                    hpf-freq 1000
+                    hpf-freq 1060
                     hpf-rq 0
                     delay-reset-trig [0 :kr]
                     lpf-mix 0
@@ -82,45 +85,57 @@
                 :pot5    (fn [v mixer-g] (ctl mixer-g :hpf-freq (+ 60 (* 2000 v))))
                 :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq v))})
 
-(defn mk-mixer
-  [mixer-k]
- (let [bufff       (buffer (* 2 44100))
-       in-bus      (audio-bus 2)
-       mixer-g     (group "m-x-synths" :tgt (foundation-safe-post-default-group))
-       mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
-       event-key   (gensym)]
-    (on-latest-event [:nanoKON2 mixer-k :control-change]
+(defn- mk-mixer
+  [event-k mixer-g]
+  (let [bufff       (buffer (* 2 44100))
+        in-bus      (audio-bus 2)
+        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
+        handler-k (uuid)]
+    (println "registering a mixer listening on " event-k)
+    (on-latest-event event-k
                      (fn [msg]
                        (let [id  (:id msg)
                              val (:val msg)]
                          (if-let [f (get nano2-fns id)]
-                           (f val mixer-g)
+                           (f val mixer)
                            (println "unbound: " note))))
-                     event-key)
-    {:bufff     bufff
-     :mixer-g   mixer-g
-     :mixer     mixer
-     :event-key event-key
-     :in-bus    in-bus
-     :key       mixer-k}))
+                     handler-k)
+    {:bufff       bufff
+     :mixer-g     mixer-g
+     :mixer       mixer
+     :handler-key handler-k
+     :in-bus      in-bus
+     :event-key   event-k}))
 
-(defonce korg-nano-kontrol-mixers
-  (atom (reduce (fn [r k]
-                  (assoc r k (mk-mixer k)))
-                {}
-                [:master-drum :grumbles])))
 
-(defn mx
-  "Returns the group of the mixer at idx. Tries to be smart when idx is
-   out of range, resorting to out-bus = 0 where necessary."
-  ([] (mx 0))
-  ([idx]
-     (cond
-      (= 0 (count korg-nano-kontrol-mixers)) 0
-      (< idx 0) (mx 0)
-      (>= idx (count korg-nano-kontrol-mixers)) (:in-bus (last korg-nano-kontrol-mixers))
-      :else (:in-bus (nth korg-nano-kontrol-mixers idx)))))
+(defn add-mixer
+  ([event-k]
+     (add-mixer event-k (foundation-safe-post-default-group)))
+  ([event-k tgt-g]
+     (let [mixers (swap! korg-nano-kontrol-mixers
+                         (fn [mixers]
+                           (when (contains? mixers event-k)
+                             (throw (Exception.
+                                     (str "Korg Nano Kontrol Mixer with event key "
+                                          event-k " already exists."))))
+
+                           (assoc mixers event-k (mk-mixer event-k tgt-g))))]
+       (get mixers event-k))))
+
+(defn add-nk-mixer
+  ([k]
+     (add-mixer [:nanoKON2 k :control-change]))
+  ([k tgt-g]
+     (add-mixer [:nanoKON2 k :control-change] tgt-g)))
 
 (defn mx
   [k]
-  (get (get @korg-nano-kontrol-mixers k) :in-bus 0))
+  (:mixer-g (get @korg-nano-kontrol-mixers k)))
+
+(defn nkmx
+  [k]
+  (:in-bus (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))
+
+(defn nkmx-synth
+  [k]
+  (:mixer (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))

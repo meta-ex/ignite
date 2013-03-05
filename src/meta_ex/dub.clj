@@ -67,7 +67,7 @@
          :note 45
          :wobble 32
          :lo-man 0
-         :hi-man 1
+         :hi-man 0
          :amp 1
          :out-bus (mx :grumbles))
 
@@ -98,11 +98,11 @@
 
 ;; Fire at will...
 (supersaw2 (* @meta-ex.arpegiator/freq 5) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
-(supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
-(supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 52)
-(supersaw2 (midi->hz 45) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 50)
-(supersaw2 (midi->hz 48) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 50)
-(supersaw2 (midi->hz 52) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 50)
+(supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (mx :grumbles))
+(supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (mx :grumbles))
+(supersaw2 (midi->hz 45) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (mx :grumbles))
+(supersaw2 (midi->hz 48) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (mx :grumbles))
+(supersaw2 (midi->hz 52) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (mx :grumbles))
 
 (supersaw2 (midi->hz 57) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq)
 (supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)

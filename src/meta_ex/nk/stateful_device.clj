@@ -1,6 +1,7 @@
 (ns meta-ex.nk.stateful-device
   (:use [meta-ex.timed]
         [overtone.core]
+        [overtone.helpers.lib :only [uuid]]
         [overtone.helpers.doc :only [fs]]
         [overtone.helpers.ref :only [swap-returning-prev!]]))
 
@@ -335,9 +336,9 @@
       col)))
 
 (defn- watch-for-col
-  [nk idx f]
+  [nk idx f k]
   (add-watch (:state nk)
-             ::challenge-col
+             k
              (fn [k r o n]
                (let [match (match-button-col n idx)]
                  (when match
@@ -349,12 +350,6 @@
   (periodic 150 (cycle-fn (fn [] (smr-col-on rcv idx))
                           (fn [] (smr-col-off rcv idx)))))
 
-(defn- watch-for-id
-  [dev rcv]
-  (let [id-p (promise)]
-;    (oneshot-event )
-;    @id-p
- nil   ))
 
 (defn- pair-nano-kons
   "We are in the situation where we have multiple nanoKONTROL2 devices
@@ -371,27 +366,38 @@
     (led-clear* rcv))
 
   (let [idxd-rcvs (map-indexed (fn [idx rcv]
-                                 (let [dev-prom (promise)]
+                                 (let [dev-prom (promise)
+                                       w-key    (uuid)]
                                    (doseq [dev devs]
                                      (watch-for-col dev
                                                     idx
                                                     (fn [m-dev]
-                                                      (deliver dev-prom m-dev))))
-                                   {:rcv      rcv
-                                    :idx      idx
-                                    :flasher  (flash-col rcv idx)
-                                    :dev      dev-prom}))
-                               rcvs)]
+                                                      (deliver dev-prom m-dev))
+                                                    w-key))
+                                   {:rcv         rcv
+                                    :idx         idx
+                                    :flasher     (flash-col rcv idx)
+                                    :dev         dev-prom
+                                    :watcher-key w-key}))
+                               rcvs)
+        proms     (repeatedly (count idxd-rcvs) promise)]
     ;; wait for all devs to be paired:
-    (doall
-     (map (fn [i-rcv]
-            (let [dev (deref (:dev i-rcv))
-                  id  (watch-for-id dev (:rcv i-rcv))]
-              (stop-player (:flasher i-rcv))
-              (remove-watch (:state dev) ::challenge-row)
-              (intromation (:rcv i-rcv))
-              (mk-nk dev (:rcv i-rcv) (:idx i-rcv))))
-          idxd-rcvs))))
+    (dorun
+     (map (fn [i-rcv prom]
+            (println "creating future")
+            (future
+              (println "i'm a future")
+              (let [dev (deref (:dev i-rcv))]
+
+                      (stop-player (:flasher i-rcv))
+                      (remove-watch (:state dev) (:watcher-key i-rcv))
+                      (intromation (:rcv i-rcv))
+                      (println "yo yo yo")
+                      (deliver prom (mk-nk dev (:rcv i-rcv) (:idx i-rcv))))))
+          idxd-rcvs
+          proms))
+
+    (doall (map (fn [p] (println "dereffing" p) (deref p))  proms))))
 
 (defn merge-nano-kons
   [rcvs stateful-devs]

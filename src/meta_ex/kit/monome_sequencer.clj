@@ -1,4 +1,4 @@
-(ns meta-ex.monome-sequencer
+(ns meta-ex.kit.monome-sequencer
   (:use [clojure.pprint]
         [overtone.core]
         [overtone.helpers.lib :only [uuid]]
@@ -21,8 +21,13 @@
                   rows))))
 
 (defn mk-monome-sequencer
-  ([handle samples] (mk-monome-sequencer handle samples (first (monomes))))
+  ([handle samples]
+     (mk-monome-sequencer handle samples (first (monomes))))
   ([handle samples tgt-monome]
+     (mk-monome-sequencer handle samples tgt-monome 0))
+  ([handle samples tgt-monome out-bus]
+     (mk-monome-sequencer handle samples tgt-monome 0 true))
+  ([handle samples tgt-monome out-bus with-mixers?]
      (when-not tgt-monome
        (IllegalArgumentException. "Please pass a valid monome to mk-monome-sequencer"))
      (let [range-x   (poly/range-x tgt-monome)
@@ -32,7 +37,9 @@
                                    range-x
                                    (foundation-default-group)
                                    trg/beat-b
-                                   trg/cnt-b)
+                                   trg/cnt-b
+                                   out-bus
+                                   with-mixers?)
            key1      (uuid)
            key2      (uuid)
            key3      (uuid)]

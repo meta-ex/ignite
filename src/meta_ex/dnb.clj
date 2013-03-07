@@ -18,12 +18,13 @@
 
 (def dnb (drumnbass :tgt dnb-g :loop? true :out-bus 0))
 
-(def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (mx :grumbles)))
+(def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
 
-(def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1))
-(def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (mx :grumbles) :loop? true))
-(def oc (oceanwavescrushing :tgt dnb-g :out-bus (mx :grumbles) :loop? true :vol 1))
-(kill oc)
+(def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m0)))
+(def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))
+(def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :s0) :loop? true :vol 1))
+(kill tibet1)
+(ctl tibet2  :rate 0.5)
 (ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)
 
@@ -64,8 +65,8 @@
 
 (ctl tibet2 :rate 0.5)
 (ctl dnb :vol 0)
-
-(def alien (alienwhisper :tgt dnb-g :rate 0.1))
+(kill dnb)
+(def alien (alienwhisper :tgt dnb-g :rate ))
 (ctl alien :out-bus (mx :grumbles))
 (grenade :amp 2 :rate 0.25 :out-bus (mx :grumbles))
 

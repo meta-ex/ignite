@@ -1,4 +1,4 @@
-(ns meta-ex.client-fn
+(ns meta-ex.server.client-fn
   (:use overtone.live))
 
 (defn do-action [msg]

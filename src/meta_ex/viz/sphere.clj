@@ -1,4 +1,4 @@
-(ns meta-ex.sphere
+ (ns meta-ex.viz.sphere
   (:require meta-ex.voltap)
   (:use quil.core
         [quil.helpers.drawing :only [line-join-points]]

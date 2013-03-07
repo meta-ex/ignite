@@ -1,6 +1,6 @@
-(ns meta-ex.nk.state-maps
-  (:use [meta-ex.timed]
-        [meta-ex.nk.stateful-device]
+(ns meta-ex.hw.nk.state-maps
+  (:use [meta-ex.lib.timed]
+        [meta-ex.hw.nk.stateful-device]
         [overtone.core]
         [overtone.helpers.doc :only [fs]]
 
@@ -422,6 +422,7 @@
         (sm-nk-switcher-mode? sm nk)
         (switch-valid? sm k))
    (let [state-k (sm-state-k-with-button-id sm k)]
+     (led-off nk :cycle)
      (-> sm
          (kill-all-flashers* nk)
          (switch-state* nk state-k)))
@@ -563,7 +564,7 @@
         curr-button-id (sm-nk->button-id sm nk)]
 
     (nk-smr-leds-off nk)
-
+    (led-on nk :cycle)
     (let [flashers (reduce (fn [r [k v]]
                              (let [nks (get available k)]
                                (cond
@@ -625,6 +626,7 @@
 (defn nk-leave-switcher-mode*
   [sm nk]
   (let [state-k (sm-nk-current sm nk)]
+    (led-off nk :cycle)
     (switch-state* sm nk state-k)))
 
 (defn nk-switcher-mode*

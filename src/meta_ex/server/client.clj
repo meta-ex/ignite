@@ -1,4 +1,4 @@
-(ns meta-ex.client
+(ns meta-ex.server.client
   (:use compojure.core
         compojure.route
         aleph.tcp
@@ -6,7 +6,7 @@
         lamina.core
         clojure.data.json
         clojure.pprint
-        meta-ex.client-fn))
+        meta-ex.server.client-fn))
 
 (def client (tcp-client {:host "sam.aaron.name", :port 9901, :frame (string :utf-8 :delimiters ["\n"])}))
 

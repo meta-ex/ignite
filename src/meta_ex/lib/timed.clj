@@ -1,4 +1,4 @@
-(ns meta-ex.timed
+(ns meta-ex.lib.timed
   (:use [overtone.core]
         [overtone.helpers.ref]))
 
@@ -17,6 +17,11 @@
 
 (defprotocol ILive
   (live? [this] "Returns true if this object is live"))
+
+;; This would be nice!
+;; (defprotocol IPausable
+;;   (pause [this] "Pause this object")
+;;   (start [this] "Start this object"))
 
 (defrecord ScheduledTimedRange [desc continue? fun]
   IKillable

@@ -1,4 +1,4 @@
-(ns meta-ex.petals
+(ns meta-ex.viz.petals
   (:use quil.core
         [overtone.helpers.ref]))
 

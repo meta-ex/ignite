@@ -1,4 +1,4 @@
-(ns meta-ex.squares
+(ns meta-ex.viz.squares
   (:use quil.core))
 
 ;; Modified version of Mondrian Factory by Dan Kefford

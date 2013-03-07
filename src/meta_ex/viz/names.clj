@@ -1,4 +1,4 @@
-(ns meta-ex.names
+(ns meta-ex.viz.names
   (:use quil.core
         [overtone.core :only [on-event]]
         [overtone.helpers.ref :only [swap-returning-prev!]]))

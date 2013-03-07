@@ -1,4 +1,4 @@
-(ns meta-ex.mixer
+(ns meta-ex.kit.mixer
   (:use [overtone.live]
         [overtone.helpers.lib :only [uuid]]))
 
@@ -34,8 +34,6 @@
                     hpf-freq 1060
                     hpf-rq 0
                     delay-reset-trig [0 :kr]
-                    lpf-mix 0
-                    lpf-freq 100
                     delay-buf 0
                     out-bus 0]
   (let [src       (in:ar in-bus 2)
@@ -56,12 +54,8 @@
         src       (+ (* (- 1 hpf-mix) src)
                      (* hpf-mix (normalizer (rhpf src hpf-freq hpf-rq))))
 
-        src       (+ (* (- 1 lpf-mix) src)
-                     (* lpf-mix (lpf src lpf-freq)))
-
         src       (+ (* (- 1 wobble-mix) src)
                      (* wobble-mix (wobble src wobble-factor)))
-
         ]
 
     (buf-wr:ar [(mix src)] delay-buf pos :loop true)
@@ -86,10 +80,11 @@
                 :pot6    (fn [v mixer-g] (ctl mixer-g :hpf-rq v))})
 
 (defn- mk-mixer
-  [event-k mixer-g]
+  [event-k mixer-g out-bus]
   (let [bufff       (buffer (* 2 44100))
         in-bus      (audio-bus 2)
-        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff)
+        live?       (atom true)
+        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff :out-bus out-bus)
         handler-k (uuid)]
     (println "registering a mixer listening on " event-k)
     (on-latest-event event-k
@@ -100,18 +95,28 @@
                            (f val mixer)
                            (println "unbound: " note))))
                      handler-k)
-    {:bufff       bufff
-     :mixer-g     mixer-g
-     :mixer       mixer
-     :handler-key handler-k
-     :in-bus      in-bus
-     :event-key   event-k}))
+    (oneshot-event :reset
+                   (fn [_]
+                     (remove-handler handler-k)
+                     (reset! live? false))
+                   (uuid))
+
+    (with-meta {:bufff       bufff
+                :mixer-g     mixer-g
+                :mixer       mixer
+                :handler-key handler-k
+                :in-bus      in-bus
+                :event-key   event-k
+                :live?       live?}
+      {:type ::mixer})))
 
 
 (defn add-mixer
   ([event-k]
      (add-mixer event-k (foundation-safe-post-default-group)))
   ([event-k tgt-g]
+     (add-mixer event-k tgt-g 0))
+  ([event-k tgt-g out-bus]
      (let [mixers (swap! korg-nano-kontrol-mixers
                          (fn [mixers]
                            (when (contains? mixers event-k)
@@ -119,14 +124,17 @@
                                      (str "Korg Nano Kontrol Mixer with event key "
                                           event-k " already exists."))))
 
-                           (assoc mixers event-k (mk-mixer event-k tgt-g))))]
+                           (assoc mixers event-k (mk-mixer event-k tgt-g out-bus))))]
+       (oneshot-event :reset (fn [_] (swap! korg-nano-kontrol-mixers dissoc event-k)) (uuid))
        (get mixers event-k))))
 
 (defn add-nk-mixer
   ([k]
      (add-mixer [:nanoKON2 k :control-change]))
   ([k tgt-g]
-     (add-mixer [:nanoKON2 k :control-change] tgt-g)))
+     (add-mixer [:nanoKON2 k :control-change] tgt-g))
+  ([k tgt-g out-bus]
+     (add-mixer [:nanoKON2 k :control-change] tgt-g out-bus)))
 
 (defn mx
   [k]

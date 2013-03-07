@@ -1,4 +1,4 @@
-(ns meta-ex.timing
+(ns meta-ex.kit.timing
   (:use [overtone.core]
         [overtone.gui.scope]))
 
@@ -44,31 +44,3 @@
   (out 0 (pan2 (* amp (sin-osc freq)) pan)))
 
 (defonce root-sw (root-saw :tgt timing-g :out-bus cb1 :rate 1))
-
-(def my-sin (saw->sin :in-bus cb1 :out-bus cb2))
-(def n (noise))
-(def m-adder (mul-adder :in-bus cb1 :out-bus cb2 :mul 1 :add 0))
-
-(ctl m-adder :add 0)
-
-
-(node-map-controls* n [:amp cb1])
-(use 'overtone.helpers.lib)
-(map idify (stringify [1]))
-(stop)
-(sc-debug-on)
-
-(demo 10 (pan2 (sin-osc (mul-add:kr  (lf-saw:kr 1) 20 400 ))))
-
-(stop)
-(pscope :bus 1)
-
-
-(def d (sample (freesound-path 777)))
-(pscope :buf d)
-(to-sc-id d)
-(buffer-size d)
-(buffer-info d)
-
-(to-sc-id d)
-(buffer-info 0)

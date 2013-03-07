@@ -1,5 +1,5 @@
 (ns meta-ex.viz
- (:require [meta-ex squares petals sphere lines names meters quilome
+ (:require [meta-ex.viz squares petals sphere lines quilome names
              ])
   (:use [quil.core]))
 
@@ -36,29 +36,35 @@
         (fill 0 0 0 5)
         (rect 0 0 (width) (height))
         )
-      (background 0))
+      (background 0)
+      )
 ;;    (frame-rate 1)
     (when (:squares viz-state)
-      (meta-ex.squares/draw))
+      (meta-ex.viz.squares/draw))
 
     (when (:petals viz-state)
-      (meta-ex.petals/draw))
+      (meta-ex.viz.petals/draw))
     (frame-rate 24)
     (when (:sphere viz-state)
-      (meta-ex.sphere/draw))
+      (meta-ex.viz.sphere/draw))
 ;;    (frame-rate 10)
     (when (:lines viz-state)
-      (meta-ex.lines/draw))
+      (meta-ex.viz.lines/draw))
 
     (when (:names viz-state)
-      (meta-ex.names/draw))
+      (meta-ex.viz.names/draw))
 
-    (when (:meters viz-state)
-      (meta-ex.meters/draw))
+    ;; (when (:meters viz-state)
+    ;;   (meta-ex.meters/draw))
 
     (when (:monome viz-state)
-      (meta-ex.quilome/draw)
-      )))
+      (meta-ex.viz.quilome/draw)
+      )
+
+;;    (no-fill)
+    (stroke 0 128 255 100)
+    (stroke-weight 4)
+ ))
 
 (defsketch meta-ex-viz
   :title "My Beautiful Sketch"
@@ -72,10 +78,10 @@
 (hide :squares)
 (hide :petals)
 (hide :lines)
-(show :names)
-(show :meters)
+(hide :names)
+(hide :meters)
 (hide :monome)
-(hide :sphere)
+(show :sphere)
 
 
 ;;(hide :lines)

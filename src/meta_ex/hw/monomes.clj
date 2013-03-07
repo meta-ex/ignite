@@ -1,4 +1,4 @@
-(ns meta-ex.monomes
+(ns meta-ex.hw.monomes
   (:use [overtone.live])
   (:require [polynome.core :as poly]))
 

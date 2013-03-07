@@ -1,7 +1,7 @@
-(ns meta-ex.nk.connected
+(ns meta-ex.hw.nk.connected
   (:use [overtone.core])
-  (:require [meta-ex.nk.stateful-device :as nksd]
-            [meta-ex.nk.state-maps :as nksm]))
+  (:require [meta-ex.hw.nk.stateful-device :as nksd]
+            [meta-ex.hw.nk.state-maps :as nksm]))
 
 (defonce nk-connected-rcvs (midi-find-connected-receivers "nanoKONTROL2"))
 (defonce nk-connected-devs (midi-find-connected-devices "nanoKONTROL2"))
@@ -18,14 +18,21 @@
 (nksm/add-state state-maps :s0  0)
 (nksm/add-state state-maps :s1 0)
 (nksm/add-state state-maps :m0 0)
+(nksm/add-state state-maps :m1 0)
 (nksm/add-state state-maps :master :r7 0)
-(nksm/add-state state-maps :master :r7 0)
-(nksm/add-state state-maps "mon-0" :s5 0)
-(nksm/add-state state-maps "mon-1" :s6 0)
-(nksm/add-state state-maps "mon-2" :m5 0)
-(nksm/add-state state-maps "mon-3" :m6 0)
-(nksm/add-state state-maps "mon-4" :r5 0)
-(nksm/add-state state-maps "mon-5" :r6 0)
+(nksm/add-state state-maps "m128-0" :s5 0)
+(nksm/add-state state-maps "m128-1" :m5 0)
+(nksm/add-state state-maps "m128-2" :r5 0)
+(nksm/add-state state-maps "m128-3" :s6 0)
+(nksm/add-state state-maps "m128-4" :m6 0)
+(nksm/add-state state-maps "m128-5" :r6 0)
+
+(nksm/add-state state-maps "m64-0" :s3 0)
+(nksm/add-state state-maps "m64-1" :m3 0)
+(nksm/add-state state-maps "m64-2" :r3 0)
+(nksm/add-state state-maps "m64-3" :s4 0)
+(nksm/add-state state-maps "m64-4" :m4 0)
+(nksm/add-state state-maps "m64-5" :r4 0)
 
 ;; (nksm/add-state state-maps :cheese :s2 1)
 

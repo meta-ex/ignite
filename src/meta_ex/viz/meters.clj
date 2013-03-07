@@ -1,9 +1,9 @@
-(ns meta-ex.meters
+(ns meta-ex.viz.meters
   (:use quil.core
         [overtone.core :only [on-event event]]
         [overtone.helpers.ref :only [swap-returning-prev!]])
   (:require [overtone.at-at :as at-at]
-            [meta-ex.client]))
+            [meta-ex.server.client]))
 
 (defonce meters-pool (at-at/mk-pool))
 

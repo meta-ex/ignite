@@ -1,4 +1,4 @@
-(ns meta-ex.rhythm
+(ns meta-ex.kit.rhythm
   (:use [overtone.core]))
 
 (defn- long?

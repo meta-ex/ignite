@@ -1,4 +1,4 @@
-(ns meta-ex.lines
+(ns meta-ex.viz.lines
   (:use quil.core
         [quil.helpers.seqs :only [steps seq->stream range-incl tap tally indexed-range-incl]]
         [quil.helpers.calc :only [mul-add]]))
@@ -44,4 +44,4 @@
   (background 0)
   (stroke-weight 20)
   (let [[x-start y-start] ((state :starts-str))]
-    (draw-all-points x-start y-start 80)))
+    (draw-all-points x-start y-start 100)))

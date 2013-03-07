@@ -1,4 +1,4 @@
-(ns meta-ex.quilome
+(ns meta-ex.viz.quilome
   (:use [quil.core]
         [meta-ex.monomes])
   (:require [overtone.algo.chance :as chance]
@@ -49,7 +49,7 @@
   (let [m global-monome]))
 
 (defn mirror-viz []
-  (reset! (:coords global-monome) (:led-activation @(:state (:polynome.core/core (first monomes))))))
+  (reset! (:coords global-monome) (:led-activation @(:state (:polynome.core/core (first (monomes)))))))
 
 (defn rand-amp-viz []
   (let [m          global-monome

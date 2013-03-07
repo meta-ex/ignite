@@ -1,5 +1,5 @@
-(ns meta-ex.nk.stateful-device
-  (:use [meta-ex.timed]
+(ns meta-ex.hw.nk.stateful-device
+  (:use [meta-ex.lib.timed]
         [overtone.core]
         [overtone.helpers.lib :only [uuid]]
         [overtone.helpers.doc :only [fs]]

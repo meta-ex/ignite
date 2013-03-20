@@ -2,9 +2,10 @@
   (:use [clojure.core.match :only [match]]
         [overtone.live]
         [overtone.synth sampled-piano]
-        [meta-ex.petals :only [num-petals-to-draw*]]
-        [meta-ex.mixer])
-  (:require [meta-ex.monome-event]))
+        [meta-ex.hw.monomes]
+        [meta-ex.viz.petals :only [num-petals-to-draw*]]
+        [meta-ex.kit.mixer])
+  (:require [polynome.core :as poly]))
 
 
 
@@ -119,7 +120,7 @@
 
 (on-event [:monome :press]
           (fn [{:keys [x y monome]}]
-;;            (poly/toggle-led monome x y)
+            (poly/toggle-led monome x y)
             )
           :monome-led)
 ;;(boot-external-server)

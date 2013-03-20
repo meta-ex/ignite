@@ -1,6 +1,6 @@
 (ns meta-ex.grumbles
   (:use [overtone.live]
-        [meta-ex.mixer]))
+        [meta-ex.kit.mixer]))
 
 ;; Inspired by an example in an early chapter of the SuperCollider book
 
@@ -11,9 +11,9 @@
                       [1 (/ 2 3) (/ 3 2) 2]))]
     (out out-bus (* amp (pan2 snd (sin-osc:kr 50))))))
 
-(def grumble-g (group))
+(defonce grumble-g (group))
 
-(def ob (nkmx :s0))
+(def ob (nkmx :m0))
 (def ob 0)
 (volume 0.25)
 
@@ -21,7 +21,6 @@
 (grumble :tgt grumble-g :freq-mul 2 :out-bus ob :amp 1.5)
 (grumble :tgt grumble-g :freq-mul 2 :out-bus ob :amp 3)
 (grumble :tgt grumble-g :freq-mul 1.8 :out-bus ob :amp 1.5)
-(grumble :tgt grumble-g :freq-mul 1.8 :out-bus ob :amp 2)
 (grumble :tgt grumble-g :freq-mul 1.5 :out-bus ob :amp 2)
 (grumble :tgt grumble-g :freq-mul 1.5 :out-bus 0 :amp 1)
 (grumble :tgt grumble-g :freq-mul 1 :out-bus ob :amp 3)

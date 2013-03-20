@@ -1,4 +1,4 @@
-(ns meta-ex.kit.triggers
+(ns meta-ex.triggers
   (:use [overtone.live]
         [overtone.synth.timing]
         [overtone.libs.counters]))
@@ -18,9 +18,5 @@
 (defsynth get-beat [] (send-trig (in:kr beat-b) count-trig-id (in:kr cnt-b)))
 (defonce get-beat-s (get-beat))
 
-(defn set-rate
-  "Set the rate of the global trigger synth. Vals betwen 50 - 300 work well."
-  [r]
-  (ctl trigger-s :rate r))
 
-(set-rate 200)
+(ctl trigger-s :rate 300)

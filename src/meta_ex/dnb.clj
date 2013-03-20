@@ -1,6 +1,6 @@
 (ns meta-ex.dnb
   (:use [overtone.live]
-        [meta-ex.mixer]))
+        [meta-ex.kit.mixer]))
 
 (do
   (defonce dnb-g (group))
@@ -22,16 +22,18 @@
 
 (def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m0)))
 (def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))
-(def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :s0) :loop? true :vol 1))
-(kill tibet1)
+(def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :m0) :loop? true :vol 1))
+
+(kill tibet2)
 (ctl tibet2  :rate 0.5)
 (ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)
 
-(ctl tibet2 :rate (/ 3 2))
-(ctl tibet2 :rate (/ 4 3))
-(ctl tibet2 :rate 2)
-(ctl tibet2 :rate 0.5)
+(ctl tibet1 :rate (/ 3 2))
+(ctl tibet1 :rate (/ 4 3))
+(ctl tibet1 :rate 2)
+(ctl tibet1 :rate 1)
+
 
 (defn honour-vote [colour]
   (cond
@@ -66,9 +68,9 @@
 (ctl tibet2 :rate 0.5)
 (ctl dnb :vol 0)
 (kill dnb)
-(def alien (alienwhisper :tgt dnb-g :rate ))
-(ctl alien :out-bus (mx :grumbles))
-(grenade :amp 2 :rate 0.25 :out-bus (mx :grumbles))
+(def alien (alienwhisper :tgt dnb-g :rate 1 :out-bus (nkmx :s0)))
+(ctl alien :out-bus (nkmx :s0))
+(grenade :amp 2 :rate 0.25 :out-bus (nkmx :m0))
 
 (def i (intro :rate 1))
 (grenade :vol 2 :rate 0.2)

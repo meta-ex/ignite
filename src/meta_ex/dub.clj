@@ -1,9 +1,9 @@
 (ns meta-ex.dub
   (:use [overtone.live]
-        [meta-ex.mixer])
-  (:require [meta-ex.monome-sequencer :as ms]
-            [meta-ex.triggers :as trg]
-            [meta-ex.sequencer :as seq]))
+        [meta-ex.kit.mixer])
+  (:require [meta-ex.kit.monome-sequencer :as ms]
+            [meta-ex.kit.triggers :as trg]
+            [meta-ex.kit.sequencer :as seq]))
 
 (defonce dub-g (group))
 
@@ -37,7 +37,7 @@
 
         snd   (* 0.5 (+ (* 0.8 snd) (* 0.3 (g-verb snd 100 0.7 0.7))))
         ]
-    (out out-bus (pan2 (* amp (normalizer snd))))))
+    (out out-bus (* amp (normalizer snd)))))
 
 (defsynth supersaw2 [freq 440 amp 2.5 fil-mul 2 rq 0.3 out-bus 0]
   (let [input  (lf-saw freq)
@@ -66,7 +66,7 @@
 (dubstep :tgt dub-g
          :note 45
          :wobble 32
-         :lo-man 0
+         :lo-man 1
          :hi-man 0
          :amp 1
          :out-bus (nkmx :s1))
@@ -86,11 +86,11 @@
      :amp 1
      :out-bus (nkmx :s1))
 ;;(kill dub-g)
-(stop)
+
 ;; Bring in the supersaws!
 
-(def ssaw-rq 0.1)
-(def ssaw-fil-mul 2)
+(def ssaw-rq 0.4)
+(def ssaw-fil-mul 3)
 
 
 (supersaw2 (midi->hz (note :c2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rqbbb)

@@ -1,6 +1,6 @@
 (ns meta-ex.kit.sequencer
   (:use [overtone.core]
-        [meta-ex.mixer]))
+        [meta-ex.kit.mixer]))
 
 (defsynth mono-sequencer
   "Plays a single channel audio buffer."
@@ -106,7 +106,9 @@
 
 (defn sequencer-kill
   [s]
-  (kill (:group s)))
+  (group-free (:group s))
+  (doseq [mixer (:mixers s)]
+    (kill-mixer mixer)))
 
 (defn sequencer-set-out-bus!
   [s out-bus]

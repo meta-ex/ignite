@@ -61,6 +61,11 @@
     (buf-wr:ar [(mix src)] delay-buf pos :loop true)
     (out out-bus (pan2 (* amp src) pan))))
 
+;; (defsynth meta-master-mix [amp 1.5
+;;                            in-bus 0
+;;                            out-bus 0]
+;;   (let [src (in:ar in-bus 2)]))
+
 (def nano2-fns {:slider0 (fn [v mixer-g] (ctl mixer-g :rev-mix v))
                 :slider1 (fn [v mixer-g] (ctl mixer-g :delay-decay v))
                 :slider2 (fn [v mixer-g] (ctl mixer-g :dec-mix v))
@@ -125,8 +130,17 @@
                                           event-k " already exists."))))
 
                            (assoc mixers event-k (mk-mixer event-k tgt-g out-bus))))]
-       (oneshot-event :reset (fn [_] (swap! korg-nano-kontrol-mixers dissoc event-k)) (uuid))
+       (oneshot-event :reset
+                      (fn [_] (swap! korg-nano-kontrol-mixers dissoc event-k))
+                      (uuid))
        (get mixers event-k))))
+
+(defn kill-mixer [mixer]
+  (remove-handler (:event-key mixer))
+  (swap! korg-nano-kontrol-mixers dissoc (:event-key mixer))
+  (buffer-free (:bufff mixer))
+  (with-inactive-modification-error :silent
+    (kill (:mixer mixer))))
 
 (defn add-nk-mixer
   ([k]

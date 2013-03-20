@@ -10,7 +10,13 @@
                  [quil "1.6.0"]
                  [compojure "1.1.1"]
                  [org.clojure/data.json "0.1.2"]
-                 [seesaw "1.4.3"]]
+                 [seesaw "1.4.3"]
+                 [org.lwjgl.lwjgl/lwjgl "2.8.5"]
+                 [org.lwjgl.lwjgl/lwjgl_util "2.8.5"]
+                 [org.lwjgl.lwjgl/lwjgl-platform "2.8.5"
+                  :classifier "natives-osx"]
+                 [watchtower "0.1.1"]
+                 ]
   :jvm-opts [
     "-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
     "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with

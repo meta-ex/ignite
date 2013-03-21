@@ -7,7 +7,7 @@
 ;; and the real monome may have many virtual monomes docked onto it.
 
 (def fonomes (atom {}))
-(def history-size 500)
+(def history-size 5000)
 
 (defn mk-fonome
   [id width height]
@@ -88,6 +88,22 @@
                      :new-leds new-leds}]
     (event [:fonome :led-off (:id s) x y] event-msg)
     (event [:fonome :led-off (:id s)] event-msg)
+    (event [:fonome :led-change (:id s)] event-msg)
+    (assoc s :history new-history)))
+
+(defn- clear*
+  [s f]
+
+  (let [old-leds    (:leds s)
+        new-leds    {}
+        s           (assoc s :leds new-leds)
+        e           [(now) :clear (dissoc s :history :id :width :height)]
+        new-history (cons e (take history-size (:history s)))
+        event-msg   {:state    s
+                     :fonome   f
+                     :old-leds old-leds
+                     :new-leds new-leds}]
+    (event [:fonome :clear (:id s)] event-msg)
     (event [:fonome :led-change (:id s)] event-msg)
     (assoc s :history new-history)))
 
@@ -191,13 +207,10 @@
   (ensure-fonome! f)
   (:leds @(:state f)))
 
-;; (led-on (first (vals @fonomes)) 1 1)
-
-;; ;; (ensure-valid-coords! (first @fonomes) 1 1)
-;; (mk-fonome ::g 7 4)
-
-;; (:state (first (vals @fonomes)))
-;; ;; (:state (first @fonomes))
-
-
-(:state (first (vals @fonomes)))
+(defn clear
+  [f]
+  (ensure-fonome! f)
+  (println "before: " (:leds @(:state f)))
+  (send (:state f) clear* f)
+  (println "finished: " (:leds @(:state f)))
+  f)

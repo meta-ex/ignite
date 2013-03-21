@@ -30,7 +30,6 @@
   (let [out-busses (if mixers
                      (map :in-bus mixers)
                      (repeat out-bus))]
-    (println "yo busses: " out-busses)
     (doall (map (fn [sample out-bus]
                   (doseq [x (range num-steps)]
                     (mono-sequencer :tgt tgt-group
@@ -69,7 +68,9 @@
                    :mixer-group   mixer-group
                    :desc          desc
                    :mixer-handles mixer-handles
-                   :mixers        mixers}
+                   :mixers        mixers
+                   :out-bus       out-bus
+                   :with-mixers?  with-mixers?}
          {:type ::sequencer}))))
 
 (defn sequencer-write!

@@ -15,10 +15,6 @@
 
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
-;; give each nk an initial state
-(doseq [nk nano-kons]
-  (nksm/switch-state state-maps nk :s0))
-
 (defn update-state
   [state-map-k id val]
   (nksm/update-state state-maps state-map-k id val))

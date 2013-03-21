@@ -1,5 +1,6 @@
 (ns meta-ex.sets.ignite
   (:require
+   [meta-ex.hw.monomes :as mon]
    [meta-ex.hw.polynome :as poly]
    [meta-ex.kit.triggers]
    [meta-ex.hw.nk.connected :as nk-conn]
@@ -37,5 +38,13 @@
     ;;(nksm/add-state nk-conn/state-maps "m64-3" :s4 0)
     ;;(nksm/add-state nk-conn/state-maps "m64-4" :m4 0)
     ;;(nksm/add-state nk-conn/state-maps "m64-5" :r4 0)
+
+    ;; give each nk an initial state
+    (doseq [nk nk-conn/nano-kons]
+      (nksm/switch-state nk-conn/state-maps nk :s0))
     )
-)
+  )
+
+(def m64 (mon/find-monome "/dev/tty.usbserial-m64-0790"))
+(def m128 (mon/find-monome "/dev/tty.usbserial-m128-115"))
+(def m256 (mon/find-monome "/dev/tty.usbserial-m256-203"))

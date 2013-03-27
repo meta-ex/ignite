@@ -16,15 +16,16 @@
   (def nr (notresponsible :tgt dnb-g :rate 1 :vol 0 :out-bus 10 :loop? true))
   (def aw (alienwhisper :tgt dnb-g :rate 1 :out-bus 10 :loop? true :vol 0)))
 
-(def dnb (drumnbass :tgt dnb-g :loop? true :out-bus 0))
+(def dnb (drumnbass :tgt dnb-g :loop? true :out-bus (nkmx :s0) :rate 0.1))
 
 (def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
 
-(def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m0)))
+(def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
 (def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))
 (def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :m0) :loop? true :vol 1))
 
 (kill tibet2)
+(kill dnb)
 (ctl tibet2  :rate 0.5)
 (ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)

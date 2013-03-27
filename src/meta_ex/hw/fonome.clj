@@ -6,8 +6,8 @@
 ;; monome. Typically a virtual monome is smaller than the real monome
 ;; and the real monome may have many virtual monomes docked onto it.
 
-(def fonomes (atom {}))
-(def history-size 5000)
+(defonce fonomes (atom {}))
+(def history-size 1000)
 
 (defn mk-fonome
   [id width height]

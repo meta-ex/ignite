@@ -64,7 +64,7 @@
 
 ;; get the dubstep bass involved
 (dubstep :tgt dub-g
-         :note 45
+         :note 28
          :wobble 32
          :lo-man 1
          :hi-man 0

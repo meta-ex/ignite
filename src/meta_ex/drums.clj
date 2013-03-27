@@ -40,7 +40,7 @@
                          ]))
 
 (def seq64
-  (ms/mk-monome-sequencer "m64" mouth-samples [] seq64-f))
+  (ms/mk-monome-sequencer "m64" orig-samples [] seq64-f))
 
 (def seq64
   (ms/mk-monome-sequencer "m64" orig-samples [] seq64-f))
@@ -67,7 +67,7 @@
   (fon/led-on seq64-f 3 3)
   (fon/led-on seq64-f 7 1))
 
-(ms/swap-samples! seq64 orig-samples)
+(ms/swap-samples! seq64 african-samples)
 (fon/led-off seq64-f 5 1)
 (fon/led seq64-f 5 1)
 (fon/clear seq64-f)

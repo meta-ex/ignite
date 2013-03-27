@@ -1,7 +1,8 @@
 (ns meta-ex.hw.monomes
   (:require [monome-serial.core :as monome-core]
             [monome-serial.event-handlers :as handlers]
-            [meta-ex.hw.polynome :as poly]))
+            [meta-ex.hw.polynome :as poly]
+            [overtone.music.time :as time]))
 
 (defonce monomes* (atom #{}))
 
@@ -16,12 +17,36 @@
     :height height
     :path   path))
 
+(defonce events (atom {}))
+
+(defn- press
+  [m x y]
+  (let [t              (time/now)
+        last-press-t   (get-in @events [m [x y] :press] -1)
+        last-release-t (get-in @events [m [x y] :release] 0)]
+    (when (and (> last-release-t last-press-t)
+               (> (- t last-release-t) 50))
+
+      (swap! events assoc-in [m [x y] :press] t)
+      (poly/handle-monome-press m x y)))  )
+
+(defn- release
+  [m x y]
+  (let [t              (time/now)
+        last-press-t   (get-in @events [m [x y] :press] 0)
+        last-release-t (get-in @events [m [x y] :release] -1)]
+    (when (and (< last-release-t last-press-t)
+               (> (- t last-press-t) 50))
+      (swap! events assoc-in [m [x y] :release] t)
+      (poly/handle-monome-release m x y)))  )
+
+
 (defn mk-button-handler
   [m]
   (fn [action x y]
     (if (= :press action)
-      (poly/handle-monome-press m x y)
-      (poly/handle-monome-release m x y))))
+      (press m x y)
+      (release m x y))))
 
 (defn safe-init-monome
   "returns an initialised monome or nil if unavailable. Also adds

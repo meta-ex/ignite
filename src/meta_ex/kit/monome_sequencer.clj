@@ -1,10 +1,8 @@
 (ns meta-ex.kit.monome-sequencer
-  (:use [clojure.pprint]
-        [overtone.core]
+  (:use [overtone.core]
         [overtone.helpers.lib :only [uuid]])
   (:require [meta-ex.hw.fonome :as fon]
             [meta-ex.kit.triggers :as trg]
-            [meta-ex.hw.monomes :as mon]
             [meta-ex.kit.sequencer :as seq]))
 
 (defonce m-sequencers (atom {}))
@@ -23,13 +21,11 @@
   (doseq [y (range range-x)]
     (sequencer-write-row! sequencer y range-x grid)))
 
-
-
 (defn mk-monome-sequencer
   ([handle samples]
      (mk-monome-sequencer handle samples []))
   ([handle samples trig-samples]
-     (mk-monome-sequencer handle samples trig-samples (first (mon/monomes))))
+     (mk-monome-sequencer handle samples trig-samples (first @fon/fonomes)))
   ([handle samples trig-samples tgt-fonome]
      (mk-monome-sequencer handle samples trig-samples tgt-fonome 0 ))
   ([handle samples trig-samples tgt-fonome out-bus]

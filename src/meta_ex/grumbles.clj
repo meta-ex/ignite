@@ -1,6 +1,7 @@
 (ns meta-ex.grumbles
   (:use [overtone.live]
-        [meta-ex.kit.mixer]))
+        [meta-ex.kit.mixer]
+        [meta-ex.sets.ignite]))
 
 ;; Inspired by an example in an early chapter of the SuperCollider book
 
@@ -13,7 +14,7 @@
 
 (defonce grumble-g (group))
 
-(def ob (nkmx :m0))
+(def ob (nkmx :s0))
 (def ob 0)
 (volume 0.25)
 

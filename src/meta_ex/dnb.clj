@@ -25,7 +25,7 @@
 (def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :m0) :loop? true :vol 1))
 
 (kill tibet2)
-(kill dnb)
+(kill nr)
 (ctl tibet2  :rate 0.5)
 (ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)
@@ -69,7 +69,7 @@
 (ctl tibet2 :rate 0.5)
 (ctl dnb :vol 0)
 (kill dnb)
-(def alien (alienwhisper :tgt dnb-g :rate 1 :out-bus (nkmx :s0)))
+(def alien (alienwhisper :tgt dnb-g :rate 2 :out-bus (nkmx :s1)))
 (ctl alien :out-bus (nkmx :s0))
 (grenade :amp 2 :rate 0.25 :out-bus (nkmx :m0))
 

@@ -50,6 +50,24 @@
               (>= y h))
       (throw (Exception. (str "Invalid key range used as an index for fonome. Expected coords with x in the range 0 -> " (dec w) ", and y 0 -> " (dec h) ", got: [" x ", " y "]"))))))
 
+(defn ensure-valid-led-state!
+  [f new-led-state]
+  (when-not (and (associative? new-led-state)
+                 (every? (fn [k] (and (sequential? k)
+                                     (= 2 (count k))))
+                         (keys new-led-state))
+                 (every? (fn [[x y]] (and (number? x)
+                                         (number? y)
+                                         (< x (:width f))
+                                         (>= x 0)
+                                         (< y (:height f))
+                                         (>= y 0)))
+                         (keys new-led-state))
+                 (every? (fn [v] (or (= true v)
+                                    (= false v)))
+                         (vals new-led-state)))
+    (throw (Exception. (str "Invalid fonome led state: " new-led-state)))))
+
 (defn- ensure-fonome!
   [f]
   (when-not (= (type f) ::fonome)
@@ -105,6 +123,59 @@
                      :new-leds new-leds}]
     (event [:fonome :clear (:id s)] event-msg)
     (event [:fonome :led-change (:id s)] event-msg)
+    (doseq [x (range (:width s))
+            y (range (:height s))]
+      (event [:fonome :led-off (:id s) x y] (assoc event-msg :x x :y y))
+      (event [:fonome :led-off (:id s)] (assoc event-msg :x x :y y)))
+    (assoc s :history new-history)))
+
+(defn- all*
+  [s f]
+
+  (let [old-leds    (:leds s)
+        new-leds    (reduce (fn [r el] (assoc r el true))
+                            {}
+                            (for [x (range (:width s))
+                                  y (range (:height s))]
+                              [x y]))
+        s           (assoc s :leds new-leds)
+        e           [(now) :all (dissoc s :history :id :width :height)]
+        new-history (cons e (take history-size (:history s)))
+        event-msg   {:state    s
+                     :fonome   f
+                     :old-leds old-leds
+                     :new-leds new-leds}]
+    (event [:fonome :clear (:id s)] event-msg)
+    (event [:fonome :led-change (:id s)] event-msg)
+    (doseq [x (range (:width s))
+            y (range (:height s))]
+      (event [:fonome :led-on (:id s) x y] (assoc event-msg :x x :y y))
+      (event [:fonome :led-on (:id s)] (assoc event-msg :x x :y y)))
+    (assoc s :history new-history)))
+
+(defn- replace-led-state*
+  [s f new-led-state]
+  (let [old-leds    (:leds s)
+        s           (assoc s :leds new-led-state)
+        e           [(now) :led-update (dissoc s :history :id :width :height)]
+        new-history (cons e (take history-size (:history s)))
+        event-msg   {:state  s
+                     :fonome f
+                     :old-leds old-leds
+                     :new-leds new-led-state}]
+    (event [:fonome :led-change (:id s)] event-msg)
+    (doseq [x (range (:width s))
+            y (range (:height s))]
+      (let [old-led (get old-leds [x y] false)
+            new-led (get new-led-state [x y] false)]
+        (when (not= old-led new-led)
+          (if new-led
+            (do
+              (event [:fonome :led-on (:id s) x y] (assoc event-msg :x x :y y))
+              (event [:fonome :led-on (:id s)] (assoc event-msg :x x :y y)))
+            (do
+              (event [:fonome :led-off (:id s) x y] (assoc event-msg :x x :y y))
+              (event [:fonome :led-off (:id s)] (assoc event-msg :x x :y y)))))))
     (assoc s :history new-history)))
 
 (defn- toggle-led*
@@ -210,7 +281,44 @@
 (defn clear
   [f]
   (ensure-fonome! f)
-  (println "before: " (:leds @(:state f)))
   (send (:state f) clear* f)
-  (println "finished: " (:leds @(:state f)))
+  f)
+
+(defn all
+  [f]
+  (ensure-fonome! f)
+  (send (:state f) all* f)
+  f)
+
+(defn range-x
+  [f]
+  (ensure-fonome! f)
+  (range (:width f)))
+
+(defn range-y
+  [f]
+  (ensure-fonome! f)
+  (range (:height f)))
+
+(defn ascii-led-state
+  [f]
+  (ensure-fonome! f)
+  (with-out-str   (let [state  (led-state f)
+                        render #(if (= true %) "* " "o ")]
+                    (doseq [y (range-y f)]
+                      (doseq [x (range-x f)]
+                        (print (render (get state [x y]))))
+                      (println "")))))
+
+(defn pp-led-state
+  [f]
+  (ensure-fonome! f)
+  (println "")
+  (println (ascii-led-state f))
+  (println ""))
+
+(defn set-led-state!
+  [f new-state]
+  (ensure-valid-led-state! f new-state)
+  (send (:state f) replace-led-state* f new-state)
   f)

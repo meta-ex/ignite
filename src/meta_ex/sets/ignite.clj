@@ -14,31 +14,42 @@
 (defonce mixer-s1 (mx/add-nk-mixer :s1))
 (defonce mixer-m0 (mx/add-nk-mixer :m0))
 (defonce mixer-m1 (mx/add-nk-mixer :m1))
+(defonce mixer-s2 (mx/add-nk-mixer :s2))
+
 (defonce mixer-master (mx/add-nk-mixer :master))
 
-  (defonce orig-samples [(sample (freesound-path 777))   ;;kick
-                         (sample (freesound-path 406))   ;;click
-                         (sample (freesound-path 25649)) ;;subby
-                         (sample (freesound-path 85291));;wop
-                         ])
+(defonce orig-samples [(sample (freesound-path 777))   ;;kick
+                       (sample (freesound-path 406))   ;;click
+                       (sample (freesound-path 25649)) ;;subby
+                       (sample (freesound-path 85291));;wop
+                       ])
 
-  (defonce african-samples [(sample (freesound-path 127124))
-                            (sample (freesound-path 173025))
-                            (sample (freesound-path 178048))
-                            (sample (freesound-path 21351))
-                            (sample (freesound-path 21328))
-                            (sample (freesound-path 21344))])
+(defonce african-samples [(sample (freesound-path 127124))
+                          (sample (freesound-path 173025))
+                          (sample (freesound-path 178048))
+                          (sample (freesound-path 21351))
+                          (sample (freesound-path 21328))
+                          (sample (freesound-path 21344))])
 
-  (defonce mouth-samples [(sample (freesound-path 34460))
-                          (sample (freesound-path 20834))
-                          (sample (freesound-path 16665))
-                          (sample (freesound-path 62911))
-                          (sample (freesound-path 18035))
-                          (sample (freesound-path 2837))])
+(defonce mouth-samples [(sample (freesound-path 34460))
+                        (sample (freesound-path 20834))
+                        (sample (freesound-path 16665))
+                        (sample (freesound-path 62911))
+                        (sample (freesound-path 18035))
+                        (sample (freesound-path 2837))])
 
-  (defonce bass-samples [(sample (freesound-path 33637)) ;;boom
-                         (sample (freesound-path 25649)) ;;subby
-                         ])
+(defonce bass-samples [(sample (freesound-path 33637)) ;;boom
+                       (sample (freesound-path 25649)) ;;subby
+                       ])
+
+(defonce atmos-samples [(sample (freesound-path 2523))
+                        (sample (freesound-path 18765))
+                        (sample (freesound-path 48413))
+                        (sample (freesound-path 64544))
+                        (sample (freesound-path 116730))
+                        (sample (freesound-path 113700))
+                        (sample (freesound-path 113701))
+                        (sample (freesound-path 113702))])
 
 (defonce __ADD-STATE-MAPS__
   ;; Adds a new set of state-maps to the initial nk state-maps. This
@@ -50,6 +61,7 @@
     (nksm/add-state nk-conn/state-maps :m0 0)
     (nksm/add-state nk-conn/state-maps :m1 0)
     (nksm/add-state nk-conn/state-maps :master :r7 0)
+    (nksm/add-state nk-conn/state-maps :triggers :s2 0)
     (nksm/add-state nk-conn/state-maps "m128-0" :s3 0)
     (nksm/add-state nk-conn/state-maps "m128-1" :m3 0)
     (nksm/add-state nk-conn/state-maps "m128-2" :r3 0)

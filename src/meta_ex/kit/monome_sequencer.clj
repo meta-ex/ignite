@@ -22,31 +22,37 @@
     (sequencer-write-row! sequencer y range-x grid)))
 
 (defn mk-monome-sequencer
-  ([handle samples]
-     (mk-monome-sequencer handle samples []))
-  ([handle samples trig-samples]
-     (mk-monome-sequencer handle samples trig-samples (first @fon/fonomes)))
-  ([handle samples trig-samples tgt-fonome]
-     (mk-monome-sequencer handle samples trig-samples tgt-fonome 0 ))
-  ([handle samples trig-samples tgt-fonome out-bus]
-     (mk-monome-sequencer handle samples trig-samples tgt-fonome 0 true))
-  ([handle samples trig-samples tgt-fonome out-bus with-mixers?]
+  ([handle samples tgt-fonome]
+     (mk-monome-sequencer handle samples tgt-fonome 0 ))
+  ([handle samples tgt-fonome out-bus]
+     (mk-monome-sequencer handle samples tgt-fonome 0 true))
+  ([handle samples tgt-fonome out-bus with-mixers?]
      (when-not tgt-fonome
        (throw (IllegalArgumentException. "Please pass a valid fonome to mk-monome-sequencer")))
 
-     (let [range-x   (:width tgt-fonome)
-           range-y   (:height tgt-fonome)
-           sequencer (seq/mk-sequencer handle
-                                       (take (dec range-y) samples)
-                                       range-x
-                                       (foundation-default-group)
-                                       trg/beat-b
-                                       trg/cnt-b
-                                       out-bus
-                                       with-mixers?)
-           key1      (uuid)
-           key2      (uuid)
-           key3      (uuid)]
+     (let [range-x     (:width tgt-fonome)
+           range-y     (:height tgt-fonome)
+           sequencer   (seq/mk-sequencer handle
+                                         (take (dec range-y) samples)
+                                         range-x
+                                         (foundation-default-group)
+                                         trg/beat-b
+                                         trg/cnt-b
+                                         out-bus
+                                         with-mixers?)
+           seq-atom    (atom sequencer)
+           key1        (uuid)
+           key2        (uuid)
+           key3        (uuid)
+           m-sequencer (with-meta
+                         {:sequencer      seq-atom
+                          :led-change-key key1
+                          :press-key      key2
+                          :beat-key       key3
+                          :fonome         tgt-fonome
+                          :handle         handle
+                          :status         (atom :running)}
+                         {:type ::monome-sequencer})]
 
        (swap! m-sequencers (fn [ms]
                              (when (contains? ms handle)
@@ -55,15 +61,15 @@
                                        (str "A monome-sequencer with handle "
                                             handle
                                             " already exists."))))
-                             (assoc ms handle sequencer)))
+                             (assoc ms handle m-sequencer)))
 
        (sequencer-write-grid! sequencer range-x range-y (fon/led-state tgt-fonome))
 
        (on-event [:fonome :led-change (:id tgt-fonome)]
                  (fn [{:keys [new-leds y]}]
                    (if y
-                     (sequencer-write-row! sequencer y range-x new-leds)
-                     (sequencer-write-grid! sequencer range-x range-y new-leds)))
+                     (sequencer-write-row! @seq-atom y range-x new-leds)
+                     (sequencer-write-grid! @seq-atom range-x range-y new-leds)))
                  key1)
 
        (on-event [:fonome :press (:id tgt-fonome)]
@@ -73,23 +79,15 @@
 
        (on-trigger trg/count-trig-id
                    (fn [beat]
-                     (let [beat-track-y (dec (:height tgt-fonome ))]
+                     (let [beat-track-y (dec (:height tgt-fonome))]
                        (doseq [x (range (:width tgt-fonome)) ]
                          (fon/led-off tgt-fonome x beat-track-y))
                        (fon/led-on tgt-fonome  (mod beat range-x) beat-track-y)))
-            key3)
+                   key3)
 
        (oneshot-event :reset (fn [_] (remove-handler key1) (remove-handler key2)) (uuid))
 
-       (with-meta
-         {:sequencer      (atom sequencer)
-          :led-change-key key1
-          :press-key      key2
-          :beat-key       key3
-          :fonome         tgt-fonome
-          :handle         handle
-          :status         (atom :running)}
-         {:type ::monome-sequencer}))))
+       m-sequencer)))
 
 (defn running? [seq]
   (= :running @(:status seq)))
@@ -114,6 +112,9 @@
                                         trg/cnt-b
                                         (-> sequencer :out-bus)
                                         (-> sequencer :with-mixers?))]
-    (sequencer-write-grid! new-sequencer (-> m-seq :fonome :width) (-> m-seq :fonome :width)  (fon/led-state (:fonome m-seq)))
+    (sequencer-write-grid! new-sequencer
+                           (-> m-seq :fonome :width)
+                           (-> m-seq :fonome :width)
+                           (fon/led-state (:fonome m-seq)))
     (reset! (:sequencer m-seq) new-sequencer)
     m-seq))

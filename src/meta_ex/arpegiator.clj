@@ -1,7 +1,8 @@
 (ns meta-ex.arpegiator
   (:use [overtone.core]
-        [meta-ex.synths]
-         [meta-ex.mixer]))
+;;        [meta-ex.synths]
+;;         [meta-ex.mixer]
+        ))
 
 (defonce arp-g (group))
 (kill wo)

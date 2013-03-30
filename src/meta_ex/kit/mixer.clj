@@ -136,7 +136,7 @@
        (get mixers event-k))))
 
 (defn kill-mixer [mixer]
-  (remove-handler (:event-key mixer))
+  (remove-handler (:handler-key mixer))
   (swap! korg-nano-kontrol-mixers dissoc (:event-key mixer))
   (buffer-free (:bufff mixer))
   (with-inactive-modification-error :silent

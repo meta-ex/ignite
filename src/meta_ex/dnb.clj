@@ -69,9 +69,11 @@
 (ctl tibet2 :rate 0.5)
 (ctl dnb :vol 0)
 (kill dnb)
-(def alien (alienwhisper :tgt dnb-g :rate 2 :out-bus (nkmx :s1)))
+(def alien (alienwhisper :tgt dnb-g :rate 0.1 :out-bus (nkmx :s1)))
 (ctl alien :out-bus (nkmx :s0))
 (grenade :amp 2 :rate 0.25 :out-bus (nkmx :m0))
 
 (def i (intro :rate 1))
-(grenade :vol 2 :rate 0.2)
+(grenade :vol 0.5 :rate 0.4)
+
+(stop)

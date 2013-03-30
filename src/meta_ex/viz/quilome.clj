@@ -1,10 +1,10 @@
 (ns meta-ex.viz.quilome
   (:use [quil.core]
-        [meta-ex.monomes])
+)
   (:require [overtone.algo.chance :as chance]
-            [polynome.core :as poly]
             [overtone.live :as o]
-            [meta-ex.voltap]))
+            [meta-ex.synths.voltap]
+            [meta-ex.hw.fonome :as fon]))
 
 (defrecord Quilome [max-x max-y coords])
 
@@ -19,37 +19,37 @@
                  y (range max-y)]
              [[x y] default]))))
 
-(defn mk-monome
+(defn mk-quilome
   [max-x max-y]
   (let [coords (mk-coords max-x max-y)]
     (Quilome. max-x max-y (atom coords))))
 
-(def global-monome (mk-monome 8 8))
+(def global-quilome (mk-quilome 8 8))
 
-(defn led-on [m x y]
+(defn q-led-on [m x y]
   (swap! (:coords m) assoc [x y] 1)
 ;;  (poly/led-on m256 x y)
   )
 
-(defn led-off [m x y]
+(defn q-led-off [m x y]
   (swap! (:coords m) assoc [x y] 0))
 
-(defn led [m x y val]
+(defn q-led [m x y val]
   (swap! (:coords m) assoc [x y] val))
 
-(defn clear [m]
+(defn q-clear [m]
   (reset! (:coords m) (mk-coords (:max-x m) (:max-y m) 0))
 ;;  (poly/clear m256)
   )
 
-(defn all [m]
+(defn q-all [m]
   (reset! (:coords m) (mk-coords (:max-x m) (:max-y m) 1)))
 
 (defn tunnel-viz []
-  (let [m global-monome]))
+  (let [m global-quilome]))
 
 (defn mirror-viz []
-  (reset! (:coords global-monome) (:led-activation @(:state (:polynome.core/core (first (monomes)))))))
+  (reset! (:coords global-quilome) (:led-activation @(:state (@fon/fonomes)))))
 
 (defn rand-amp-viz []
   (let [m          global-monome

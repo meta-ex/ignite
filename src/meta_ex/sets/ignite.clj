@@ -15,6 +15,7 @@
 (defonce mixer-m0 (mx/add-nk-mixer :m0))
 (defonce mixer-m1 (mx/add-nk-mixer :m1))
 (defonce mixer-s2 (mx/add-nk-mixer :s2))
+(defonce mixer-r0 (mx/add-nk-mixer :r0))
 
 (defonce mixer-master (mx/add-nk-mixer :master))
 
@@ -42,6 +43,10 @@
                        (sample (freesound-path 25649)) ;;subby
                        ])
 
+(defonce transition-samples [(sample (freesound-path 127124))
+                             (sample (freesound-path 25649))
+                       ])
+
 (defonce atmos-samples [(sample (freesound-path 2523))
                         (sample (freesound-path 18765))
                         (sample (freesound-path 48413))
@@ -50,6 +55,30 @@
                         (sample (freesound-path 113700))
                         (sample (freesound-path 113701))
                         (sample (freesound-path 113702))])
+
+(defonce trigger-samples [(sample (freesound-path 86773))
+                        (sample (freesound-path 77305))
+                        (sample (freesound-path 102720))
+                        (sample (freesound-path 46092))
+                        (sample (freesound-path 135117))
+                        (sample (freesound-path 57143))
+                        (sample (freesound-path 85487))
+                        (sample (freesound-path 70052))])
+
+(defonce ambient-drum-samples [(sample (freesound-path 72989))
+                               (sample (freesound-path 122048))
+                               (sample (freesound-path 87726))
+                               (sample (freesound-path 36325))])
+
+(defonce atmossy {:stream-under-bridge (sample (freesound-path 117329))
+                        :birdsong            (sample (freesound-path 18765))
+                        :rain-with-thunder   (sample (freesound-path 2523))
+                        :ocean-waves         (sample (freesound-path 48412))
+                        :water-dripping      (sample (freesound-path 116730))
+                        :bubbles1            (sample (freesound-path 113700))
+                        :bubbles2            (sample (freesound-path 113701))
+                        :bubbles3            (sample (freesound-path 113702))
+})
 
 (defonce __ADD-STATE-MAPS__
   ;; Adds a new set of state-maps to the initial nk state-maps. This
@@ -60,6 +89,7 @@
     (nksm/add-state nk-conn/state-maps :s1 0)
     (nksm/add-state nk-conn/state-maps :m0 0)
     (nksm/add-state nk-conn/state-maps :m1 0)
+    (nksm/add-state nk-conn/state-maps :r0 0)
     (nksm/add-state nk-conn/state-maps :master :r7 0)
     (nksm/add-state nk-conn/state-maps :triggers :s2 0)
     (nksm/add-state nk-conn/state-maps "m128-0" :s3 0)

@@ -1,4 +1,4 @@
-(ns meta-ex.voltap
+(ns meta-ex.synths.voltap
   (:use [overtone.live]))
 
 (defonce g (group "Voltap" :head (foundation-monitor-group)))

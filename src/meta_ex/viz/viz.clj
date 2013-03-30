@@ -1,6 +1,5 @@
 (ns meta-ex.viz
- (:require [meta-ex.viz squares petals sphere lines quilome names
-             ])
+ (:require [meta-ex.viz squares petals sphere lines names])
   (:use [quil.core]))
 
 (defonce viz-state* (atom {:squares false
@@ -22,8 +21,8 @@
 (defn setup []
   (apply set-state!
          (flatten (seq (merge
-                        (meta-ex.lines/state-map)
-                        (meta-ex.names/state-map)))))
+                        (meta-ex.viz.lines/state-map)
+                        (meta-ex.viz.names/state-map)))))
   (background 0))
 
 (defn draw []
@@ -58,7 +57,7 @@
     ;;   (meta-ex.meters/draw))
 
     (when (:monome viz-state)
-      (meta-ex.viz.quilome/draw)
+;;      (meta-ex.viz.quilome/draw)
       )
 
 ;;    (no-fill)

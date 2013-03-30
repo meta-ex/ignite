@@ -1,5 +1,5 @@
  (ns meta-ex.viz.sphere
-  (:require meta-ex.voltap)
+  (:require meta-ex.synths.voltap)
   (:use quil.core
         [quil.helpers.drawing :only [line-join-points]]
         [quil.helpers.calc :only [mul-add]]))
@@ -9,7 +9,7 @@
 (defn radius
   []
   (+ 100
-     (* (* 1 (height)) (meta-ex.voltap/curr-vol))))
+     (* (* 1 (height)) (meta-ex.synths.voltap/curr-vol))))
 
 (defn setup []
   (background 255)

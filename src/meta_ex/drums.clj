@@ -1,10 +1,12 @@
 (ns meta-ex.drums
   (:use [overtone.live]
-        [meta-ex.sets.ignite])
+        [meta-ex.sets.ignite]
+        [meta-ex.kit.mixer])
   (:require [meta-ex.sets.ignite]
             [meta-ex.kit.monome-sequencer :as ms]
             [meta-ex.kit.sequencer :as seq]
             [meta-ex.kit.triggers :as trg]
+            [meta-ex.kit.sampler :as samp]
             [meta-ex.hw.polynome :as poly]
             [meta-ex.hw.fonome :as fon]))
 
@@ -13,16 +15,24 @@
   (defonce seq64-f (fon/mk-fonome ::seq64 8 5))
   (defonce seq128-f (fon/mk-fonome ::seq128 16 6)))
 
-(defonce seq64
-  (ms/mk-monome-sequencer "m64" orig-samples seq64-f))
+(def seq64
+  (ms/mk-monome-sequencer "m64" transition-samples seq64-f))
 
-(defonce seq128
-  (ms/mk-monome-sequencer "m128" mouth-samples seq128-f))
+(def seq128
+  (ms/mk-monome-sequencer "m128" african-samples seq128-f))
 
-(poly/dock-fonome! m64 seq64-f ::seq64 0 1)
+(poly/dock-fonome! m64 seq64-f ::seq64 0 0)
 (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
 
-;;(ms/swap-samples! seq64 african-samples)
+
+(defonce trigger-sampler (samp/mk-sampler ::bar trigger-samples   (nkmx :r0) ))
+
+(poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 0)
+
+(ms/swap-samples! seq128 african-samples)
+(ms/swap-samples! seq64 transition-samples)
+(ms/swap-samples! seq64 ambient-drum-samples)
+(ms/swap-samples! seq128  orig-samples)
 
 ;;(ms/stop-sequencer seq128)
 ;;(ms/stop-sequencer seq64)
@@ -46,11 +56,17 @@
 ;; (stop)
 
 
-(def s (fon/led-state seq64-f))
+(def s (fon/led-state seq128-f))
 (def s2 (fon/led-state seq64-f))
 
-(fon/set-led-state! seq64-f s)
+(fon/set-led-state! seq128-f s)
 (fon/set-led-state! seq64-f s2)
-(fon/clear seq64-f )
-(fon/all seq64-f )
+(fon/clear seq128-f )
+(fon/all seq128-f )
 (:history @(:state seq64-f))
+(adsr)
+
+
+
+()
+(volume 2)

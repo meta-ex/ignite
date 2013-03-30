@@ -611,13 +611,15 @@
 
 (defn nk-force-sync-all*
   [sm nk old-raw-state raw-state]
-  (let [ctl-keys (filter controller-id? (keys raw-state))]
-    (reduce (fn [r ctl-k]
-              (let [raw     (get raw-state ctl-k)
-                    old-raw (get old-raw-state ctl-k)]
-                (nk-force-sync* r nk ctl-k old-raw raw old-raw-state raw-state)))
-            sm
-            ctl-keys)))
+  (if (not (sm-nk-switcher-mode? sm nk))
+    (let [ctl-keys (filter controller-id? (keys raw-state))]
+      (reduce (fn [r ctl-k]
+                (let [raw     (get raw-state ctl-k)
+                      old-raw (get old-raw-state ctl-k)]
+                  (nk-force-sync* r nk ctl-k old-raw raw old-raw-state raw-state)))
+              sm
+              ctl-keys))
+    sm))
 
 (defn nk-force-sync-all
   [state-a nk old-raw-state raw-state]

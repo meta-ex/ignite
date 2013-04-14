@@ -19,8 +19,8 @@
   (dorun
    (for [[x-idx x] (indexed-range-incl 0 (width) step-size)
          [y-idx y] (indexed-range-incl 0 (height) step-size)]
-     (let [x-noise-shift (* x-idx 0.1)
-           y-noise-shift (* y-idx 0.1)
+     (let [x-noise-shift (* x-idx 1)
+           y-noise-shift (* y-idx 1)
            x-noise (+ x-start x-noise-shift)
            y-noise (+ y-start y-noise-shift)]
        (draw-point x y (noise x-noise y-noise))))))
@@ -43,5 +43,6 @@
 (defn draw []
   (background 0)
   (stroke-weight 20)
+  (frame-rate 20)
   (let [[x-start y-start] ((state :starts-str))]
-    (draw-all-points x-start y-start 100)))
+    (draw-all-points x-start y-start 120)))

@@ -19,19 +19,18 @@
   (ms/mk-monome-sequencer "m64" transition-samples seq64-f))
 
 (def seq128
-  (ms/mk-monome-sequencer "m128" african-samples seq128-f))
+  (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
 
 (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
 (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
-
-
+(demo )
 (defonce trigger-sampler (samp/mk-sampler ::bar trigger-samples   (nkmx :r0) ))
 
 (poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 0)
 
-(ms/swap-samples! seq128 african-samples)
+(ms/swap-samples! seq128 mouth-samples)
 (ms/swap-samples! seq64 transition-samples)
-(ms/swap-samples! seq64 ambient-drum-samples)
+(ms/swap-samples! seq128 african-samples)
 (ms/swap-samples! seq128  orig-samples)
 
 ;;(ms/stop-sequencer seq128)

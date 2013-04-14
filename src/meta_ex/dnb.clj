@@ -16,6 +16,9 @@
   (def nr (notresponsible :tgt dnb-g :rate 1 :vol 0 :out-bus 10 :loop? true))
   (def aw (alienwhisper :tgt dnb-g :rate 1 :out-bus 10 :loop? true :vol 0)))
 
+(def foo (drumnbass :loop? true))
+(ctl foo :rate 1)
+(===stop)
 (def dnb (drumnbass :tgt dnb-g :loop? true :out-bus (nkmx :s0) :rate 0.1))
 
 (def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))

@@ -9,10 +9,6 @@
 (defonce nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
 (defonce state-maps (nksm/mk-state-map nano-kons))
 
-(defonce mixer-init-state (merge (nksd/nk-state-map 0)
-                             {:slider7 0.5}
-                             {:pot5 0.5}))
-
 ;; (nksm/add-state state-maps :cheese :s2 1)
 
 (defn update-state
@@ -69,10 +65,5 @@
 ;; have a way of recording states
 
 ;; have a way of giving more bespoke starting vals
-
-;; Have a way of visualising each non-synced control via flashes which
-;; are not relative to the difference between the raw val and the state
-;; val, but are an indication between 0 and 1 to gain an approximation
-;; of the current value at a glance
 
 ;;(.printStackTrace (agent-error state-maps))

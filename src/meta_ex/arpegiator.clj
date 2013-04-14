@@ -1,32 +1,19 @@
 (ns meta-ex.arpegiator
   (:use [overtone.core]
-;;        [meta-ex.synths]
-;;         [meta-ex.mixer]
-        ))
+        [meta-ex.synths.synths]
+        [meta-ex.kit.mixer]))
 
 (defonce arp-g (group))
-(kill wo)
-(def wo (woah :tgt arp-g))
-(def wo2 (woah :tgt arp-g))
-(ctl wo :out-bus (mx :grumbles))
-(ctl wo :depth 0.5)
-(ctl wo :rate 0.5)
-(ctl wo :note 40)
+(defonce wo (woah :tgt arp-g :note (note :a2) :rate 0.1 :depth 1))
 
-(ctl wo :x 1000)
-(kill wo)
+(ctl wo :depth 1)
+(ctl wo :rate 0.1)
 
 (def freq (atom 0))
 
-
-(demo (pan2 (square [(* 1 @freq)
-                  (+ (* 1 @freq) 0.01)])))
-
-
-
 (on-event [:midi :note-on]
           (fn [msg]
-            (let [note (:note msg )]
+            (let [note (- (:note msg ) 24)]
               (println note)
               (reset! freq note)
               (ctl wo :note note))

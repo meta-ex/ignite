@@ -89,7 +89,7 @@
 
 ;; Bring in the supersaws!
 
-(def ssaw-rq 0.8)
+(def ssaw-rq 0.1)
 (def ssaw-fil-mul 20)
 
 
@@ -97,8 +97,6 @@
 
 
 ;; Fire at will...
-(supersaw2 (* @meta-ex.arpegiator/freq 5) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
-(supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus 0)
 (supersaw2 (midi->hz 28) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))
 (supersaw2 (midi->hz 40) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))
 (supersaw2 (midi->hz 45) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))

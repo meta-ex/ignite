@@ -80,7 +80,7 @@
 (hide :names)
 (hide :meters)
 (hide :monome)
-(show :sphere)
+(hide :sphere)
 
 
 ;;(hide :lines)

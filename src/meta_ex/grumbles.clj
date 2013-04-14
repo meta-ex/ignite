@@ -18,12 +18,9 @@
 (def ob 0)
 (volume 0.25)
 
-
 (grumble :tgt grumble-g :freq-mul 2 :out-bus ob :amp 1.5)
 (grumble :tgt grumble-g :freq-mul 1.8 :out-bus ob :amp 1.5)
 (grumble :tgt grumble-g :freq-mul 1.5 :out-bus ob :amp 2)
-;;(grumble :tgt grumble-g :freq-mul 1.5 :out-bus 0 :amp 1)
-(grumble :tgt grumble-g :freq-mul 1 :out-bus ob :amp 3)
 (grumble :tgt grumble-g :freq-mul 1 :out-bus ob :amp 3)
 (grumble :tgt grumble-g :freq-mul 0.5 :out-bus 0 :amp 2)
-(ctl grumble-g :speed 2000)
+(ctl grumble-g :speed 1997)

@@ -24,3 +24,14 @@
   (ctl trigger-s :rate r))
 
 (set-rate 200)
+
+(comment
+  (set-rate 20)
+
+  (doseq [x (range 20 250)]
+    (set-rate x)
+    (Thread/sleep 30))
+
+  (doseq [x (range 250 20 -1)]
+    (set-rate x)
+    (Thread/sleep 1)))

@@ -31,8 +31,8 @@
                     samp-rate 0
                     bit-rate 0
                     delay-rate 0
-                    hpf-freq 1060
-                    hpf-rq 0
+                    hpf-freq 2060
+                    hpf-rq 1
                     delay-reset-trig [0 :kr]
                     delay-buf 0
                     out-bus 0]
@@ -100,11 +100,11 @@
                            (f val mixer)
                            (println "unbound: " note))))
                      handler-k)
-    (oneshot-event :reset
-                   (fn [_]
-                     (remove-handler handler-k)
-                     (reset! live? false))
-                   (uuid))
+    (on-node-destroyed mixer
+                       (fn [_]
+                         (remove-handler handler-k)
+                         (swap! korg-nano-kontrol-mixers dissoc event-k)
+                         (reset! live? false)))
 
     (with-meta {:bufff       bufff
                 :mixer-g     mixer-g
@@ -130,9 +130,6 @@
                                           event-k " already exists."))))
 
                            (assoc mixers event-k (mk-mixer event-k tgt-g out-bus))))]
-       (oneshot-event :reset
-                      (fn [_] (swap! korg-nano-kontrol-mixers dissoc event-k))
-                      (uuid))
        (get mixers event-k))))
 
 (defn kill-mixer [mixer]

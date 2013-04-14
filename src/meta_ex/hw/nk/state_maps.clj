@@ -8,9 +8,11 @@
 
 ;; example state-map
 ;; (def state-maps (agent {:states {:mixer    {:state (nk-state-map 0)
-;;                                             :button-id :s0}
+;;                                             :button-id :s0
+;;                                             :kind 0}
 ;;                                  :grumbles {:state (nk-state-map 0)
-;;                                             :button-id :s1}}
+;;                                             :button-id :s1
+;;                                             :kind 0}}
 ;;                         :nks   {(first nano-kons) {:syncs    (nk-state-map false)
 ;;                                                    :flashers (nk-state-map nil)
 ;;                                                    :current  :mixer
@@ -25,6 +27,11 @@
   "Get the state for a specific key"
   [sm k]
   (get-in sm [:states k :state]))
+
+(defn- sm-kind
+  "Get the state for a specific key"
+  [sm k]
+  (get-in sm [:states k :kind]))
 
 (defn- sm-nk-syncs
   "Get the syncs for a specific nk in the sm"
@@ -46,6 +53,12 @@
   [sm nk]
   (let [k (sm-nk-current sm nk) ]
     (sm-state sm k)))
+
+(defn- sm-nk-kind
+  "Get the kind associated with a specific nk"
+  [sm nk]
+  (let [k (sm-nk-current sm nk) ]
+    (sm-kind sm k)))
 
 (defn- sm-nks-with-state-k
   "Get all the nks associated with a specific state-k"
@@ -191,9 +204,10 @@
 
 (defn- sm-add-state
   "Return a new sm with the new state"
-  [sm k s button-id]
+  [sm k s button-id kind]
   (assoc-in sm [:states k] {:state s
-                            :button-id button-id}))
+                            :button-id button-id
+                            :kind kind}))
 
 (defn- sm-add-nk
   "Return a new sm with the new state"
@@ -201,6 +215,7 @@
   (assoc-in sm [:nks nk] {:syncs (nk-state-map false)
                           :flashers (nk-state-map nil)
                           :current nil
+                          :kind 0
                           :mode :controller}))
 
 (defn mk-state-map
@@ -220,6 +235,43 @@
     (led-off nk (keyword (str "s" i)))
     (led-off nk (keyword (str "m" i)))
     (led-off nk (keyword (str "r" i)))))
+
+(defn nk-rec-leds-on
+  "Turn off all recording leds on nk"
+  [nk]
+  (led-on nk :rewind)
+  (led-on nk :fast-forward)
+  (led-on nk :stop)
+  (led-on nk :play)
+  (led-on nk :record))
+
+(defn nk-rec-leds-off
+  "Turn off all recording leds on nk"
+  [nk]
+  (led-off nk :rewind)
+  (led-off nk :fast-forward)
+  (led-off nk :stop)
+  (led-off nk :play)
+  (led-off nk :record))
+
+(defn nk-show-kind
+  "Turn on the rec lights specific to the kind id"
+  [nk kind]
+  (nk-rec-leds-off nk)
+  (cond
+   (= 0 kind) (led-on nk :record)
+   (= 1 kind) (led-on nk :play)
+   (= 2 kind) (led-on nk :stop)
+   (= 3 kind) (led-on nk :fast-forward)
+   (= 4 kind) (led-on nk :rewind)
+   (= 5 kind) (do (led-on nk :record)
+                  (led-on nk :play))
+   (= 6 kind) (do (led-on nk :record)
+                  (led-on nk :stop))
+   (= 7 kind) (do (led-on nk :record)
+                  (led-on nk :fast-forward))
+   (= 8 kind) (do (led-on nk :record)
+                  (led-on nk :rewind))))
 
 (defn nk-smr-leds-on
   "Turn on all smr leds on nk"
@@ -252,6 +304,8 @@
     (let [sm    (kill-all-flashers* sm nk)
           syncs (sm-nk-syncs sm nk)]
       (nk-smr-leds-off nk)
+      (nk-rec-leds-off nk)
+
       (doseq [[k synced?] syncs]
         (when synced?
           (led-on nk (matching-sync-led k))))
@@ -353,6 +407,7 @@
                                    (assoc r k synced?)))
                                {}
                                syncs)]
+        (nk-show-kind nk (sm-kind sm state-k))
         (-> sm
             (sm-nk-swap-current nk state-k)
             (sm-nk-swap-syncs nk syncs)
@@ -505,6 +560,13 @@
                    (<= v 1)))
           "State value must be a number between 0 and 1 inclusively"))
 
+(defn ensure-valid-kind!
+  [k]
+  (assert (and (integer? k)
+               (<= 0 k)
+               (<= k 8))
+          "State kind must be a number between 0 and 8 inclusively"))
+
 
 (defn update-state*
   [sm state-k k v]
@@ -533,18 +595,19 @@
   (send state-a add-nk* nk))
 
 (defn- add-state*
-  [sm state-k state button-id]
-  (sm-add-state sm state-k state button-id))
+  [sm state-k state button-id kind]
+  (sm-add-state sm state-k state button-id kind))
 
 (defn add-state
-  ([state-a button-id init-val-or-state-map]
-     (add-state state-a button-id button-id init-val-or-state-map))
-  ([state-a state-k button-id init-val-or-state-map]
+  ([state-a button-id kind init-val-or-state-map]
+     (add-state state-a button-id button-id kind init-val-or-state-map))
+  ([state-a state-k button-id kind init-val-or-state-map]
      (ensure-valid-val! init-val-or-state-map)
+     (ensure-valid-kind! kind)
      (let [state (if (number? init-val-or-state-map)
                    (nk-state-map init-val-or-state-map)
                    init-val-or-state-map)]
-       (send state-a add-state* state-k state button-id))))
+       (send state-a add-state* state-k state button-id kind))))
 
 (defn sm-nks-with-current-state
   [sm state-k]
@@ -564,6 +627,7 @@
         curr-button-id (sm-nk->button-id sm nk)]
 
     (nk-smr-leds-off nk)
+    (nk-rec-leds-off nk)
     (led-on nk :cycle)
     (let [flashers (reduce (fn [r [k v]]
                              (let [nks (get available k)]
@@ -581,14 +645,15 @@
 
 (defn nk-absolute-val-viz-on*
   [sm nk]
-  (let [sm       (kill-all-flashers* sm nk)
-        sm       (sm-nk-swap-mode sm nk :viz)
-        state    (sm-nk-state sm nk)
-        syncs    (sm-nk-syncs sm nk)
-        ctl-ids  (filter controller-id? (keys state))]
+  (let [sm      (kill-all-flashers* sm nk)
+        sm      (sm-nk-swap-mode sm nk :viz)
+        state   (sm-nk-state sm nk)
+        syncs   (sm-nk-syncs sm nk)
+        ctl-ids (filter controller-id? (keys state))
+        kind    (sm-nk-kind sm nk)]
 
     (nk-smr-leds-off nk)
-
+    (nk-show-kind nk kind)
     (reduce (fn [r ctl-id]
               (let [val      (get state ctl-id)
                     sync-led (matching-sync-led ctl-id)

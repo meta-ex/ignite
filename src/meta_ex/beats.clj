@@ -111,8 +111,8 @@
   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true))
   (def windy (sample-player (sample (freesound-path 17553)) :loop? true))
 
-  (ctl wwii :rate 0.5 :vol 2 :out-bus (nkmx :m1))
-  (ctl windy :rate 0.8 :vol 5 :out-bus (nkmx :m0))
+  (ctl wwii :rate 0.5 :vol 1 :out-bus (nkmx :m1))
+  (ctl windy :rate 1 :vol 1 :out-bus (nkmx :m0))
 
 
   (kill wwii)

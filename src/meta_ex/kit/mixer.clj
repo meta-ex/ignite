@@ -89,7 +89,7 @@
   (let [bufff       (buffer (* 2 44100))
         in-bus      (audio-bus 2)
         live?       (atom true)
-        mixer       (meta-mix :target mixer-g :in-bus in-bus :delay-buf bufff :out-bus out-bus)
+        mixer       (meta-mix [:tail mixer-g] :in-bus in-bus :delay-buf bufff :out-bus out-bus)
         handler-k (uuid)]
     (println "registering a mixer listening on " event-k)
     (on-latest-event event-k

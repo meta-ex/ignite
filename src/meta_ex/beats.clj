@@ -33,7 +33,7 @@
   (fn play-sample
     ([] (play-sample {}))
     ([args]
-       (sample-player (sample (freesound-path freesound-id)) :tgt synths  (assoc args :out-bus 0)))))
+       (sample-player (sample (freesound-path freesound-id)) [:head synths] (assoc args :out-bus 0)))))
 
 (do
   (def ring-hat (freesound-sampler 12912))

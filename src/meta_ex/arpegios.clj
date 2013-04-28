@@ -17,7 +17,7 @@
 (defonce notes-b (buffer buf-size))
 
 (comment
-  (baroque :tgt cellos-g :rate 0.5 :out-bus 50 :vol 1)
+  (baroque [:head cellos-g] :rate 0.5 :out-bus 50 :vol 1)
 
   (ctl  cellos-g :vol 0.5)
 

@@ -12,20 +12,20 @@
   (defonce intro (sample (freesound-path 9690)))
   (defonce grenade (sample (freesound-path 33245)))
 
-  (def oc (oceanwavescrushing :tgt dnb-g :out-bus 10 :loop? true :vol 1))
-  (def nr (notresponsible :tgt dnb-g :rate 1 :vol 0 :out-bus 10 :loop? true))
-  (def aw (alienwhisper :tgt dnb-g :rate 1 :out-bus 10 :loop? true :vol 0)))
+  (def oc (oceanwavescrushing [:head dnb-g] :out-bus 10 :loop? true :vol 1))
+  (def nr (notresponsible [:head dnb-g] :rate 1 :vol 0 :out-bus 10 :loop? true))
+  (def aw (alienwhisper [:head dnb-g] :rate 1 :out-bus 10 :loop? true :vol 0)))
 
 (def foo (drumnbass :loop? true))
 (ctl foo :rate 1)
-(===stop)
-(def dnb (drumnbass :tgt dnb-g :loop? true :out-bus (nkmx :s0) :rate 0.1))
+(stop)
+(def dnb (drumnbass [:head dnb-g] :loop? true :out-bus (nkmx :s0) :rate 0.1))
 
-(def tibet2 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
+(def tibet2 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
 
-(def tibet1 (tibetanchant :tgt dnb-g :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
-(def nr (notresponsible :tgt dnb-g :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))
-(def oc (oceanwavescrushing :tgt dnb-g :out-bus (nkmx :m0) :loop? true :vol 1))
+(def tibet1 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
+(def nr (notresponsible [:head dnb-g] :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))`
+(def oc (oceanwavescrushing [:head dnb-g] :out-bus (nkmx :m0) :loop? true :vol 1))
 
 (kill tibet2)
 (kill nr)
@@ -72,9 +72,9 @@
 (ctl tibet2 :rate 0.5)
 (ctl dnb :vol 0)
 (kill dnb)
-(def alien (alienwhisper :tgt dnb-g :rate 0.1 :out-bus (nkmx :s1)))
+(def alien (alienwhisper [:head dnb-g] :rate 1 :out-bus (nkmx :s1)))
 (ctl alien :out-bus (nkmx :s0))
-(grenade :amp 2 :rate 0.25 :out-bus (nkmx :m0))
+(grenade :amp 2 :rate 0.25 :out-bus (nkmx :s0))
 
 (def i (intro :rate 1))
 (grenade :vol 0.5 :rate 0.4)

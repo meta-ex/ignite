@@ -32,7 +32,7 @@
                      (repeat out-bus))]
     (doall (map (fn [sample out-bus]
                   (doseq [x (range num-steps)]
-                    (mono-sequencer :tgt tgt-group
+                    (mono-sequencer [:tail tgt-group]
                                     :buf (:sample sample)
                                     :beat-num x
                                     :pattern (:pattern sample)

@@ -11,9 +11,9 @@
 
 (defonce count-trig-id (trig-id))
 
-(defonce trigger-s (trigger :tgt triggers-g :out-bus trg-b))
-(defonce divider-s (divider :tgt triggers-g :in-bus trg-b :out-bus beat-b))
-(defonce counter-s (counter :tgt triggers-g :in-bus beat-b :out-bus cnt-b))
+(defonce trigger-s (trigger [:tail triggers-g] :out-bus trg-b))
+(defonce divider-s (divider [:tail triggers-g] :in-bus trg-b :out-bus beat-b))
+(defonce counter-s (counter [:tail triggers-g] :in-bus beat-b :out-bus cnt-b))
 
 (defsynth get-beat [] (send-trig (in:kr beat-b) count-trig-id (in:kr cnt-b)))
 (defonce get-beat-s (get-beat))
@@ -22,7 +22,7 @@
   "Set the rate of the global trigger synth. Vals betwen 50 - 300 work well."
   [r]
   (ctl trigger-s :rate r))
-
+n
 (set-rate 200)
 
 (comment

@@ -2,7 +2,7 @@
   (:use [overtone.live])
   (:require [clojure.set]
             [meta-ex.mixer]
-            [meta-ex.triggers :as trg]
+            [meta-ex.timing :as tim]
             [meta-ex.sequencer :as s]))
 
 (defonce num-notes-bs (control-bus))
@@ -21,7 +21,7 @@
 
   (ctl  cellos-g :vol 0.5)
 
-  (def s (arpeg-click :out-bus 50 :rate 1 :buf notes-b :tik-b trg/trg-b))
+  (def s (arpeg-click :out-bus 50 :rate 1 :buf notes-b :tik-b tim/root-b))
   (node-map-controls s [:num-notes num-notes-bs])
 
   (kill s)

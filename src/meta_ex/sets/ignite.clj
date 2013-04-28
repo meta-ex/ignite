@@ -4,7 +4,7 @@
   (:require
    [meta-ex.hw.monomes :as mon]
    [meta-ex.hw.polynome :as poly]
-   [meta-ex.kit.triggers]
+   [meta-ex.kit.timing :as tim]
    [meta-ex.hw.nk.connected :as nk-conn]
    [meta-ex.kit.mixer :as mx]
    [meta-ex.hw.nk.state-maps :as nksm]

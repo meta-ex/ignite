@@ -2,7 +2,7 @@
   (:use [overtone.live]
         [meta-ex.kit.mixer])
   (:require [meta-ex.kit.monome-sequencer :as ms]
-            [meta-ex.kit.triggers :as trg]
+            [meta-ex.kit.timing :as tim]
             [meta-ex.kit.sequencer :as seq]))
 
 (defonce dub-g (group))
@@ -12,8 +12,8 @@
 ;;(kill dub-g)
 (defsynth dubstep [note 40 wobble 32 hi-man 0 lo-man 0 sweep-man 0 deci-man 0 tan-man 0 shape 0 sweep-max-freq 3000 hi-man-max 1000 lo-man-max 500 beat-vol 0 lag-delay 0.5 amp 1 out-bus 0]
   (let [bpm   300
-        wob   (pulse-divider (in:kr trg/trg-b) wobble)
-        sweep (lin-lin:kr (lag-ud wob 0.01 lag-delay) 0 1 400 sweep-max-freq)
+        wob   (in:kr tim/sin-b)
+        sweep (lin-lin:kr (lag-ud wob 0.01 lag-delay) -1 1 400 sweep-max-freq)
         snd   (mix (saw (* (midicps note) [0.99 1.01])))
         snd   (lpf snd sweep)
         snd   (normalizer snd)

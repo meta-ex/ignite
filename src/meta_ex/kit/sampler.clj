@@ -5,7 +5,6 @@
   (:require [clojure.set :as set]
             [meta-ex.hw.fonome :as fon]
             [meta-ex.hw.polynome :as poly]
-            [meta-ex.kit.triggers :as trg]
             [meta-ex.kit.sequencer :as seq]))
 
 (defonce samplers (atom {}))

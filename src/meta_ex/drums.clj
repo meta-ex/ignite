@@ -5,7 +5,7 @@
   (:require [meta-ex.sets.ignite]
             [meta-ex.kit.monome-sequencer :as ms]
             [meta-ex.kit.sequencer :as seq]
-            [meta-ex.kit.triggers :as trg]
+            [meta-ex.kit.timing :as tim]
             [meta-ex.kit.sampler :as samp]
             [meta-ex.hw.polynome :as poly]
             [meta-ex.hw.fonome :as fon]))
@@ -16,7 +16,7 @@
   (defonce seq128-f (fon/mk-fonome ::seq128 16 6)))
 
 (def seq64
-  (ms/mk-monome-sequencer "m64" transition-samples seq64-f))
+  (ms/mk-monome-sequencer "m64" african-samples seq64-f))
 
 (def seq128
   (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
@@ -36,11 +36,11 @@
 ;;(ms/stop-sequencer seq128)
 ;;(ms/stop-sequencer seq64)
 
-;; (def c-sequencer (seq/mk-sequencer "m128" samples 16 drum-g trg/beat-b trg/cnt-b 0))
-;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g trg/beat-b trg/cnt-b 0))
-;; (seq/sequencer-write! c-sequencer4 0 [1 0 1 0 1 1 1 ])
-;; (seq/sequencer-write! c-sequencer4 3 (repeat 8 0))
-;; (seq/sequencer-write! c-sequencer4 2 [1 0 0 0 0 0 0 1])
+;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
+;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
+;; (seq/sequencer-write! c-sequencer4 0 [1 0 0 0 1 1 0 ])
+;; (seq/sequencer-write! c-sequencer4 3 (repeat 8 1))
+;; (seq/sequencer-write! c-sequencer4 2 [1 1 0 0 0 0 0 1])
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)
@@ -65,7 +65,5 @@
 (:history @(:state seq64-f))
 (adsr)
 
-
-
-()
-(volume 2)
+;;(volume 2)
+;;(stop)

@@ -2,7 +2,7 @@
   (:use [overtone.core]
         [overtone.helpers.lib :only [uuid]])
   (:require [meta-ex.hw.fonome :as fon]
-            [meta-ex.kit.triggers :as trg]
+            [meta-ex.kit.timing :as tim]
             [meta-ex.kit.sequencer :as seq]))
 
 (defonce m-sequencers (atom {}))
@@ -36,8 +36,8 @@
                                          (take (dec range-y) samples)
                                          range-x
                                          (foundation-default-group)
-                                         trg/beat-b
-                                         trg/cnt-b
+                                         tim/beat-b
+                                         tim/beat-count-b
                                          out-bus
                                          with-mixers?)
            seq-atom    (atom sequencer)
@@ -77,7 +77,7 @@
                    (fon/toggle-led fonome x y))
                  key2)
 
-       (on-trigger trg/count-trig-id
+       (on-trigger tim/count-trig-id
                    (fn [beat]
                      (let [beat-track-y (dec (:height tgt-fonome))]
                        (doseq [x (range (:width tgt-fonome)) ]
@@ -108,8 +108,8 @@
                                         (take (dec (-> m-seq :fonome :height)) samples)
                                         (-> m-seq :fonome :width)
                                         (foundation-default-group)
-                                        trg/beat-b
-                                        trg/cnt-b
+                                        tim/beat-b
+                                        tim/beat-count-b
                                         (-> sequencer :out-bus)
                                         (-> sequencer :with-mixers?))]
     (sequencer-write-grid! new-sequencer

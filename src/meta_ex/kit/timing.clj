@@ -37,7 +37,7 @@
 (defsynth pi-offset [root-bus 0 out-bus 0]
   (out:kr out-bus (* (+ 1 (in:kr root-bus)) Math/PI)))
 
-(defsynth get-beat [] (send-trig (in:kr beat-b) count-trig-id (in:kr count-b)))
+(defsynth get-beat [] (send-trig (in:kr beat-b) count-trig-id (+ (in:kr beat-count-b) 1)))
 
 (defsynth x [count-bus 0 offset-bus 0 out-bus 0]
   (let [cnt (in:kr count-bus)
@@ -58,18 +58,18 @@
     (out:kr out-bus (* x mul ))))
 
 (do
-  (defonce root-s (root-saw [:head timing-g] :saw-bus root-b :inv-saw-bus inv-root-b :rate 200))
-  (defonce count-s (saw-counter [:after root-s] :out-bus count-b :in-bus inv-root-b))
-  (defonce pi-count-s (pi-counter [:after root-s] :out-bus pi-count-b :counter-bus count-b))
-  (defonce offset-s (offset [:after count-s] :root-bus root-b :out-bus offset-b))
-  (defonce pi-offset-s (pi-offset [:after pi-count-s] :out-bus pi-offset-b :root-bus root-b))
-  (defonce x-s (x [:after count-b] :offset-bus offset-b :out-bus x-b))
-  (defonce pi-x-s (pi-x [:after offset-s] :pi-count-bus pi-count-b :pi-offset-bus pi-offset-b :out-bus pi-x-b))
-  (defonce sin-x-s (sin-x [:after pi-x-s] :pi-x-bus pi-x-b :mul 1 :out-bus sin-b))
-  (defonce x-mul-s (x-mul  [:after x-s] :x-bus x-b :mul 0.1 :out-bus x-mul-b))
-  (defonce divider-s (divider [:after root-s] :in-bus inv-root-b :out-bus beat-b))
-  (defonce counter-s (counter [:after divider-s] :in-bus beat-b :out-bus beat-count-b))
-  (defonce get-beat-s (get-beat [:after divider-s])))
+  (def root-s (root-saw [:head timing-g] :saw-bus root-b :inv-saw-bus inv-root-b :rate 2))
+  (def count-s (saw-counter [:after root-s] :out-bus count-b :in-bus inv-root-b))
+  (def pi-count-s (pi-counter [:after root-s] :out-bus pi-count-b :counter-bus count-b))
+  (def offset-s (offset [:after count-s] :root-bus root-b :out-bus offset-b))
+  (def pi-offset-s (pi-offset [:after pi-count-s] :out-bus pi-offset-b :root-bus root-b))
+  (def x-s (x [:after count-b] :offset-bus offset-b :out-bus x-b))
+  (def pi-x-s (pi-x [:after offset-s] :pi-count-bus pi-count-b :pi-offset-bus pi-offset-b :out-bus pi-x-b))
+  (def sin-x-s (sin-x [:after pi-x-s] :pi-x-bus pi-x-b :mul 1 :out-bus sin-b))
+  (def x-mul-s (x-mul  [:after x-s] :x-bus x-b :mul 0.1 :out-bus x-mul-b))
+  (def divider-s (divider [:after root-s] :div 1 :in-bus inv-root-b :out-bus beat-b))
+  (def counter-s (counter [:after divider-s] :in-bus beat-b :out-bus beat-count-b))
+  (def get-beat-s (get-beat [:after divider-s])))
 
 (comment
  (do
@@ -90,10 +90,19 @@
 
 ;; ;;(run (poll (impulse:kr 10) (/ (+ 1 (* -1 (lf-saw:kr 1))) 2)))
 
+ (defsynth foo [freq 100]
+   (out 0 (pan2 (normalizer (lpf (mix (saw [freq (+ freq 1)])) (* 200 (+ 1 (in:kr sin-b))))))))
 
-;; (demo 20
-;;       (let [f (+ 50 (* 50 (+ 2 (in:kr sin-b))))]
-;;         (saw [f (+ f 1)])))
+;; (def f (foo))
+;; (ctl f :freq 100)
+;; (kill f)
+;; (ctl sin-x-s :mul (/ 1/60 16))
+;; (ctl sin-x-s :mul (/ 1/60 8))
+;; (ctl sin-x-s :mul (/ 1/60 0.5))
+
+;;  (demo 20
+;;                (let [f (+ 50 (* 50 (+ 2 (in:kr sin-b))))]
+;;          (saw [f (+ f 1)])))
 ;; (ctl sin-x-s :mul 3)
 ;; (stop)
 
@@ -102,9 +111,9 @@
 ;; ;;             (println m)
 ;;             )
 ;;           ::debug)
-;;(ctl root-s :rate 100)
+;;(ctl root-s :rate 8)
 
-;;(ctl sin-x-s :mul 1/1024)
+
 
 ;; (pscope root-b)
 ;; ;; (pscope x-b)
@@ -112,9 +121,10 @@
 ;; (pscope x-mul-b)
 ;; (* Math/PI 2)
 ;; (bus-get pi-offset-b)
-;; (bus-get pi-count-b)
+;; (bus-get beat-count-b)
+
 ;; (bus-get sin-b)
 
-(ctl root-s :rate 50)
+;;(ctl root-s :rate 50)
 
-(bus-get beat-count-b)
+;;(bus-get beat-count-b)

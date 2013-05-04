@@ -18,6 +18,7 @@
                  [watchtower "0.1.1"]
                  ]
   :jvm-opts [
+;;             "-agentpath:/Applications/YourKit_Java_Profiler_12.0.5.app/bin/mac/libyjpagent.jnilib"
     "-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
     "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with
     "-XX:+UseConcMarkSweepGC"     ;  the concurrent garbage collector

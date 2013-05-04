@@ -25,8 +25,9 @@
 (def ob 0)
 (volume 0.25)
 
-(grumble [:head grumble-g] :freq-mul 2 :out-bus ob :amp 1.5)
-(grumble [:head grumble-g] :freq-mul 1.8 :out-bus ob :amp 1.5)
+
+(grumble [:head grumble-g] :freq-mul 2 :out-bus ob :amp 3)
+(grumble [:head grumble-g] :freq-mul 1.8 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 1.5 :out-bus ob :amp 2)
 (grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2)

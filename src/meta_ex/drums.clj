@@ -18,12 +18,14 @@
 (def seq64
   (ms/mk-monome-sequencer "m64" african-samples seq64-f))
 
+( seq64)
+
 (def seq128
   (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
 
 (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
 (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
-(demo )
+
 (defonce trigger-sampler (samp/mk-sampler ::bar trigger-samples   (nkmx :r0) ))
 
 (poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 0)
@@ -34,7 +36,8 @@
 (ms/swap-samples! seq128  orig-samples)
 
 ;;(ms/stop-sequencer seq128)
-;;(ms/stop-sequencer seq64)
+
+
 
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))

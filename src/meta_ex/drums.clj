@@ -13,13 +13,46 @@
 (do
   (defonce drum-g (group))
   (defonce seq64-f (fon/mk-fonome ::seq64 8 5))
-  (defonce seq128-f (fon/mk-fonome ::seq128 16 6)))
+;;  (defonce seq128-f (fon/mk-fonome ::seq128 16 6))
+  )
 
 (def seq64
   (ms/mk-monome-sequencer "m64" african-samples seq64-f))
 
-( seq64)
 
+;;(ms/stop-sequencer seq64)
+(defn get-sin-ctl
+  [sequencer idx]
+  (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
+
+(ctl (get-sin-ctl seq64 1)
+     :freq-mul-7 1/16
+     :mul-7 1
+     :add-7 0.5)
+
+(node-get-control (get-sin-ctl seq64 0) [:freq-mul-7])
+
+(ctl sc
+     :freq-mul-7 1/16
+     :mul-7 1.3
+     )
+
+(ctl sc
+     :freq-mul-15 1/16
+     :mul-15 0
+     :add-15 0.5
+     :amp-15 1)
+
+
+(stop)
+
+(defsynth foo [p 0] (out 0 (pan2 (sin-osc) p)))
+
+(def f (foo))
+
+(ctl f :p -10)
+
+(stop)
 (def seq128
   (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
 
@@ -31,13 +64,12 @@
 (poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 0)
 
 (ms/swap-samples! seq128 mouth-samples)
-(ms/swap-samples! seq64 transition-samples)
+(ms/swap-samples! seq64 orig-samples)
 (ms/swap-samples! seq128 african-samples)
 (ms/swap-samples! seq128  orig-samples)
 
 ;;(ms/stop-sequencer seq128)
-
-
+;p(ms/stop-sequencer seq64)
 
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
@@ -70,3 +102,4 @@
 
 ;;(volume 2)
 ;;(stop)
+(bus-get 900)

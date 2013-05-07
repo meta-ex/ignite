@@ -13,11 +13,14 @@
 (do
   (defonce drum-g (group))
   (defonce seq64-f (fon/mk-fonome ::seq64 8 5))
-;;  (defonce seq128-f (fon/mk-fonome ::seq128 16 6))
+  (defonce seq128-f (fon/mk-fonome ::seq128 16 6))
   )
 
 (def seq64
   (ms/mk-monome-sequencer "m64" african-samples seq64-f))
+
+(def seq128
+  (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
 
 
 ;;(ms/stop-sequencer seq64)
@@ -53,8 +56,7 @@
 (ctl f :p -10)
 
 (stop)
-(def seq128
-  (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
+
 
 (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
 (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
@@ -66,6 +68,7 @@
 (ms/swap-samples! seq128 mouth-samples)
 (ms/swap-samples! seq64 orig-samples)
 (ms/swap-samples! seq128 african-samples)
+(ms/swap-samples! seq128 ambient-drum--samples)
 (ms/swap-samples! seq128  orig-samples)
 
 ;;(ms/stop-sequencer seq128)
@@ -73,9 +76,9 @@
 
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
-;; (seq/sequencer-write! c-sequencer4 0 [1 0 0 0 1 1 0 ])
-;; (seq/sequencer-write! c-sequencer4 3 (repeat 8 1))
-;; (seq/sequencer-write! c-sequencer4 2 [1 1 0 0 0 0 0 1])
+ (seq/sequencer-write! c-sequencer4 0 [1 0 0 0 1 1 0 ])
+ (seq/sequencer-write! c-sequencer4 3 (repeat 8 0))
+ (seq/sequencer-write! c-sequencer4 2 [1 1 0 0 1 0 0 1])
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)

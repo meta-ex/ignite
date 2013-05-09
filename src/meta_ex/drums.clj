@@ -14,24 +14,26 @@
   (defonce drum-g (group))
   (defonce seq64-f (fon/mk-fonome ::seq64 8 5))
   (defonce seq128-f (fon/mk-fonome ::seq128 16 6))
-  )
 
-(def seq64
-  (ms/mk-monome-sequencer "m64" african-samples seq64-f))
+  (def seq64
+    (ms/mk-monome-sequencer "m64" orig-samples seq64-f))
 
-(def seq128
-  (ms/mk-monome-sequencer "m128" ambient-drum-samples seq128-f))
+  (def seq128
+    (ms/mk-monome-sequencer "m128" mouth-samples seq128-f))
 
+
+  (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
+  (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
 
 ;;(ms/stop-sequencer seq64)
 (defn get-sin-ctl
   [sequencer idx]
   (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
 
-(ctl (get-sin-ctl seq64 1)
-     :freq-mul-7 1/16
-     :mul-7 1
-     :add-7 0.5)
+(ctl (get-sin-ctl seq128 )
+     :freq-mul-7 5/7
+     :mul-7 0.5
+     :add-7 1)
 
 (node-get-control (get-sin-ctl seq64 0) [:freq-mul-7])
 
@@ -40,36 +42,26 @@
      :mul-7 1.3
      )
 
-(ctl sc
+(ctl (get-sin-ctl seq128 1)
      :freq-mul-15 1/16
      :mul-15 0
      :add-15 0.5
      :amp-15 1)
 
 
-(stop)
-
-(defsynth foo [p 0] (out 0 (pan2 (sin-osc) p)))
-
-(def f (foo))
-
-(ctl f :p -10)
-
-(stop)
-
-
-(poly/dock-fonome! m64 seq64-f ::seq64 0 0)
-(poly/dock-fonome! m128 seq128-f ::seq128 0 0)
-
 (defonce trigger-sampler (samp/mk-sampler ::bar trigger-samples   (nkmx :r0) ))
 
-(poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 0)
+(poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 7)
 
-(ms/swap-samples! seq128 mouth-samples)
+(ms/swap-samples! seq64 african-samples)
+(ms/swap-samples! seq64 ambient-drum-samples)
 (ms/swap-samples! seq64 orig-samples)
+(ms/swap-samples! seq64 mouth-samples)
+
 (ms/swap-samples! seq128 african-samples)
-(ms/swap-samples! seq128 ambient-drum--samples)
-(ms/swap-samples! seq128  orig-samples)
+(ms/swap-samples! seq128 ambient-drum-samples)
+(ms/swap-samples! seq128 orig-samples)
+(ms/swap-samples! seq128 mouth-samples)
 
 ;;(ms/stop-sequencer seq128)
 ;p(ms/stop-sequencer seq64)

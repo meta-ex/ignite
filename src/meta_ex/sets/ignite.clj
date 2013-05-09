@@ -129,3 +129,5 @@
 (def m64 (mon/find-monome "/dev/tty.usbserial-m64-0790"))
 (def m128 (mon/find-monome "/dev/tty.usbserial-m128-115"))
 (def m256 (mon/find-monome "/dev/tty.usbserial-m256-203"))
+
+(ctl tim/root-s :rate 4)

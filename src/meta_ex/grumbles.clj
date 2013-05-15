@@ -32,3 +32,25 @@
 (grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2)
 (ctl grumble-g :speed 1997)
+
+(apply hash-map [:foo 1])
+
+(defn sin-ctl
+  [ctl-id arg-map]
+  (reduce (fn [res [k v]]
+            (let [idx (mix-idx k)]
+              (merge res (map (fn [[k v]]
+                                [(keyword (str (name k) "-" mix-idx)) v])
+                              v))))
+          {}
+          arg-map))
+
+(sin-ctl (nkmx-sctl :s1)
+         {:amp {:freq-mul 0.5
+                :mul 1
+                :add 0.5}})
+
+(ctl  (nkmx-sctl :s1)
+     :freq-mul-7 0.5
+     :mul-7 1
+     :add-7 0.5)

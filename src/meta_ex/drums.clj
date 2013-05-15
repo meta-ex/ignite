@@ -11,27 +11,83 @@
             [meta-ex.hw.fonome :as fon]))
 
 (do
+
+  (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
+    (out out-bus (* (lag amp clamp-down-t) (in:ar in-bus 2))))
+
   (defonce drum-g (group))
+  (defonce m64-b (audio-bus 2))
+  (defonce m128-b (audio-bus 2))
   (defonce seq64-f (fon/mk-fonome ::seq64 8 5))
   (defonce seq128-f (fon/mk-fonome ::seq128 16 6))
+  (defonce insta-pause64-f (fon/mk-fonome ::pauser64 1 1))
+  (defonce insta-pause128-f (fon/mk-fonome ::pauser128 1 1))
+  (defonce insta-pause-all-f (fon/mk-fonome ::pauser-all 1 1))
+  (defonce bas-mix-s64 (basic-mixer [:after drum-g] :in-bus m64-b))
+  (defonce bas-mix-s128 (basic-mixer [:after drum-g] :in-bus m128-b))
 
-  (def seq64
-    (ms/mk-monome-sequencer "m64" orig-samples seq64-f))
+  (defonce seq64
+    (ms/mk-monome-sequencer "m64" orig-samples seq64-f m64-b drum-g))
 
-  (def seq128
-    (ms/mk-monome-sequencer "m128" mouth-samples seq128-f))
-
+  #_(defonce seq128
+    (ms/mk-monome-sequencer "m128" mouth-samples seq128-f m128-b drum-g))
 
   (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
-  (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
+  #_(poly/dock-fonome! m128 seq128-f ::seq128 0 0)
+
+  (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7)
+
+  (on-event [:fonome :led-change (:id insta-pause64-f)]
+            (fn [{:keys [x y new-leds]}]
+              (let [on? (get new-leds [x y])]
+                (if on?
+                  (ctl bas-mix-s64 :amp 1)
+                  (ctl bas-mix-s64 :amp 0)))
+
+              )
+            ::seq64)
+
+
+
+  (on-event [:fonome :press (:id insta-pause64-f)]
+            (fn [{:keys [x y fonome]}]
+              (fon/toggle-led fonome x y)
+              )
+            ::seq64-press)
+
+
+  (poly/dock-fonome! m64 insta-pause64-f ::pause128 15 7)
+
+  (on-event [:fonome :led-change (:id insta-pause128-f)]
+            (fn [{:keys [x y new-leds]}]
+              (let [on? (get new-leds [x y])]
+                (if on?
+                  (ctl bas-mix-s128 :amp 1)
+                  (ctl bas-mix-s128 :amp 0)))
+
+              )
+            ::seq128)
+
+
+
+  (on-event [:fonome :press (:id insta-pause128-f)]
+            (fn [{:keys [x y fonome]}]
+              (fon/toggle-led fonome x y)
+              )
+            ::seq128-press))
+
+(event-debug-off)
+(ctl bas-mix-s :amp 0.5)
+
 
 ;;(ms/stop-sequencer seq64)
 (defn get-sin-ctl
   [sequencer idx]
   (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
 
-(ctl (get-sin-ctl seq128 )
-     :freq-mul-7 5/7
+
+(ctl (get-sin-ctl seq64 0)
+     :freq-mul-7 4/7
      :mul-7 0.5
      :add-7 1)
 

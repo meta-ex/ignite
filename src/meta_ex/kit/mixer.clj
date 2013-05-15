@@ -18,7 +18,7 @@
      (+ wob (* 0.2 (g-verb wob 9 0.7 0.7))))))
 
 (def mix-idx
-  [:rev-mix 0
+  {:rev-mix 0
    :delay-decay 1
    :dec-mix 2
    :wobble-mix 3
@@ -29,11 +29,11 @@
    :rev-damp 8
    :rev-room 9
    :samp-rate 10
-   :bit-rate  11
+   :bit-rate 11
    :delay-rate 12
    :hpf-freq 13
    :hpf-rq 14
-   :pan 15])
+   :pan 15})
 
 (defsynth meta-mix [rev-mix 0
                     delay-decay 0
@@ -331,3 +331,7 @@
 (defn nkmx-synth
   [k]
   (:mixer (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))
+
+(defn nkmx-sctl
+  [k]
+  (:sin-ctl (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))

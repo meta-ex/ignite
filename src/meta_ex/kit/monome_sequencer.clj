@@ -25,8 +25,10 @@
   ([handle samples tgt-fonome]
      (mk-monome-sequencer handle samples tgt-fonome 0 ))
   ([handle samples tgt-fonome out-bus]
-     (mk-monome-sequencer handle samples tgt-fonome 0 true))
-  ([handle samples tgt-fonome out-bus with-mixers?]
+     (mk-monome-sequencer handle samples tgt-fonome 0 (foundation-default-group)))
+  ([handle samples tgt-fonome out-bus tgt-g]
+     (mk-monome-sequencer handle samples tgt-fonome out-bus tgt-g true))
+  ([handle samples tgt-fonome out-bus tgt-g with-mixers?]
      (when-not tgt-fonome
        (throw (IllegalArgumentException. "Please pass a valid fonome to mk-monome-sequencer")))
 
@@ -35,7 +37,7 @@
            sequencer   (seq/mk-sequencer handle
                                          (take (dec range-y) samples)
                                          range-x
-                                         (foundation-default-group)
+                                         tgt-g
                                          tim/beat-b
                                          tim/beat-count-b
                                          out-bus

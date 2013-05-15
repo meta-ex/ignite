@@ -81,7 +81,8 @@
                    :mixer-handles mixer-handles
                    :mixers        mixers
                    :out-bus       out-bus
-                   :with-mixers?  with-mixers?}
+                   :with-mixers?  with-mixers?
+                   :tgt-group     tgt-group}
          {:type ::sequencer}))))
 
 (defn sequencer-write!

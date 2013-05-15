@@ -109,7 +109,7 @@
         new-sequencer (seq/mk-sequencer (:handle m-seq)
                                         (take (dec (-> m-seq :fonome :height)) samples)
                                         (-> m-seq :fonome :width)
-                                        (foundation-default-group)
+                                        (-> sequencer :tgt-group)
                                         tim/beat-b
                                         tim/beat-count-b
                                         (-> sequencer :out-bus)

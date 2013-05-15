@@ -29,13 +29,13 @@
   (defonce seq64
     (ms/mk-monome-sequencer "m64" orig-samples seq64-f m64-b drum-g))
 
-  #_(defonce seq128
+  (defonce seq128
     (ms/mk-monome-sequencer "m128" mouth-samples seq128-f m128-b drum-g))
 
   (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
-  #_(poly/dock-fonome! m128 seq128-f ::seq128 0 0)
+  (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
 
-  (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7)
+  (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7)
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
             (fn [{:keys [x y new-leds]}]
@@ -56,7 +56,7 @@
             ::seq64-press)
 
 
-  (poly/dock-fonome! m64 insta-pause64-f ::pause128 15 7)
+  (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7)
 
   (on-event [:fonome :led-change (:id insta-pause128-f)]
             (fn [{:keys [x y new-leds]}]
@@ -68,7 +68,8 @@
               )
             ::seq128)
 
-
+  ;;(ctl bas-mix-s128 :amp 2)
+  ;;(ctl bas-mix-s64 :amp 2)
 
   (on-event [:fonome :press (:id insta-pause128-f)]
             (fn [{:keys [x y fonome]}]
@@ -87,20 +88,15 @@
 
 
 (ctl (get-sin-ctl seq64 0)
-     :freq-mul-7 4/7
-     :mul-7 0.5
-     :add-7 1)
+     :freq-mul-7 5/7
+     :mul-7 2
+     :add-7 0)
 
-(node-get-control (get-sin-ctl seq64 0) [:freq-mul-7])
 
-(ctl sc
-     :freq-mul-7 1/16
-     :mul-7 1.3
-     )
 
-(ctl (get-sin-ctl seq128 1)
-     :freq-mul-15 1/16
-     :mul-15 0
+(ctl (get-sin-ctl seq64 0)
+     :freq-mul-15 1
+     :mul-15 0.5
      :add-15 0.5
      :amp-15 1)
 
@@ -113,6 +109,7 @@
 (ms/swap-samples! seq64 ambient-drum-samples)
 (ms/swap-samples! seq64 orig-samples)
 (ms/swap-samples! seq64 mouth-samples)
+(ms/swap-samples! seq64 transition-samples)
 
 (ms/swap-samples! seq128 african-samples)
 (ms/swap-samples! seq128 ambient-drum-samples)

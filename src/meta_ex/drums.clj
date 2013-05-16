@@ -27,15 +27,14 @@
   (defonce bas-mix-s128 (basic-mixer [:after drum-g] :in-bus m128-b))
 
   (defonce seq64
-    (ms/mk-monome-sequencer "m64" orig-samples seq64-f m64-b drum-g))
+    (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
 
-  (defonce seq128
+  #_(defonce seq128
     (ms/mk-monome-sequencer "m128" mouth-samples seq128-f m128-b drum-g))
 
-  (poly/dock-fonome! m64 seq64-f ::seq64 0 0)
-  (poly/dock-fonome! m128 seq128-f ::seq128 0 0)
-
-  (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7)
+  (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
+  ;;(defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
+  (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7))
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
             (fn [{:keys [x y new-leds]}]
@@ -56,7 +55,7 @@
             ::seq64-press)
 
 
-  (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7)
+  #_(defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
 
   (on-event [:fonome :led-change (:id insta-pause128-f)]
             (fn [{:keys [x y new-leds]}]

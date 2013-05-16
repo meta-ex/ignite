@@ -29,8 +29,13 @@
 (grumble [:head grumble-g] :freq-mul 2 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 1.8 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 1.5 :out-bus ob :amp 2)
-(grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 3)
-(grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2)
+(do
+  (grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 3)
+  (grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2))
+
+(do
+  (grumble [:head grumble-g] :freq-mul 1 :out-bus 0 :amp 3)
+  (grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2))
 (ctl grumble-g :speed 1997)
 
 (defn sin-ctl
@@ -49,11 +54,11 @@
                 :add 0.5}})
 
 (ctl  (nkmx-sctl :s1)
-     :freq-mul-7 2
+     :freq-mul-7 0
      :mul-7 1
      :add-7 0.5)
 
 (ctl  (nkmx-sctl :s1)
-     :freq-mul-13 2
+     :freq-mul-13 0
      :mul-13 1
      :add-13 0.5)

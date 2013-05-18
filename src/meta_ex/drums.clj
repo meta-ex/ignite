@@ -10,6 +10,9 @@
             [meta-ex.hw.polynome :as poly]
             [meta-ex.hw.fonome :as fon]))
 
+(recording-start "~/Desktop/musictechfest.wav")
+;;(recording-stop)
+
 (do
 
   (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
@@ -26,14 +29,14 @@
   (defonce bas-mix-s64 (basic-mixer [:after drum-g] :in-bus m64-b))
   (defonce bas-mix-s128 (basic-mixer [:after drum-g] :in-bus m128-b))
 
-  (defonce seq64
+  (def seq64
     (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
 
-  #_(defonce seq128
+  (defonce seq128
     (ms/mk-monome-sequencer "m128" mouth-samples seq128-f m128-b drum-g))
 
   (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
-  ;;(defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
+  (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
   (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7))
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
@@ -55,7 +58,7 @@
             ::seq64-press)
 
 
-  #_(defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
+  (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
 
   (on-event [:fonome :led-change (:id insta-pause128-f)]
             (fn [{:keys [x y new-leds]}]
@@ -74,10 +77,9 @@
             (fn [{:keys [x y fonome]}]
               (fon/toggle-led fonome x y)
               )
-            ::seq128-press))
+            ::seq128-press))_
 
-(event-debug-off)
-(ctl bas-mix-s :amp 0.5)
+(ctl bas-mix-s64 :amp 1)
 
 
 ;;(ms/stop-sequencer seq64)
@@ -87,14 +89,14 @@
 
 
 (ctl (get-sin-ctl seq64 0)
-     :freq-mul-7 5/7
-     :mul-7 2
-     :add-7 0)
+     :freq-mul-7 0.125
+     :mul-7 0
+     :add-7 1)
 
 
 
 (ctl (get-sin-ctl seq64 0)
-     :freq-mul-15 1
+     :freq-mul-15 5/7
      :mul-15 0.5
      :add-15 0.5
      :amp-15 1)

@@ -134,6 +134,6 @@
 
 ;; (bus-get sin-b)
 
-;;(ctl root-s :rate 8)
+(ctl root-s :rate 1)
 
 ;;(bus-get beat-count-b)

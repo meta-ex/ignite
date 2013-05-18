@@ -23,15 +23,14 @@
 
 (def ob (nkmx :s1))
 (def ob 0)
-(volume 0.25)
+(volume 0.55)
 
 
 (grumble [:head grumble-g] :freq-mul 2 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 1.8 :out-bus ob :amp 3)
 (grumble [:head grumble-g] :freq-mul 1.5 :out-bus ob :amp 2)
-(do
-  (grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 3)
-  (grumble [:head grumble-g] :freq-mul 0.5 :out-bus 0 :amp 2))
+(do  (grumble [:head grumble-g] :freq-mul 1 :out-bus ob :amp 1)
+  (grumble [:head grumble-g] :freq-mul 0.5 :out-bus ob :amp 1))
 
 (do
   (grumble [:head grumble-g] :freq-mul 1 :out-bus 0 :amp 3)
@@ -54,11 +53,11 @@
                 :add 0.5}})
 
 (ctl  (nkmx-sctl :s1)
-     :freq-mul-7 0
+     :freq-mul-7 1
      :mul-7 1
      :add-7 0.5)
 
 (ctl  (nkmx-sctl :s1)
-     :freq-mul-13 0
+     :freq-mul-13 1/8
      :mul-13 1
      :add-13 0.5)

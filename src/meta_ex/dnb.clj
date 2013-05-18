@@ -24,9 +24,9 @@
 (def tibet2 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
 
 (def tibet1 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
-(def nr (notresponsible [:head dnb-g] :rate 1 :vol 1 :out-bus (nkmx :s1) :loop? true))`
+(def nr (notresponsible [:head dnb-g] :rate 1 :vol 1 :out-bus (nkmx :m0) :loop? true))
 (def oc (oceanwavescrushing [:head dnb-g] :out-bus (nkmx :m0) :loop? true :vol 1))
-
+(stop)
 (kill tibet2)
 (kill nr)
 (ctl tibet2  :rate 0.5)

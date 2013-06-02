@@ -10,9 +10,11 @@
             [meta-ex.hw.polynome :as poly]
             [meta-ex.hw.fonome :as fon]))
 
-(recording-start "~/Desktop/musictechfest.wav")
-;;(recording-stop)
 
+
+(recording-start "~/Desktop/post-hotcodecon.wav")
+;;(recording-stop)
+;; (stop)o
 (do
 
   (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
@@ -32,11 +34,11 @@
   (def seq64
     (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
 
-  (defonce seq128
-    (ms/mk-monome-sequencer "m128" mouth-samples seq128-f m128-b drum-g))
+  #_(defonce seq128
+    (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
 
   (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
-  (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
+  #_(defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
   (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7))
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
@@ -58,7 +60,7 @@
             ::seq64-press)
 
 
-  (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
+  #_(defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
 
   (on-event [:fonome :led-change (:id insta-pause128-f)]
             (fn [{:keys [x y new-leds]}]
@@ -88,10 +90,10 @@
   (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
 
 
-(ctl (get-sin-ctl seq64 0)
-     :freq-mul-7 0.125
-     :mul-7 0
-     :add-7 1)
+(ctl (get-sin-ctl seq128 0)
+     :freq-mul-7 5/7
+     :mul-7 3
+     :add-7 0)
 
 
 
@@ -122,9 +124,10 @@
 
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
- (seq/sequencer-write! c-sequencer4 0 [1 0 0 0 1 1 0 ])
- (seq/sequencer-write! c-sequencer4 3 (repeat 8 0))
- (seq/sequencer-write! c-sequencer4 2 [1 1 0 0 1 0 0 1])
+ (seq/sequencer-write! c-sequencer4 0 [1 1 1 1 1 1 1 1])
+ (seq/sequencer-write! c-sequencer4 1 (repeat 8 1))
+(seq/sequencer-write! c-sequencer4 2 [1 0 1 0 1 0 1 0])
+(seq/sequencer-write! c-sequencer4 1 [0 1 0 1 0 1 0 1])
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)
@@ -141,7 +144,6 @@
 
 (def s (fon/led-state seq128-f))
 (def s2 (fon/led-state seq64-f))
-
 (fon/set-led-state! seq128-f s)
 (fon/set-led-state! seq64-f s2)
 (fon/clear seq128-f )

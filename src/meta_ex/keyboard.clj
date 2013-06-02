@@ -20,22 +20,25 @@
                      :action FREE)]
     (out out-bus (* 0.5 (* (+ 2 (* 1 (in:kr wob-b))) env amp (scaled-play-buf 2 buf :level level :loop loop? :action FREE))))))
 
-(ctl sin-x-s :mul 0)
+(ctl sin-x-s :mul 1)
 
-(doseq [c (chord :D3 :minor)]
+(doseq [c (concat (chord :e3 :m11)
+                  (chord :e4 :m11)
+                  (chord :e5 :m11))]
+  (Thread/sleep (+ 75 (rand 10)))
   (sampled-piano2 c 1 :out-bus (nkmx :r0)))
 
 
 (on-event [:midi-device "KORG INC." "KEYBOARD" "nanoKEY2 KEYBOARD" 0 :note-on]
           (fn [msg]
-            (sampled-piano2 (:note msg) :out-bus (nkmx :r0) :amp 1)
+;;           (sampled-piano2 (:note msg) :out-bus (nkmx :r0) :amp 1)
             )
           ::keyboard)
 
 
 
 
-(def cs (syn/cs80 :out-bus (nkmx :s1) :freq (midi->hz (note :g1))))
+(def cs (syn/cs80 :out-bus (nkmx :s2) :freq (midi->hz (note :g1))))
 
 (ctl cs :out-bus (nkmx :s1) :freq (midi->hz (note :g1)) :vibrate 4 :dtune 0.002)
 (kill cs)
@@ -48,3 +51,4 @@
 
             )
           ::control-cs)
+(stop)

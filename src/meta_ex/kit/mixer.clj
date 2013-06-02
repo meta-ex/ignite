@@ -64,11 +64,10 @@
         bit-rate      (* bit-rate 32)
         hpf-freq      (mul-add hpf-freq 2000 60)
         pan           (- (* 2 pan) 1)
-
-        delay-buf     (local-buf (* 2 44100))
+        num-samps     (* 2 44100)
+        delay-buf     (local-buf num-samps)
         src           (in:ar in-bus 2)
-        samps         (buf-frames:kr delay-buf)
-        pos           (phasor:ar delay-reset-trig 1 0 (* delay-rate samps))
+        pos           (phasor:ar delay-reset-trig 1 0 (* delay-rate num-samps))
         old           (buf-rd:ar 1 delay-buf pos :loop true)
         delay-sig     (+ src (* delay-decay old))
 

@@ -1,6 +1,5 @@
 (ns meta-ex.sets.ignite
-  (:use [overtone.live]
-        [overtone.synth.sampled-piano])
+  (:use [overtone.live])
   (:require
    [meta-ex.hw.monomes :as mon]
    [meta-ex.hw.polynome :as poly]

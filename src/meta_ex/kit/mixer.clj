@@ -327,6 +327,10 @@
   [k]
   (:in-bus (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))
 
+(defn nkmx-out
+  [k]
+  (:out-bus (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))
+
 (defn nkmx-synth
   [k]
   (:mixer (get @korg-nano-kontrol-mixers [:nanoKON2 k :control-change])))

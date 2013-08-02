@@ -12,9 +12,11 @@
 
 
 
-(recording-start "~/Desktop/post-hotcodecon.wav")
+(declare seq64)
+(declare seq128)
+;;(recording-start "~/Desktop/bristol.wav")
 ;;(recording-stop)
-;; (stop)o
+;; (stop)
 (do
 
   (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
@@ -31,15 +33,15 @@
   (defonce bas-mix-s64 (basic-mixer [:after drum-g] :in-bus m64-b))
   (defonce bas-mix-s128 (basic-mixer [:after drum-g] :in-bus m128-b))
 
-  (def seq64
-    (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
+  (when m64
+    (defonce seq64 (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
+    (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
+    (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7)))
 
-  #_(defonce seq128
-    (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
-
-  (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
-  #_(defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
-  (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause642 7 7))
+  (when m128
+    (defonce seq128 (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
+    (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
+    (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7)))
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
             (fn [{:keys [x y new-leds]}]
@@ -60,7 +62,7 @@
             ::seq64-press)
 
 
-  #_(defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
+
 
   (on-event [:fonome :led-change (:id insta-pause128-f)]
             (fn [{:keys [x y new-leds]}]
@@ -81,7 +83,7 @@
               )
             ::seq128-press))_
 
-(ctl bas-mix-s64 :amp 1)
+;;(ctl bas-mix-s64 :amp 1)
 
 
 ;;(ms/stop-sequencer seq64)
@@ -103,7 +105,6 @@
      :add-15 0.5
      :amp-15 1)
 
-
 (defonce trigger-sampler (samp/mk-sampler ::bar trigger-samples   (nkmx :r0) ))
 
 (poly/dock-fonome! m64 (:fonome trigger-sampler) ::foo 0 7)
@@ -120,14 +121,14 @@
 (ms/swap-samples! seq128 mouth-samples)
 
 ;;(ms/stop-sequencer seq128)
-;p(ms/stop-sequencer seq64)
+;;(ms/stop-sequencer seq64)
 
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
  (seq/sequencer-write! c-sequencer4 0 [1 1 1 1 1 1 1 1])
- (seq/sequencer-write! c-sequencer4 1 (repeat 8 1))
-(seq/sequencer-write! c-sequencer4 2 [1 0 1 0 1 0 1 0])
-(seq/sequencer-write! c-sequencer4 1 [0 1 0 1 0 1 0 1])
+ (seq/sequencer-write! c-sequencer4 1 (repeat 8 0))
+(seq/sequencer-write! c-sequencer4 3 [0  0 0 0 0 0 0 0])
+(seq/sequencer-write! c-sequencer4 0 [0 1 0 1 0 1 0 1])
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)
@@ -140,17 +141,3 @@
 ;; (seq/sequencer-set-out-bus! c-sequencer4 (nkmx :s0))
 ;; (seq/sequencer-set-out-bus! c-sequencer (nkmx :s1))
 ;; (stop)
-
-
-(def s (fon/led-state seq128-f))
-(def s2 (fon/led-state seq64-f))
-(fon/set-led-state! seq128-f s)
-(fon/set-led-state! seq64-f s2)
-(fon/clear seq128-f )
-(fon/all seq128-f )
-(:history @(:state seq64-f))
-(adsr)
-
-;;(volume 2)
-;;(stop)
-(bus-get 900)

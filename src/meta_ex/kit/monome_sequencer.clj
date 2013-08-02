@@ -14,7 +14,7 @@
 
 (defn sequencer-write-row! [sequencer y range-x grid]
   (let [row (get-row grid y range-x)]
-    (when-not (>= y (count (:samples sequencer)))
+    (when-not (>= y (:num-samps sequencer))
       (seq/sequencer-write! sequencer y row))))
 
 (defn sequencer-write-grid! [sequencer range-x range-y grid]
@@ -104,19 +104,4 @@
     (remove-handler (:beat-key seq))))
 
 (defn swap-samples! [m-seq samples]
-  (let [sequencer     @(:sequencer m-seq)
-        _             (seq/sequencer-kill sequencer)
-        new-sequencer (seq/mk-sequencer (:handle m-seq)
-                                        (take (dec (-> m-seq :fonome :height)) samples)
-                                        (-> m-seq :fonome :width)
-                                        (-> sequencer :tgt-group)
-                                        tim/beat-b
-                                        tim/beat-count-b
-                                        (-> sequencer :out-bus)
-                                        (-> sequencer :with-mixers?))]
-    (sequencer-write-grid! new-sequencer
-                           (-> m-seq :fonome :width)
-                           (-> m-seq :fonome :width)
-                           (fon/led-state (:fonome m-seq)))
-    (reset! (:sequencer m-seq) new-sequencer)
-    m-seq))
+  (seq/swap-samples! @(:sequencer m-seq) samples))

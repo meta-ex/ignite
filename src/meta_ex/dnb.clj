@@ -12,24 +12,29 @@
   (defonce intro (sample (freesound-path 9690)))
   (defonce grenade (sample (freesound-path 33245)))
 
-  (def oc (oceanwavescrushing [:head dnb-g] :out-bus 10 :loop? true :vol 1))
-  (def nr (notresponsible [:head dnb-g] :rate 1 :vol 0 :out-bus 10 :loop? true))
-  (def aw (alienwhisper [:head dnb-g] :rate 1 :out-bus 10 :loop? true :vol 0)))
+  (def oc (oceanwavescrushing [:head dnb-g] :out-bus 10 :loop? true :amp 1))
+  (def nr (notresponsible [:head dnb-g] :rate 1 :amp 0 :out-bus 10 :loop? true))
+  (def aw (alienwhisper [:head dnb-g] :rate 1 :out-bus 10 :loop? true :amp 0)))
 
 (def foo (drumnbass :loop? true))
-(ctl foo :rate 1)
+(ctl foo :rate 0.5)
 (stop)
 (def dnb (drumnbass [:head dnb-g] :loop? true :out-bus (nkmx :s0) :rate 0.1))
-
+(c)
 (def tibet2 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
 
-(def tibet1 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
-(def nr (notresponsible [:head dnb-g] :rate 1 :vol 1 :out-bus (nkmx :m0) :loop? true))
-(def oc (oceanwavescrushing [:head dnb-g] :out-bus (nkmx :m0) :loop? true :vol 1))
+(kill foo)
 (stop)
+
+(def tibet1 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate 1 :out-bus (nkmx :m1)))
+(def nr (notresponsible [:head dnb-g] :rate 1 :amp 4 :out-bus (nkmx :s0) :loop? true))
+(def oc (oceanwavescrushing [:head dnb-g] :out-bus (nkmx :m0) :loop? true :amp 1))
+(stop)
+
 (kill tibet2)
 (kill nr)
-(ctl tibet2  :rate 0.5)
+(kill oc)
+(ctl tibet2  :rate 0.5 :out-bus (nkmx :m1))
 (ctl tibet2  :rate 1)
 (ctl tibet1 :rate 0.5)
 
@@ -41,15 +46,15 @@
 
 (defn honour-vote [colour]
   (cond
-   (= "GREEN" colour) (do (ctl oc :vol 4)
-                          (ctl nr :vol 0)
-                          (ctl aw :vol 0))
-   (= "PINK" colour) (do (ctl oc :vol 0)
-                        (ctl nr :vol 6)
-                        (ctl aw :vol 0))
-   (= "BLUE" colour) (do (ctl oc :vol 0)
-                         (ctl nr :vol 0)
-                         (ctl aw :vol 3))))
+   (= "GREEN" colour) (do (ctl oc :amp 4)
+                          (ctl nr :amp 0)
+                          (ctl aw :amp 0))
+   (= "PINK" colour) (do (ctl oc :amp 0)
+                        (ctl nr :amp 6)
+                        (ctl aw :amp 0))
+   (= "BLUE" colour) (do (ctl oc :amp 0)
+                         (ctl nr :amp 0)
+                         (ctl aw :amp 3))))
 
 (defn honour-vote [colour]
   (cond
@@ -70,13 +75,13 @@
 (ctl tibet2 :out-bus 10)
 
 (ctl tibet2 :rate 0.5)
-(ctl dnb :vol 0)
+(ctl dnb :amp 0)
 (kill dnb)
-(def alien (alienwhisper [:head dnb-g] :rate 1 :out-bus (nkmx :s1)))
+(def alien (alienwhisper [:head dnb-g] :rate 5 :out-bus (nkmx :s1)))
 (ctl alien :out-bus (nkmx :s0))
-(grenade :amp 2 :rate 0.25 :out-bus (nkmx :s0))
+(grenade :amp 2 :rate 1 :out-bus (nkmx :s0))
 
 (def i (intro :rate 1))
-(grenade :vol 0.5 :rate 0.4)
+(grenade :amp 0.5 :rate 0.4)
 
 (stop)

@@ -2,19 +2,18 @@
   (:use [clojure.core.match :only [match]]
         [overtone.live]
         [overtone.synth sampled-piano]
-        [meta-ex.hw.monomes]
-        [meta-ex.viz.petals :only [num-petals-to-draw*]]
-        [meta-ex.kit.mixer])
-  (:require [polynome.core :as poly]))
+        [meta-ex.kit.mixer]
+        [meta-ex.sets.ignite])
+  (:require
 
+   [meta-ex.hw.fonome :as fon]
+   [meta-ex.hw.polynome :as poly]))
 
 
 ;; hat = Klank.ar(`[ [ 6563, 9875 ],
 ;;                [ 0.6, 0.5 ],
 ;;                [ 0.002, 0.003] ], PinkNoise.ar(1));
 ;;     hatOut = Pan2.ar(hat*env3, pan2, hatLevel);
-
-
 
 
 ;;Erik Satie Gnossienne No. 1
@@ -97,8 +96,8 @@
   [vol]
   (let [idx (swap! cur-pitch-rh inc)
         pitch (nth (cycle rh-pitches) idx)]
-    (swap! num-petals-to-draw* inc)
-    (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus 0)))
+;;    (swap! num-petals-to-draw* inc)
+    (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus (nkmx :r0))))
 
 (defn play-next-lh
   [vol]
@@ -106,27 +105,30 @@
         pitch (nth (cycle lh-pitches) idx)]
     (if (sequential? pitch)
       (doseq [p pitch]
-        (sampled-piano p (/ (vol-mul vol) 2) :out-bus 0))
-      (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus 0))))
+        (sampled-piano p (/ (vol-mul vol) 2) :out-bus (nkmx :r0)))
+      (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus (nkmx :r0)))))
 
 
-(on-event [:monome :press]
+(defonce satie-keys (fon/mk-fonome ::satie 8 8))
+(defonce __dock_satie__ (poly/dock-fonome! m64 satie-keys ::satie 0 0))
+
+(on-event [:fonome :press (:id satie-keys)]
           (fn [{:keys [x y]}]
             (match [x y]
                    [7 _] (reset-pos)
-                   [_ 0] (play-next-lh (+ (rand-int 5) (* 12 (+ x 4))))
+                   [_ 5] (play-next-lh (+ (rand-int 5) (* 12 (+ x 4))))
                    [_ 7] (play-next-rh (+ (rand-int 5) (* 12 (+ x 4))))))
-          :monome-press)
+          ::fonome-press)
 
-(on-event [:monome :press]
-          (fn [{:keys [x y monome]}]
-            (poly/toggle-led monome x y)
+(on-event [:fonome :press (:id satie-keys)]
+          (fn [{:keys [x y fonome]}]
+            (println "hi")
+            (fon/toggle-led fonome x y)
             )
-          :monome-led)
+          ::fonome-led)
 ;;(boot-external-server)
 
 ;;(play-next-lh 8)
-
 
 ;;(poly/remove-all-callbacks m)
 ;;(poly/disconnect m)
@@ -136,3 +138,4 @@
            (def windy (sample-player (sample (freesound-path 17553)) :loop? true :out-bus (mx :grumbles)))
            (ctl wwii :rate 0.5)
            (stop))
+;;(event-debug-off)

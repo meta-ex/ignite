@@ -46,7 +46,8 @@
    ratio 1
    cbus 1
    freq-lag 0.1
-   out-bus 0]
+   out-bus 0
+   lpf-freq 1000]
   (let [freq (lag freq freq-lag)
         cuttoff (in:kr cbus)
         env     (env-gen (adsr att decay sus rel) gate :action FREE)
@@ -55,7 +56,9 @@
         vib     (+ 1 (lin-lin:kr (sin-osc:kr vibrate) -1 1 (- vibdepth) vibdepth))
 
         freq    (* freq vib)
-        sig     (mix (* env amp (saw [freq (* freq (+ dtune 1))])))]
+        sig     (mix (* env amp (saw [freq (* freq (+ dtune 1))])))
+        sig     (lpf sig lpf-freq)
+        sig     (normalizer sig)]
     (out out-bus (* amp sig))))
 
 

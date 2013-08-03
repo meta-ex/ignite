@@ -9,10 +9,10 @@
 ;; example state-map
 ;; (def state-maps (agent {:states {:mixer    {:state (nk-state-map 0)
 ;;                                             :button-id :s0
-;;                                             :kind 0}
+;;                                             :group 0}
 ;;                                  :grumbles {:state (nk-state-map 0)
 ;;                                             :button-id :s1
-;;                                             :kind 0}}
+;;                                             :group 1}}
 ;;                         :nks   {(first nano-kons) {:syncs    (nk-state-map false)
 ;;                                                    :flashers (nk-state-map nil)
 ;;                                                    :current  :mixer
@@ -28,10 +28,10 @@
   [sm k]
   (get-in sm [:states k :state]))
 
-(defn- sm-kind
-  "Get the state for a specific key"
+(defn- sm-group
+  "Get the group for a specific key"
   [sm k]
-  (get-in sm [:states k :kind]))
+  (get-in sm [:states k :group]))
 
 (defn- sm-nk-syncs
   "Get the syncs for a specific nk in the sm"
@@ -49,16 +49,16 @@
   (get-in sm [:nks nk :current]))
 
 (defn- sm-nk-state
-  "Get the state associated with a specific nk"
+  "Get the current state associated with a specific nk"
   [sm nk]
   (let [k (sm-nk-current sm nk) ]
     (sm-state sm k)))
 
-(defn- sm-nk-kind
-  "Get the kind associated with a specific nk"
+(defn- sm-nk-group
+  "Get the current group associated with a specific nk"
   [sm nk]
   (let [k (sm-nk-current sm nk) ]
-    (sm-kind sm k)))
+    (sm-group sm k)))
 
 (defn- sm-nks-with-state-k
   "Get all the nks associated with a specific state-k"
@@ -204,18 +204,18 @@
 
 (defn- sm-add-state
   "Return a new sm with the new state"
-  [sm k s button-id kind]
+  [sm k s button-id group]
   (assoc-in sm [:states k] {:state s
                             :button-id button-id
-                            :kind kind}))
+                            :group group}))
 
 (defn- sm-add-nk
-  "Return a new sm with the new state"
+  "Add a new nk to the statemap"
   [sm nk]
   (assoc-in sm [:nks nk] {:syncs (nk-state-map false)
                           :flashers (nk-state-map nil)
                           :current nil
-                          :kind 0
+                          :group 0
                           :mode :controller}))
 
 (defn mk-state-map
@@ -254,23 +254,23 @@
   (led-off nk :play)
   (led-off nk :record))
 
-(defn nk-show-kind
+(defn nk-show-group
   "Turn on the rec lights specific to the kind id"
-  [nk kind]
+  [nk group]
   (nk-rec-leds-off nk)
   (cond
-   (= 0 kind) (led-on nk :record)
-   (= 1 kind) (led-on nk :play)
-   (= 2 kind) (led-on nk :stop)
-   (= 3 kind) (led-on nk :fast-forward)
-   (= 4 kind) (led-on nk :rewind)
-   (= 5 kind) (do (led-on nk :record)
+   (= 0 group) (led-on nk :record)
+   (= 1 group) (led-on nk :play)
+   (= 2 group) (led-on nk :stop)
+   (= 3 group) (led-on nk :fast-forward)
+   (= 4 group) (led-on nk :rewind)
+   (= 5 group) (do (led-on nk :record)
                   (led-on nk :play))
-   (= 6 kind) (do (led-on nk :record)
+   (= 6 group) (do (led-on nk :record)
                   (led-on nk :stop))
-   (= 7 kind) (do (led-on nk :record)
+   (= 7 group) (do (led-on nk :record)
                   (led-on nk :fast-forward))
-   (= 8 kind) (do (led-on nk :record)
+   (= 8 group) (do (led-on nk :record)
                   (led-on nk :rewind))))
 
 (defn nk-smr-leds-on
@@ -333,6 +333,7 @@
   [sm nk k old-raw raw old-raw-state raw-state]
   (if (not (sm-nk-switcher-mode? sm nk ))
     (let [current-state (sm-nk-current sm nk)
+          group         (sm-nk-group sm nk)
           old-state     (sm-nk-state sm nk)
           syncs         (sm-nk-syncs sm nk)
           flashers      (sm-nk-flashers sm nk)
@@ -358,13 +359,15 @@
 
       (let [flashers (if synced?
                        (do
-                         (event [:nanoKON2 current-state :control-change k]
+                         (event [:v-nanoKON2 group current-state :control-change k]
+                                :group group
                                 :id k
                                 :old-state old-state
                                 :state state
                                 :old-val val
                                 :val new-val)
-                         (event [:nanoKON2 current-state :control-change]
+                         (event [:v-nanoKON2 group current-state :control-change]
+                                :group group
                                 :id k
                                 :old-state old-state
                                 :state state
@@ -407,7 +410,7 @@
                                    (assoc r k synced?)))
                                {}
                                syncs)]
-        (nk-show-kind nk (sm-kind sm state-k))
+        (nk-show-group nk (sm-group sm state-k))
         (-> sm
             (sm-nk-swap-current nk state-k)
             (sm-nk-swap-syncs nk syncs)
@@ -442,6 +445,7 @@
 
    (controller-id? k)
    (let [current-state-k (sm-nk-current sm nk)
+         group           (sm-nk-group sm nk)
          old-state       (sm-nk-state sm nk)
          state           (assoc old-state k raw)
          syncs           (sm-nk-syncs sm nk)
@@ -450,13 +454,13 @@
          val             (get old-state k)]
      (led-on nk (matching-sync-led k))
      (led-off nk (matching-warmer-led k))
-     (event [:nanoKON2 current-state-k :control-change k]
+     (event [:v-nanoKON2 group current-state-k :control-change k]
             :id k
             :old-state old-state
             :state state
             :old-val val
             :val raw)
-     (event [:nanoKON2 current-state-k :control-change]
+     (event [:v-nanoKON2 group current-state-k :control-change]
             :id k
             :old-state old-state
             :state state
@@ -560,12 +564,12 @@
                    (<= v 1)))
           "State value must be a number between 0 and 1 inclusively"))
 
-(defn ensure-valid-kind!
+(defn ensure-valid-group!
   [k]
   (assert (and (integer? k)
                (<= 0 k)
                (<= k 8))
-          "State kind must be a number between 0 and 8 inclusively"))
+          "State group must be a number between 0 and 8 inclusively"))
 
 
 (defn update-state*
@@ -595,19 +599,19 @@
   (send state-a add-nk* nk))
 
 (defn- add-state*
-  [sm state-k state button-id kind]
-  (sm-add-state sm state-k state button-id kind))
+  [sm state-k state button-id group]
+  (sm-add-state sm state-k state button-id group))
 
 (defn add-state
-  ([state-a button-id kind init-val-or-state-map]
-     (add-state state-a button-id button-id kind init-val-or-state-map))
-  ([state-a state-k button-id kind init-val-or-state-map]
+  ([state-a group button-id init-val-or-state-map]
+     (add-state group state-a button-id button-id init-val-or-state-map))
+  ([state-a group state-k button-id init-val-or-state-map]
      (ensure-valid-val! init-val-or-state-map)
-     (ensure-valid-kind! kind)
+     (ensure-valid-group! group)
      (let [state (if (number? init-val-or-state-map)
                    (nk-state-map init-val-or-state-map)
                    init-val-or-state-map)]
-       (send state-a add-state* state-k state button-id kind))))
+       (send state-a add-state* state-k state button-id group))))
 
 (defn sm-nks-with-current-state
   [sm state-k]
@@ -650,10 +654,10 @@
         state   (sm-nk-state sm nk)
         syncs   (sm-nk-syncs sm nk)
         ctl-ids (filter controller-id? (keys state))
-        kind    (sm-nk-kind sm nk)]
+        group    (sm-nk-group sm nk)]
 
     (nk-smr-leds-off nk)
-    (nk-show-kind nk kind)
+    (nk-show-group nk group)
     (reduce (fn [r ctl-id]
               (let [val      (get state ctl-id)
                     sync-led (matching-sync-led ctl-id)

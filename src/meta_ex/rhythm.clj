@@ -16,7 +16,7 @@
   (defonce saw-bf1 (buffer 16 "TIM Saw Buffer"))
   (defonce saw-bf2 (buffer 16 "TIM Saw Buffer 2"))
 
-;;  (defcbus saw-x-b1 1 "Tim Saw")
+  ;;  (defcbus saw-x-b1 1 "Tim Saw")
 
   (defonce saw-x-b1 (control-bus 1 "TIM Saw"))
   (defonce saw-x-b2 (control-bus 1 "TIM Saw2"))
@@ -32,7 +32,7 @@
   (def phasor-s1 (tim/buf-phasor [:after saw-s1] saw-x-b1 :out-bus phasor-b1 :buf saw-bf1))
   (def phasor-s2 (tim/buf-phasor [:after saw-s2] saw-x-b2 :out-bus phasor-b2 :buf saw-bf2))
 
-  (ctl saw-s1 :freq-mul 1/16)
+  (ctl saw-s1 :freq-mul 2)
   (ctl saw-s2 :freq-mul 1/16)
   (ctl saw-s3 :freq-mul 1/16))
 
@@ -40,21 +40,19 @@
 (buffer-write! saw-bf1 (map #(+ 200 (* 10 %)) (range 10)))
 
 
-(buffer-write! saw-bf2 (map midi->hz
-                           (map (fn [midi-note] (+ 0 midi-note))
+(buffer-write! saw-bf1 (map midi->hz
+                           (map (fn [midi-note] (+ 12 midi-note))
                                 (flatten (repeat 2 (map note [:D3 :D0 :D3 :C3 :C3 :C5 :C4 :D4]) )))))
 
-(buffer-write! saw-bf1 (map midi->hz
-                            (map (fn [midi-note] (+ -0 midi-note))
+(buffer-write! saw-bf2 (map midi->hz
+                            (map (fn [midi-note] (+ 0 midi-note))
                                  (map note [:C3 :E4 :C6 :D4 :F6 :E5 :D5 :D3 :C3 :C4 :E3 :D4 :C4 :E4 :D5 :D5]))))
 
-(buffer-write! saw-bf1 (map midi->hz
-                           (map (fn [midi-note] (+ -12 midi-note))
-                                (map note (repeat 8 :d5)))))
+(buffer-write! saw-bf2 (map midi->hz
+                           (map (fn [midi-note] (+ 0 midi-note))
+                                (map note (repeat 16 :d5)))))
 
-(buffer-write! saw-bf1 (map midi->hz
-                           (map (fn [midi-note] (+ -12 midi-note))
-                                (repeat 16 (hz->midi @bass-note)))))
+
 
 (defn set-bass!
   [notes]
@@ -66,9 +64,24 @@
   (doseq [b bufs]
     (buffer-write! b vals )))
 
-(modify-bufs
- [saw-bf1 saw-bf2]
- (map midi->hz (take 16 (drop (* 0 16) meta-ex.giorgio/score))))
+(defn giorgio [idx]
+  (modify-bufs
+   [saw-bf2 ]
+   (map midi->hz (take 16 (drop (* idx 16) meta-ex.giorgio/score))))
+  (buffer-write! saw-bf1 (map midi->hz
+                              (map (fn [midi-note] (+ -12 midi-note))
+                                   (repeat 16 (hz->midi @bass-note))))) )
+
+(giorgio 0)
+(giorgio 2)
+(giorgio 8)
+(giorgio 9)
+(giorgio 10)
+(giorgio 11)
+(giorgio 12)
+(giorgio 13)
+(giorgio 14)
+
 
 (do
   (def f nil)
@@ -110,15 +123,16 @@
                                                           (saw freq)
                                                           ])
                                                     (* lpf-mul ct-saw lpf-f)))))))
+
   (kill rhythm-bass-g)
- #_(def b (beepy [:head rhythm-bass-g]))
+ (def b (beepy [:head rhythm-bass-g]))
 
 
  #_(do
     (def f (foo [:head rhythm-bass-g]))
     )
 
-  #_(do
+ (do
     (def  bass (foo-bass [:head rhythm-bass-g]))
     (ctl  bass :lpf-f 1000)
     (ctl  bass :lpf-mul 10)

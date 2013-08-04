@@ -7,16 +7,20 @@
    [meta-ex.hw.nk.connected :as nk-conn]
    [meta-ex.kit.mixer :as mx]
    [meta-ex.hw.nk.state-maps :as nksm]
-   [meta-ex.hw.nk.stateful-device :as nksd]))
+   [meta-ex.hw.nk.stateful-device :as nksd]
+   [meta-ex.server.nrepl]))
 
 ;;(set-rate 300)
 
-(defonce mixer-s0 (mx/add-nk-mixer :s0))
-(defonce mixer-s1 (mx/add-nk-mixer :s1))
-(defonce mixer-m0 (mx/add-nk-mixer :m0))
-(defonce mixer-m1 (mx/add-nk-mixer :m1))
-(defonce mixer-s2 (mx/add-nk-mixer :s2))
-(defonce mixer-r0 (mx/add-nk-mixer :r0))
+(defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
+
+(defonce mixer-s0 (mx/add-nk-mixer :s0 default-mixer-g))
+(defonce mixer-s1 (mx/add-nk-mixer :s1 default-mixer-g))
+(defonce mixer-m0 (mx/add-nk-mixer :m0 default-mixer-g))
+(defonce mixer-m1 (mx/add-nk-mixer :m1 default-mixer-g))
+(defonce mixer-s2 (mx/add-nk-mixer :s2 default-mixer-g))
+(defonce mixer-r0 (mx/add-nk-mixer :r0 default-mixer-g))
+
 
 (defonce mixer-master (mx/add-nk-mixer :master))
 
@@ -98,7 +102,7 @@
     (nksm/add-state nk-conn/state-maps 0 :s1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 :m0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 :m1 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :r0 mixer-init-state)
+
     (nksm/add-state nk-conn/state-maps 0 :master :r7 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 :triggers :s2 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 "m128-0" :s3 mixer-init-state)
@@ -113,6 +117,9 @@
     (nksm/add-state nk-conn/state-maps 0 "m64-2" :r5 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 "m64-3" :s6 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 "m64-4" :m6 mixer-init-state)
+
+    (nksm/add-state nk-conn/state-maps 0 :s7 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 0 :m7 mixer-init-state)
 
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-2" :r3 mixer-init-state)
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-3" :s4 mixer-init-state)

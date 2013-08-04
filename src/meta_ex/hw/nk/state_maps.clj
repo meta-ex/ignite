@@ -451,6 +451,7 @@
          syncs           (sm-nk-syncs sm nk)
          syncs           (assoc syncs k true)
          sm              (sm-nk-kill-flasher* sm nk (matching-sync-led k))
+         sm              (sm-nk-unsync-other-nks sm nk current-state-k k raw)
          val             (get old-state k)]
      (led-on nk (matching-sync-led k))
      (led-off nk (matching-warmer-led k))
@@ -604,14 +605,15 @@
 
 (defn add-state
   ([state-a group button-id init-val-or-state-map]
-     (add-state group state-a button-id button-id init-val-or-state-map))
+     (add-state state-a group button-id button-id init-val-or-state-map))
   ([state-a group state-k button-id init-val-or-state-map]
      (ensure-valid-val! init-val-or-state-map)
      (ensure-valid-group! group)
      (let [state (if (number? init-val-or-state-map)
                    (nk-state-map init-val-or-state-map)
                    init-val-or-state-map)]
-       (send state-a add-state* state-k state button-id group))))
+       (send state-a add-state* state-k state button-id group)
+       (str "Added state " group ", " state-k ", " button-id))))
 
 (defn sm-nks-with-current-state
   [sm state-k]

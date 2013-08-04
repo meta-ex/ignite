@@ -230,7 +230,10 @@
                                          (= y (:y e))
                                          (= :button-press (:action e))))
                                   (:history s)))
-        press-dur   (- ts (:ts last-press))
+
+        press-dur   (if (:ts last-press)
+                      (- ts (:ts last-press))
+                      0)
         new-history (cons e (take history-size (:history s)))
         event-msg   {:ts     ts
                      :action :button-release

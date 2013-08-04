@@ -54,14 +54,14 @@
     (defonce seq64 (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
     (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
     (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7))
-    (defonce trigger-sampler64 (samp/mk-sampler ::trigger-sampler64 trigger-samples drum-g (nkmx :m7) ))
+    (defonce trigger-sampler64 (samp/mk-sampler ::trigger-sampler64 trigger-samples drum-g (nkmx :m7) 8))
     (defonce __dockk_trigger__ (poly/dock-fonome! m64  (:fonome trigger-sampler64)  ::trigger-sampler64  0 6)))
 
   (when m128
     (defonce seq128 (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
     (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
     (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
-    (defonce trigger-sampler128 (samp/mk-sampler ::trigger-sampler128 trigger-samples drum-g (nkmx :s7) 15))
+    (defonce trigger-sampler128 (samp/mk-sampler ::trigger-sampler128 trigger-samples drum-g (nkmx :s7) 16))
     (defonce __dock_trigger128__ (poly/dock-fonome! m128 (:fonome trigger-sampler128) ::trigger-sampler128 0 6)))
 
 

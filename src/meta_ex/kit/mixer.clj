@@ -3,6 +3,7 @@
         [overtone.helpers.lib :only [uuid]])
   (:require [meta-ex.kit.timing :as tim]))
 
+;;State to store the currently active nk mixers
 (defonce korg-nano-kontrol-mixers
   (atom {}))
 
@@ -13,27 +14,8 @@
   (:ar
    (let [sweep (lin-exp (lf-tri wobble-factor) -1 1 40 3000)
          wob   (lpf src sweep)
-         wob   (* 0.8  wob)
-         wob   (+ wob (bpf wob 1500 2))]
-     (+ wob (* 0.2 (g-verb wob 9 0.7 0.7))))))
-
-(def mix-idx
-  {:rev-mix 0
-   :delay-decay 1
-   :dec-mix 2
-   :wobble-mix 3
-   :delay-mix 4
-   :hpf-mix 5
-   :wobble-factor 6
-   :amp 7
-   :rev-damp 8
-   :rev-room 9
-   :samp-rate 10
-   :bit-rate 11
-   :delay-rate 12
-   :hpf-freq 13
-   :hpf-rq 14
-   :pan 15})
+         wob   (* 0.8  wob)]
+     wob)))
 
 (defsynth meta-mix [rev-mix 0
                     delay-decay 0
@@ -51,8 +33,6 @@
                     hpf-freq 2060
                     hpf-rq 1
                     pan 0
-
-
                     in-bus 10
                     delay-reset-trig [0 :kr]
                     out-bus 0]
@@ -66,7 +46,7 @@
         pan           (- (* 2 pan) 1)
         num-samps     (* 2 44100)
         delay-buf     (local-buf num-samps)
-        src           (in:ar in-bus 2)
+        src           (in:ar in-bus 1)
         pos           (phasor:ar delay-reset-trig 1 0 (* delay-rate num-samps))
         old           (buf-rd:ar 1 delay-buf pos :loop true)
         delay-sig     (+ src (* delay-decay old))
@@ -87,7 +67,7 @@
                          (* wobble-mix (wobble src wobble-factor)))
         ]
 
-    (buf-wr:ar [(mix src)] delay-buf pos :loop true)
+    (buf-wr:ar [src] delay-buf pos :loop true)
     (out out-bus (pan2 (* amp src) pan))))
 
 ;; (defsynth meta-master-mix [amp 1.5

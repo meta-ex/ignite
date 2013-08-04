@@ -58,9 +58,9 @@
 
 (ctl dub-g
      :note 28
-     :hi-man  1
+     :hi-man  0
      :lo-man 1
-     :deci-man 1
+     :deci-man 0
      :amp 0.4
      :out-bus (nkmx :s1))
 ;;(kill dub-g)
@@ -75,11 +75,11 @@
 
 
 ;; Fire at will...
-(supersaw2 (midi->hz 28) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
-(supersaw2 (midi->hz 40) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
-(supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
-(supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
-(supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
+(supersaw2 (midi->hz 28) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 40) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 
 (supersaw2 (midi->hz 57) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
 (supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))
@@ -91,5 +91,3 @@
 
 ;; modify saw params on the fly too...
 (ctl supersaw2 :fil-mul 4 :rq 0.8)
-
-(stop)

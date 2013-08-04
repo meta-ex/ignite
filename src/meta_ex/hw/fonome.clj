@@ -75,12 +75,15 @@
 
 (defn- led-on*
   [s f x y]
-  (let [old-leds    (:leds s)
+  (let [ts          (now)
+        old-leds    (:leds s)
         new-leds    (assoc old-leds [x y] true)
         s           (assoc s :leds new-leds)
-        e           [(now) :led-on x y (dissoc s :history :id :width :height)]
+        e           {:ts ts :action :led-on :x x :y y :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state    s
+        event-msg   {:ts       ts
+                     :action   :led-on
+                     :state    s
                      :x        x
                      :y        y
                      :fonome   f
@@ -93,17 +96,21 @@
 
 (defn- led-off*
   [s f x y]
-  (let [old-leds    (:leds s)
+  (let [ts          (now)
+        old-leds    (:leds s)
         new-leds    (assoc old-leds [x y] false)
         s           (assoc s :leds new-leds)
-        e           [(now) :led-off x y (dissoc s :history :id :width :height)]
+        e           {:ts ts :action :led-off :x x :y y :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state    s
+        event-msg   {:ts       ts
+                     :action   :led-off
+                     :state    s
                      :x        x
                      :y        y
                      :fonome   f
                      :old-leds old-leds
-                     :new-leds new-leds}]
+                     :new-leds new-leds
+                     :event    e}]
     (event [:fonome :led-off (:id s) x y] event-msg)
     (event [:fonome :led-off (:id s)] event-msg)
     (event [:fonome :led-change (:id s)] event-msg)
@@ -112,15 +119,19 @@
 (defn- clear*
   [s f]
 
-  (let [old-leds    (:leds s)
+  (let [ts          (now)
+        old-leds    (:leds s)
         new-leds    {}
         s           (assoc s :leds new-leds)
-        e           [(now) :clear (dissoc s :history :id :width :height)]
+        e           {:ts ts :action :clear :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state    s
+        event-msg   {:ts       ts
+                     :action :clear
+                     :state    s
                      :fonome   f
                      :old-leds old-leds
-                     :new-leds new-leds}]
+                     :new-leds new-leds
+                     :event    e}]
     (event [:fonome :clear (:id s)] event-msg)
     (event [:fonome :led-change (:id s)] event-msg)
     (doseq [x (range (:width s))
@@ -132,19 +143,23 @@
 (defn- all*
   [s f]
 
-  (let [old-leds    (:leds s)
+  (let [ts          (now)
+        old-leds    (:leds s)
         new-leds    (reduce (fn [r el] (assoc r el true))
                             {}
                             (for [x (range (:width s))
                                   y (range (:height s))]
                               [x y]))
         s           (assoc s :leds new-leds)
-        e           [(now) :all (dissoc s :history :id :width :height)]
+        e           {:ts ts :action :all :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state    s
+        event-msg   {:ts       ts
+                     :action   :all
+                     :state    s
                      :fonome   f
                      :old-leds old-leds
-                     :new-leds new-leds}]
+                     :new-leds new-leds
+                     :event    e}]
     (event [:fonome :clear (:id s)] event-msg)
     (event [:fonome :led-change (:id s)] event-msg)
     (doseq [x (range (:width s))
@@ -155,14 +170,18 @@
 
 (defn- replace-led-state*
   [s f new-led-state]
-  (let [old-leds    (:leds s)
+  (let [ts          (now)
+        old-leds    (:leds s)
         s           (assoc s :leds new-led-state)
-        e           [(now) :led-update (dissoc s :history :id :width :height)]
+        e           {:ts ts :action :led-update :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state  s
+        event-msg   {:ts ts
+                     :action :led-update
+                     :state  s
                      :fonome f
                      :old-leds old-leds
-                     :new-leds new-led-state}]
+                     :new-leds new-led-state
+                     :event e}]
     (event [:fonome :led-change (:id s)] event-msg)
     (doseq [x (range (:width s))
             y (range (:height s))]
@@ -186,26 +205,41 @@
 
 (defn- press*
   [s f x y]
-  (let [s           (assoc s :buttons (assoc (:buttons s) [x y] true))
-        e           [(now) :button-press x y (dissoc s :history :id :width :height)]
+  (let [ts          (now)
+        s           (assoc s :buttons (assoc (:buttons s) [x y] true))
+        e           {:ts ts :action :button-press :x x :y y :state (dissoc s :history :id :width :height)}
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state  s
+        event-msg   {:ts     ts
+                     :action :button-press
+                     :state  s
                      :x      x
                      :y      y
-                     :fonome f}]
+                     :fonome f
+                     :event  e}]
     (event [:fonome :press (:id s) x y] event-msg)
     (event [:fonome :press (:id s)] event-msg)
     (assoc s :history new-history)))
 
 (defn- release*
   [s f x y]
-  (let [s           (assoc s :buttons (assoc (:buttons s) [x y] false))
-        e           [(now) :button-release x y (dissoc s :history :id :width :height)]
+  (let [ts          (now)
+        s           (assoc s :buttons (assoc (:buttons s) [x y] false))
+        e           {:ts ts :action :button-release :x x :y y :state (dissoc s :history :id :width :height)}
+        last-press (first (filter (fn [e]
+                                    (and (= x (:x e))
+                                         (= y (:y e))
+                                         (= :button-press (:action e))))
+                                  (:history s)))
+        press-dur   (- ts (:ts last-press))
         new-history (cons e (take history-size (:history s)))
-        event-msg   {:state  s
+        event-msg   {:ts     ts
+                     :action :button-release
+                     :state  s
                      :x      x
                      :y      y
-                     :fonome f}]
+                     :fonome f
+                     :event  e
+                     :press-dur press-dur}]
     (event [:fonome :release (:id s) x y] event-msg)
     (event [:fonome :release (:id s)] event-msg)
     (assoc s :history new-history)))

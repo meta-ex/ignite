@@ -12,11 +12,19 @@
             [meta-ex.hw.fonome :as fon]))
 
 
-(declare seq64)
-(declare seq128)
 ;;(recording-start "~/Desktop/bristol.wav")
 ;;(recording-stop)
 ;; (stop)
+
+
+
+(declare seq64)
+(declare seq128)
+(declare trigger-sampler128)
+(declare trigger-sampler64)
+
+
+
 (do
 
   (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
@@ -47,14 +55,15 @@
     (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
     (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7))
     (defonce trigger-sampler64 (samp/mk-sampler ::trigger-sampler64 trigger-samples drum-g (nkmx :m7) ))
-    (defonce __dockk_trigger__ (poly/dock-fonome! m64  (:fonome trigger-sampler64)  ::trigger-sampler64  0 7)))
+    (defonce __dockk_trigger__ (poly/dock-fonome! m64  (:fonome trigger-sampler64)  ::trigger-sampler64  0 6)))
 
   (when m128
     (defonce seq128 (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
     (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
     (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
-    (defonce trigger-sampler128 (samp/mk-sampler ::trigger-sampler128 trigger-samples drum-g (nkmx :s7) ))
-    (defonce __dock_trigger128__ (poly/dock-fonome! m128 (:fonome trigger-sampler128) ::trigger-sampler128 0 7)))
+    (defonce trigger-sampler128 (samp/mk-sampler ::trigger-sampler128 trigger-samples drum-g (nkmx :s7) 15))
+    (defonce __dock_trigger128__ (poly/dock-fonome! m128 (:fonome trigger-sampler128) ::trigger-sampler128 0 6)))
+
 
   (on-event [:fonome :led-change (:id insta-pause64-f)]
             (fn [{:keys [x y new-leds]}]
@@ -101,26 +110,29 @@
      :add-15 0.5
      :amp-15 1)
 
-(ms/swap-samples! seq64 african-samples)
-(ms/swap-samples! seq64 ambient-drum-samples)
-(ms/swap-samples! seq64 orig-samples)
-(ms/swap-samples! seq64 mouth-samples)
-(ms/swap-samples! seq64 transition-samples)
+(comment
+  (ms/swap-samples! seq64 african-samples)
+  (ms/swap-samples! seq64 ambient-drum-samples)
+  (ms/swap-samples! seq64 orig-samples)
+  (ms/swap-samples! seq64 mouth-samples)
+  (ms/swap-samples! seq64 transition-samples)b
 
-(ms/swap-samples! seq128 african-samples)
-(ms/swap-samples! seq128 ambient-drum-samples)
-(ms/swap-samples! seq128 orig-samples)
-(ms/swap-samples! seq128 mouth-samples)
+  (ms/swap-samples! seq128 african-samples)
+  (ms/swap-samples! seq128 ambient-drum-samples)
+  (ms/swap-samples! seq128 orig-samples)
+  (ms/swap-samples! seq128 mouth-samples))
 
 ;;(ms/stop-sequencer seq128)
 ;;(ms/stop-sequencer seq64)
-
+  (.printStackTrace (agent-error (:state (:fonome seq128))))
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
-(seq/sequencer-write! c-sequencer4 0 [1 1 1 1 1 1 1 1])
-(seq/sequencer-write! c-sequencer4 1 (repeat 8 0))
-(seq/sequencer-write! c-sequencer4 3 [0  0 0 0 0 0 0 0])
-(seq/sequencer-write! c-sequencer4 0 [0 1 0 1 0 1 0 1])
+
+(comment
+  (seq/sequencer-write! c-sequencer4 0 [1 1 1 1 1 1 1 1])
+  (seq/sequencer-write! c-sequencer4 1 (repeat 8 0))
+  (seq/sequencer-write! c-sequencer4 3 [0  0 0 0 0 0 0 0])
+  (seq/sequencer-write! c-sequencer4 0 [0 1 0 1 0 1 0 1]))
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)

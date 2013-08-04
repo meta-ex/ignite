@@ -16,14 +16,10 @@
 ;;(recording-stop)
 ;; (stop)
 
-
-
 (declare seq64)
 (declare seq128)
 (declare trigger-sampler128)
 (declare trigger-sampler64)
-
-
 
 (do
 
@@ -93,22 +89,22 @@
               )
             ::seq128-press))
 
+(comment
+  (defn get-sin-ctl
+    [sequencer idx]
+    (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
 
-(defn get-sin-ctl
-  [sequencer idx]
-  (:sin-ctl (nth (:mixers  @(:sequencer sequencer)) idx)))
 
+  (ctl (get-sin-ctl seq128 0)
+       :freq-mul-7 5/7
+       :mul-7 3
+       :add-7 0)
 
-(ctl (get-sin-ctl seq128 0)
-     :freq-mul-7 5/7
-     :mul-7 3
-     :add-7 0)
-
-(ctl (get-sin-ctl seq64 0)
-     :freq-mul-15 5/7
-     :mul-15 0.5
-     :add-15 0.5
-     :amp-15 1)
+  (ctl (get-sin-ctl seq64 0)
+       :freq-mul-15 5/7
+       :mul-15 0.5
+       :add-15 0.5
+       :amp-15 1))
 
 (comment
   (ms/swap-samples! seq64 african-samples)

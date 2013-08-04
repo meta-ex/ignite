@@ -20,7 +20,9 @@
         fonome (with-meta {:width  width
                            :height height
                            :state  state
-                           :id     id}
+                           :id     id
+                           :max-x  (dec width)
+                           :max-y  (dec height)}
                  {:type ::fonome})]
     (swap! fonomes (fn [fs]
                      (if (contains? fs id)

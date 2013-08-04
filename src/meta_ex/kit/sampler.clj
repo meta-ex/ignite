@@ -10,7 +10,7 @@
 (defonce samplers (atom {}))
 
 (defn mk-sampler
-  [handle samples out-bus]
+  [handle samples tgt-g out-bus]
   (let [f-id     (uuid)
         fonome   (fon/mk-fonome f-id (count samples) 1)
         event-k (uuid)
@@ -19,7 +19,7 @@
     (on-event [:fonome :press (:id fonome)]
               (fn [{:keys [x y]}]
                 (when-let [samp (nth samples x)]
-                  (let [player (sample-player samp :out-bus out-bus)]
+                  (let [player (sample-player samp [:tail tgt-g] :out-bus out-bus)]
                     (fon/led-on fonome x y)
                     (oneshot-event [:overtone :node-destroyed (:id player)]
                                    (fn [m]

@@ -87,7 +87,7 @@
                        (fon/led-on tgt-fonome  (mod beat range-x) beat-track-y)))
                    key3)
 
-       (oneshot-event :reset (fn [_] (remove-handler key1) (remove-handler key2)) (uuid))
+       (oneshot-event :reset (fn [_] (remove-event-handler key1) (remove-event-handler key2)) (uuid))
 
        m-sequencer)))
 
@@ -99,9 +99,9 @@
     (reset! (:status seq) :stopped)
     (swap! m-sequencers dissoc (:handle seq))
     (seq/sequencer-kill @(:sequencer seq))
-    (remove-handler (:led-change-key seq))
-    (remove-handler (:press-key seq))
-    (remove-handler (:beat-key seq))))
+    (remove-event-handler (:led-change-key seq))
+    (remove-event-handler (:press-key seq))
+    (remove-event-handler (:beat-key seq))))
 
 (defn swap-samples! [m-seq samples]
   (seq/swap-samples! @(:sequencer m-seq) samples))

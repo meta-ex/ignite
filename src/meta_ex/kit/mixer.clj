@@ -255,7 +255,7 @@
                      handler-k)
     (on-node-destroyed mixer
                        (fn [_]
-                         (remove-handler handler-k)
+                         (remove-event-handler handler-k)
                          (swap! korg-nano-kontrol-mixers dissoc event-k)
                          (reset! live? false)))
 
@@ -286,7 +286,7 @@
        (get mixers event-k))))
 
 (defn kill-mixer [mixer]
-  (remove-handler (:handler-key mixer))
+  (remove-event-handler (:handler-key mixer))
   (swap! korg-nano-kontrol-mixers dissoc (:event-key mixer))
   (with-inactive-modification-error :silent
     (kill (:mixer mixer))))

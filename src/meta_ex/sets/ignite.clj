@@ -85,6 +85,49 @@
                         :bubbles3            (sample (freesound-path 113702))
                   })
 
+(defonce bleep-samples
+  [(freesound 34205)
+   (freesound 25882)
+   (freesound 74233)
+   (freesound 70106)
+   (freesound 64072)])
+
+(defonce bleep2-samples
+  [(freesound 64072)
+   (freesound 74233)
+   (freesound 25882)
+   (freesound 34205)
+   (freesound 70106)
+   (freesound 64072)])
+
+(defonce bleep1-samples
+  [(freesound 70106)
+   (freesound 25882)
+   (freesound 34205)
+   (freesound 74233)
+   (freesound 64072)])
+
+(defonce clapkick1-samples
+  [(freesound 47452)
+   (freesound 47453)
+   (freesound 47454)
+   (freesound 47450)
+   (freesound 47451)])
+
+(defonce clapkick2-samples
+  [(freesound 47457)
+   (freesound 47456)
+   (freesound 47455)
+   (freesound 47449)
+   (freesound 47448)])
+
+(defonce kicks-samples
+  [(freesound 147483)
+   (freesound 147482)
+   (freesound 147480)
+   (freesound 147479)
+   (freesound 147478)])
+
 (defonce mixer-init-state (merge (nksd/nk-state-map 0)
                                  {:slider7 0.5}
                                  {:pot2 1}

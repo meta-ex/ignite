@@ -8,7 +8,8 @@
    [meta-ex.kit.mixer :as mx]
    [meta-ex.hw.nk.state-maps :as nksm]
    [meta-ex.hw.nk.stateful-device :as nksd]
-   [meta-ex.server.nrepl]))
+   [meta-ex.server.nrepl]
+   [meta-ex.touch]))
 
 ;;(set-rate 300)
 
@@ -129,7 +130,7 @@
    (freesound 147478)])
 
 (defonce mixer-init-state (merge (nksd/nk-state-map 0)
-                                 {:slider7 0.5}
+                                 {:slider7 0}
                                  {:pot2 1}
                                  {:pot3 1}
                                  {:pot5 1}

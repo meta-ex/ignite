@@ -2,7 +2,8 @@
   (:use [overtone.core]
         [meta-ex.sets.ignite]
         [meta-ex.kit.mixer]
-        [meta-ex.jon]))
+        [meta-ex.jon])
+  (:require [meta-ex.drums]))
 
 (swap-samples-128 ambient-drum-samples)
 (swap-samples-128 orig-samples)
@@ -72,6 +73,5 @@
      (freesound 147478)]))
 
 (rate 4)
-(test)
 
 (status)

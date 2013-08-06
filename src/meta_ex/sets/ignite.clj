@@ -11,8 +11,6 @@
    [meta-ex.server.nrepl]
    [meta-ex.touch]))
 
-;;(set-rate 300)
-
 (defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
 
 (defonce mixer-s0 (mx/add-nk-mixer :s0 default-mixer-g))
@@ -172,7 +170,7 @@
 
     ;; give each nk an initial state
     (doseq [nk nk-conn/nano-kons]
-      (nksm/switch-state nk-conn/state-maps nk :s0))
+      (nksm/switch-state nk-conn/state-maps nk 0 :s0))
     )
   )
 

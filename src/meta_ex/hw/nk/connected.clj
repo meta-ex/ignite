@@ -9,13 +9,11 @@
 (defonce nano-kons (nksd/merge-nano-kons nk-connected-rcvs nk-stateful-devs))
 (defonce state-maps (nksm/mk-state-map nano-kons))
 
-;; (nksm/add-state state-maps :cheese :s2 1)
+;; (defn update-state
+;;   [state-map-k id val]
+;;   (nksm/update-state state-maps state-map-k id val))
 
-(defn update-state
-  [state-map-k id val]
-  (nksm/update-state state-maps state-map-k id val))
-
-(update-state :grumbles :slider7 1)
+;; (update-state :grumbles :slider7 1)
 
 (on-event [:nanoKON2 :control-change :marker-right]
           (fn [m]
@@ -40,7 +38,7 @@
 (on-event [:nanoKON2 :control-change :marker-set]
           (fn [m]
             (when (< 0 (:val m))
-              (nksm/nk-force-sync-all state-maps (:nk m) (:old-state m) (:state m))))
+              (nksm/nk-force-sync-all state-maps (:nk m))))
           ::force-sync-all)
 
 (on-event [:nanoKON2 :control-change :cycle]
@@ -54,16 +52,31 @@
                    (nksm/nk-update-states state-maps
                                           (:nk m)
                                           (:id m)
-                                          (:old-val m)
-                                          (:val m)
-                                          (:old-state m)
-                                          (:state m)))
+                                          (:val m)))
                  ::update-state)
 
-;; things to do:
+;; Things To Do:
+;;
+;; * Save and load states
+;; * Switch between groups
+;; *
 
-;; have a way of recording states
-
-;; have a way of giving more bespoke starting vals
-
+;; To help debug:
 ;;(.printStackTrace (agent-error state-maps))
+
+(comment
+
+(:s0 @(:state (first nano-kons)))
+
+;;(def s (nksm/nk-save-state state-maps (first nano-kons)))
+;; s
+
+
+(nksm/add-state state-maps 0  :s2 0)
+(nksm/add-state state-maps 0  :s3 0)
+
+(nksm/switch-state state-maps (first nano-kons) 0 :s2)
+
+
+
+)

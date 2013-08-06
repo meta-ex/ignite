@@ -2,7 +2,8 @@
   (:use [overtone.live]
         [meta-ex.sets.ignite]
         [meta-ex.kit.mixer]
-        [meta-ex.synths.synths]))
+        [meta-ex.synths.synths])
+  (:require [meta-ex.drums :as drums]))
 
 (defonce s (spacey :out-bus (nkmx :s0)))
 

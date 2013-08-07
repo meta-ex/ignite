@@ -293,11 +293,11 @@
 
 (defn add-nk-mixer
   ([k]
-     (add-mixer [:v-nanoKON2 0 k :control-change]))
+     (add-mixer [:v-nanoKON2 8 k :control-change]))
   ([k tgt-g]
-     (add-mixer [:v-nanoKON2 0 k :control-change] tgt-g))
+     (add-mixer [:v-nanoKON2 8 k :control-change] tgt-g))
   ([k tgt-g out-bus]
-     (add-mixer [:v-nanoKON2 0 k :control-change] tgt-g out-bus)))
+     (add-mixer [:v-nanoKON2 8 k :control-change] tgt-g out-bus)))
 
 (defn mx
   [k]
@@ -305,16 +305,16 @@
 
 (defn nkmx
   [k]
-  (:in-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 0 k :control-change])))
+  (:in-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
 
 (defn nkmx-out
   [k]
-  (:out-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 0 k :control-change])))
+  (:out-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
 
 (defn nkmx-synth
   [k]
-  (:mixer (get @korg-nano-kontrol-mixers [:v-nanoKON2 0 k :control-change])))
+  (:mixer (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
 
 (defn nkmx-sctl
   [k]
-  (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 0 k :control-change])))
+  (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))

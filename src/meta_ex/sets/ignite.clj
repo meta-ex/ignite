@@ -140,28 +140,28 @@
   ;; allows us to specify which nk button to bind the location and also
   ;; which event key to use.
   (do
-    (nksm/add-state nk-conn/state-maps 0 :s0 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :s1 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :m0 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 8 :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 8 :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 8 :m0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 8 :m1 mixer-init-state)
 
-    (nksm/add-state nk-conn/state-maps 0 :master :r7 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :triggers :s2 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-0" :s3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-1" :m3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-2" :r3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-3" :s4 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-4" :m4 mixer-init-state)
-    ;;(nksm/add-state nk-conn/state-maps 0 "m128-5" :r6 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 4 "m128-0" :s3 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 4 "m128-1" :m3 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 4 "m128-2" :r3 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 4 "m128-3" :s4 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 4 "m128-4" :m4 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 0 "m128-5" :r6 mixer-init-state)
 
-    (nksm/add-state nk-conn/state-maps 0 "m64-0" :s5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m64-1" :m5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m64-2" :r5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m64-3" :s6 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m64-4" :m6 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-0" :s5 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-1" :m5 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-2" :r5 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-3" :s6 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-4" :m6 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 2 "m64-5" :s0 mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps 0 :s7 mixer-init-state)
     (nksm/add-state nk-conn/state-maps 0 :m7 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps 0 :r7 mixer-init-state)
 
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-2" :r3 mixer-init-state)
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-3" :s4 mixer-init-state)
@@ -170,8 +170,9 @@
 
     ;; give each nk an initial state
     (doseq [nk nk-conn/nano-kons]
-      (nksm/switch-state nk-conn/state-maps nk 0 :s0))
+      (nksm/switch-state nk-conn/state-maps nk 0 :s7))
     )
+
   )
 
 (def m64 (mon/find-monome "/dev/tty.usbserial-m64-0790"))

@@ -16,11 +16,12 @@
 ;;                                                :button-id :s4}
 ;;                                     :bar {:state (nk-state-map 0)
 ;;                                           :button-id :s0}}}
-;;                         :nks   {(first nano-kons) {:syncs     (nk-state-map false)
-;;                                                    :flashers  (nk-state-map nil)
-;;                                                    :current   [0 :mixer]
-;;                                                    :raw-state (nk-state-map nil)
-;;                                                    :mode      :controller}}}))
+;;                         :nks   {(first nano-kons) {:syncs        (nk-state-map false)
+;;                                                    :flashers     (nk-state-map nil)
+;;                                                    :current      [0 :mixer]
+;;                                                    :raw-state    (nk-state-map nil)
+;;                                                    :mode         :controller
+;;                                                    :switch-group nil }}}))
 ;; Available modes: [:controller, :clutch, :switcher]
 
 (defn- sm-g-k->state
@@ -61,10 +62,12 @@
     (sm-g-k->state sm g k)))
 
 (defn- sm-nk->current-group
-  "Get the current group associated with a specific nk"
+  "Get the current group associated with a specific nk. Prefer group
+   in :switch-group key if exists."
   [sm nk]
-  (let [[g k] (sm-nk->current-gk sm nk) ]
-    g))
+  (let [[g k]        (sm-nk->current-gk sm nk)
+        switch-group (get-in sm [:nks nk :switch-group])]
+    (or switch-group g)))
 
 (defn sm-nk->current-button-id
   "Returns the button-id for the current state of the nk"
@@ -206,6 +209,11 @@
   [sm nk g k]
   (assoc-in sm [:nks nk :current] [g k]))
 
+(defn- sm-nk-swap-switch-group
+  "Swap the switch-group - a key representing the new group to switch to"
+  [sm nk g]
+  (assoc-in sm [:nks nk :switch-group] g))
+
 (defn- sm-swap-state
   "Return a new sm with the state with specific group and k replaced"
   [sm g k new-state]
@@ -250,7 +258,8 @@
                           :flashers (nk-state-map nil)
                           :current nil
                           :mode :controller
-                          :raw-state (nk-state-map nil)}))
+                          :raw-state (nk-state-map nil)
+                          :switch-group nil}))
 
 (defn mk-state-map
   "Create a new state map agent used to represent a bunch of nks and
@@ -303,19 +312,11 @@
   [nk group]
   (nk-rec-leds-off nk)
   (cond
-   (= 0 group) (led-on nk :record)
-   (= 1 group) (led-on nk :play)
-   (= 2 group) (led-on nk :stop)
-   (= 3 group) (led-on nk :fast-forward)
-   (= 4 group) (led-on nk :rewind)
-   (= 5 group) (do (led-on nk :record)
-                  (led-on nk :play))
-   (= 6 group) (do (led-on nk :record)
-                  (led-on nk :stop))
-   (= 7 group) (do (led-on nk :record)
-                  (led-on nk :fast-forward))
-   (= 8 group) (do (led-on nk :record)
-                  (led-on nk :rewind))))
+   (= 0 group)  (led-on nk :record)
+   (= 2 group)  (led-on nk :play)
+   (= 4 group)  (led-on nk :stop)
+   (= 8 group)  (led-on nk :fast-forward)
+   (= 16 group) (led-on nk :rewind)))
 
 (defn kill-all-flashers*
   "Kill all the flashers on a specific nk"
@@ -478,6 +479,7 @@
         (-> sm
             (sm-nk-swap-current nk g k)
             (sm-nk-swap-syncs nk syncs)
+            (sm-nk-swap-switch-group nk nil)
             (sm-nk-swap-mode nk :controller))))
     sm))
 
@@ -541,6 +543,27 @@
 
    :else sm))
 
+(defn- group-button-id->group
+  "Use powers of two to eventually support binary notation across the
+   record row of buttons."
+  [id]
+  (cond
+   (= :record id) 0
+   (= :play id) 2
+   (= :stop id) 4
+   (= :fast-forward id) 8
+   (= :rewind id) 16))
+
+(defn- group-button?
+  [id]
+  (or (= :record id)
+      (= :play id)
+      (= :stop id)
+      (= :fast-forward id)
+      (= :rewind id)))
+
+(declare nk-enter-switcher-mode*)
+
 (defn nk-update-states-button*
   "A button has been pressed...
    - if we're in switcher mode, switch state
@@ -555,6 +578,15 @@
         raw-state (sm-nk->raw-state sm nk)]
     (cond
 
+     ;; switch group (within switcher mode)
+     (and (= 1.0 raw)
+          (sm-nk-switcher-mode? sm nk)
+          (group-button? id))
+     (let [g (group-button-id->group id)]
+       (-> sm
+           (sm-nk-swap-switch-group nk g)
+           (nk-enter-switcher-mode* nk)))
+
      ;; switch state
      (and (= 0.0 raw)
           (sm-nk-switcher-mode? sm nk)
@@ -564,6 +596,7 @@
        (-> sm
            (kill-all-flashers* nk)
            (switch-state* nk g state-k)
+           (sm-nk-swap-switch-group nk nil)
            (sm-nk-swap-raw-state nk (assoc raw-state id raw))))
 
      ;; force sync
@@ -577,6 +610,7 @@
            (nk-force-sync* nk controller-id ctl-raw)
            (sm-nk-swap-raw-state nk (assoc raw-state id raw))))
 
+     ;; do nothing except register button press in raw-state
      :else (-> sm
                (sm-nk-swap-raw-state nk (assoc raw-state id raw))))))
 
@@ -710,7 +744,7 @@
         curr-button-id (sm-nk->current-button-id sm nk)]
 
     (nk-smr-leds-off nk)
-    (nk-rec-leds-off nk)
+    (nk-show-group nk g)
     (led-on nk :cycle)
 
     (let [flashers (reduce (fn [r [k v]]

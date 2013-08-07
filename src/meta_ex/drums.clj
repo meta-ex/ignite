@@ -120,7 +120,7 @@
 
 ;;(ms/stop-sequencer seq128)
 ;;(ms/stop-sequencer seq64)
-  (.printStackTrace (agent-error (:state (:fonome seq128))))
+;;  (.printStackTrace (agent-error (:state (:fonome seq128))))
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
 ;; (def c-sequencer4 (seq/mk-sequencer "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
 

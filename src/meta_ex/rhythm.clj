@@ -9,39 +9,6 @@
 
 (defonce rhythm-bass-g (group "Rhythm Bass"))
 
-(defsynth foo [attack 0.01 sustain 0.03 release 0.1 amp 0.8 out-bus 0 ]
-  (let [freq (/ (in:kr phasor-b2) 2)
-        env  (env-gen (lin-env attack sustain release) 1 1 0 1)
-        src  (mix (saw [freq (* 1.01 freq)]))
-        src  (lpf src (mouse-y 100 20000))
-        sin  (sin-osc (* 1 freq))
-        sin2 (sin-osc freq)
-        src  (mix [src sin sin2])]
-    (out out-bus (pan2 (* src amp)))))
-
-(defsynth beepy [amp 1 out-bus 0]
-  (let [freq   (* (in:kr phasor-b2) 1 )
-        ct-saw (+ (lin-lin (in:kr saw-x-b3) 0 1 0.5 1))]
-    (out out-bus (* 0.5  ct-saw amp 1.25 (mix (+ (lf-tri [(* 0.5 freq)
-                                                          (* 0.25 freq)
-                                                          (* 0.5 freq)
-                                                          (* 2.01 freq)])
-                                                 ;;                                                 (square (* 1/8 freq) )
-                                                 ))
-                    ))))
-
-(defsynth foo-bass [lpf-f 1000 lpf-mul 1 amp 0 out-bus 0]
-  (let [freq  (/ (in:kr phasor-b1) 8)
-        ct-saw           (in:kr saw-x-b3)
-        ]
-    (out out-bus (* amp (* 0.5 (* (+ 0.2 ct-saw) (lpf (sum [
-                                                            (sin-osc (/ freq))
-                                                            (sin-osc (/ freq 0.25))
-                                                            (square (* 2 freq))
-                                                            (saw freq)
-                                                            ])
-                                                      (* lpf-mul ct-saw lpf-f))))))))
-
 (defonce bass-note (atom 30))
 
 (defonce rhythm-g (group "Rhythm" :after tim/timing-g))
@@ -66,15 +33,50 @@
 (defonce phasor-s2 (tim/buf-phasor [:after saw-s2] saw-x-b2 :out-bus phasor-b2 :buf saw-bf2))
 
 
+(defsynth foo [attack 0.01 sustain 0.03 release 0.1 amp 0.8 out-bus 0 ]
+  (let [freq (/ (in:kr phasor-b2) 2)
+        env  (env-gen (lin-env attack sustain release) 1 1 0 1)
+        src  (mix (saw [freq (* 1.01 freq)]))
+        src  (lpf src (mouse-y 100 20000))
+        sin  (sin-osc (* 1 freq))
+        sin2 (sin-osc freq)
+        src  (mix [src sin sin2])]
+    (out out-bus (pan2 (* src amp)))))
+
+(defsynth beepy [amp 1 out-bus 0]
+  (let [freq   (* (in:kr phasor-b2) 1 )
+        ct-saw (+ (lin-lin (in:kr saw-x-b3) 0 1 0.5 1))]
+    (out out-bus (* 0.5  ct-saw amp 1.25 (mix (+ (lf-tri [(* 0.5 freq)
+                                                          (* 0.25 freq)
+                                                          (* 0.5 freq)
+                                                          (* 2.01 freq)])
+                                                 ;;                                                 (square (* 1/8 freq) )
+                                                 ))
+                    ))))
+
+(defsynth foo-bass [lpf-f 1000 lpf-mul 1 amp 0 out-bus 0]
+  (let [freq  (/ (in:kr phasor-b1) 8)
+        ct-saw           (in:kr saw-x-b3)]
+    (out out-bus (* amp (* 0.5 (* (+ 0.2 ct-saw) (lpf (sum [
+                                                            (sin-osc (/ freq))
+                                                            (sin-osc (/ freq 0.25))
+                                                            (square (* 2 freq))
+                                                            (saw freq)
+                                                            ])
+                                                      (* lpf-mul ct-saw lpf-f))))))))
+
 (defn set-saw-s1
+  "bass-rate"
   [rate]
   (ctl saw-s1 :freq-mul rate))
 
 (defn set-saw-s2
+  "mid-hi-rate"
   [rate]
   (ctl saw-s2 :freq-mul rate))
 
 (defn set-saw-s3
+  "bass-wob-rate"
   [rate]
   (ctl saw-s3 :freq-mul rate))
 
@@ -118,7 +120,7 @@
                                           (map (fn [midi-note] (+ -12 midi-note))
                                                (repeat 16 (:note m))))))
             ::phat-bass-keyboard))
-(map-keyboard-on)
+
 (defn map-keyboard-off
   []
   (remove-event-handler ::phat-bass-keyboard))
@@ -140,16 +142,6 @@
   (buffer-write! saw-bf1 (map midi->hz
                               (map (fn [midi-note] (+ -12 midi-note))
                                    (repeat 16 (hz->midi @bass-note))))) )
-;; (giorgio 0)
-;; (giorgio 2)
-;; (giorgio 8)
-;; (giorgio 9)
-;; (giorgio 10)
-;; (giorgio 11)
-;; (giorgio 12)
-;; (giorgio 13)
-;; (giorgio 14)
-
 
 (defonce hi   (beepy    [:head rhythm-bass-g] :amp 0 :out-bus (nkmx :s0)))
 (defonce mid  (foo      [:head rhythm-bass-g] :amp 0 :out-bus (nkmx :s1)))

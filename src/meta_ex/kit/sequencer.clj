@@ -58,8 +58,9 @@
   "Creates a sequencer that resides at the tail of the target group with
    synths to play each sample with the specified number of steps using
    clock busses"
-  ([handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus] (mk-sequencer handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus true))
-  ([handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus with-mixers?]
+  ([nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus]
+     (mk-sequencer nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus true))
+  ([nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus with-mixers?]
      (let [desc            (str "M-x Sequencer " handle)
            num-samps       (count samples)
            container-group (group handle :tail tgt-group)
@@ -68,7 +69,7 @@
            patterns        (mk-sequencer-patterns samples num-steps)
            mixer-handles   (map #(str handle "-" %) (range num-samps))
            mixers          (when with-mixers?
-                             (doall (map #(add-nk-mixer % mixer-group out-bus) mixer-handles)))
+                             (doall (map #(add-nk-mixer nk-group % mixer-group out-bus) mixer-handles)))
            synths          (start-synths samples patterns mixers num-steps seq-group beat-cnt-bus beat-trg-bus out-bus)]
        (with-meta {:num-samps     num-samps
                    :beat-trg-bus  beat-trg-bus

@@ -22,19 +22,20 @@
     (sequencer-write-row! sequencer y range-x grid)))
 
 (defn mk-monome-sequencer
-  ([handle samples tgt-fonome]
-     (mk-monome-sequencer handle samples tgt-fonome 0 ))
-  ([handle samples tgt-fonome out-bus]
-     (mk-monome-sequencer handle samples tgt-fonome 0 (foundation-default-group)))
-  ([handle samples tgt-fonome out-bus tgt-g]
-     (mk-monome-sequencer handle samples tgt-fonome out-bus tgt-g true))
-  ([handle samples tgt-fonome out-bus tgt-g with-mixers?]
+  ([nk-group handle samples tgt-fonome]
+     (mk-monome-sequencer nk-group handle samples tgt-fonome 0 ))
+  ([nk-group handle samples tgt-fonome out-bus]
+     (mk-monome-sequencer nk-group handle samples tgt-fonome 0 (foundation-default-group)))
+  ([nk-group handle samples tgt-fonome out-bus tgt-g]
+     (mk-monome-sequencer nk-group handle samples tgt-fonome out-bus tgt-g true))
+  ([nk-group handle samples tgt-fonome out-bus tgt-g with-mixers?]
      (when-not tgt-fonome
        (throw (IllegalArgumentException. "Please pass a valid fonome to mk-monome-sequencer")))
 
      (let [range-x     (:width tgt-fonome)
            range-y     (:height tgt-fonome)
-           sequencer   (seq/mk-sequencer handle
+           sequencer   (seq/mk-sequencer nk-group
+                                         handle
                                          (take (dec range-y) samples)
                                          range-x
                                          tgt-g
@@ -53,7 +54,8 @@
                           :beat-key       key3
                           :fonome         tgt-fonome
                           :handle         handle
-                          :status         (atom :running)}
+                          :status         (atom :running)
+                          :nk-group       nk-group}
                          {:type ::monome-sequencer})]
 
        (swap! m-sequencers (fn [ms]

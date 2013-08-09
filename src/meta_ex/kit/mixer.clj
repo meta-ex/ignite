@@ -233,6 +233,8 @@
                 :pot6    (fn [v sin-ctl-s] (ctl sin-ctl-s :amp-14  v))
                 :pot7    (fn [v sin-ctl-s] (ctl sin-ctl-s :amp-15 v))})
 
+(def nano2-controls (keys nano2-fns))
+
 (defn- mk-mixer
   [event-k mixer-g out-bus]
   (let [in-bus    (audio-bus 2)
@@ -241,31 +243,34 @@
         sin-ctl   (mixer-sin-control [:tail mixer-g] :out-bus ctl-bus)
         mixer     (meta-mix [:after sin-ctl] :in-bus in-bus :out-bus out-bus)
         handler-k (uuid)]
-        (node-map-n-controls mixer :rev-mix ctl-bus 16)
-    (println "registering a mixer listening on " event-k)
-    (on-latest-event event-k
-                     (fn [msg]
-                       (let [id  (:id msg)
-                             val (:val msg)]
-                         (if-let [f (get nano2-fns id)]
-                           (do ;;(println "-->" id ctl-bus (bus-get ctl-bus))
+    (node-map-n-controls mixer :rev-mix ctl-bus 16)
+    (doseq [control-id nano2-controls]
+      (println "adding handler for: " (vec (concat event-k [control-id])))
+      (on-latest-event (vec (concat event-k [control-id]))
+                       (fn [msg]
+                         (let [id  (:id msg)
+                               val (:val msg)]
+                           (if-let [f (get nano2-fns id)]
+                             (do ;;(println "-->" id ctl-bus (bus-get ctl-bus))
                                (f val sin-ctl)
                                )
-                           (println "unbound: " note))))
-                     handler-k)
+;;                             (println "unbound: " note)
+                             )))
+                       (str handler-k control-id)))
     (on-node-destroyed mixer
                        (fn [_]
-                         (remove-event-handler handler-k)
+                         (doseq [control-id nano2-controls]
+                           (remove-event-handler (str handler-k control-id)))
                          (swap! korg-nano-kontrol-mixers dissoc event-k)
                          (reset! live? false)))
 
-    (with-meta {:mixer-g     mixer-g
-                :mixer       mixer
-                :handler-key handler-k
-                :in-bus      in-bus
-                :event-key   event-k
-                :live?       live?
-                :sin-ctl     sin-ctl}
+    (with-meta {:mixer-g   mixer-g
+                :mixer     mixer
+                :handler-k handler-k
+                :in-bus    in-bus
+                :event-key event-k
+                :live?     live?
+                :sin-ctl   sin-ctl}
       {:type ::mixer})))
 
 
@@ -292,12 +297,12 @@
     (kill (:mixer mixer))))
 
 (defn add-nk-mixer
-  ([k]
-     (add-mixer [:v-nanoKON2 8 k :control-change]))
-  ([k tgt-g]
-     (add-mixer [:v-nanoKON2 8 k :control-change] tgt-g))
-  ([k tgt-g out-bus]
-     (add-mixer [:v-nanoKON2 8 k :control-change] tgt-g out-bus)))
+  ([g k]
+     (add-mixer [:v-nanoKON2 g k :control-change]))
+  ([g k tgt-g]
+     (add-mixer [:v-nanoKON2 g k :control-change] tgt-g))
+  ([g k tgt-g out-bus]
+     (add-mixer [:v-nanoKON2 g k :control-change] tgt-g out-bus)))
 
 (defn mx
   [k]

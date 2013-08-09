@@ -43,18 +43,18 @@
   (defonce bas-mix-s64  (basic-mixer [:head drum-basic-mixer-g] :in-bus m64-b :amp 0))
   (defonce bas-mix-s128 (basic-mixer [:head drum-basic-mixer-g] :in-bus m128-b :amp 0))
 
-  (defonce trig128-mixer (mx/add-nk-mixer :s7 drum-trigger-mix-g m128-b))
-  (defonce trig64-mixer  (mx/add-nk-mixer :m7 drum-trigger-mix-g m64-b))
+  (defonce trig128-mixer (mx/add-nk-mixer 4 :s7 drum-trigger-mix-g m128-b))
+  (defonce trig64-mixer  (mx/add-nk-mixer 2 :m7 drum-trigger-mix-g m64-b))
 
   (when m64
-    (defonce seq64 (ms/mk-monome-sequencer "m64" transition-samples seq64-f m64-b drum-g))
+    (defonce seq64 (ms/mk-monome-sequencer 2 "m64" transition-samples seq64-f m64-b drum-g))
     (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
     (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7))
     (defonce trigger-sampler64 (samp/mk-sampler ::trigger-sampler64 trigger-samples drum-g (nkmx :m7) 8))
     (defonce __dockk_trigger__ (poly/dock-fonome! m64  (:fonome trigger-sampler64)  ::trigger-sampler64  0 6)))
 
   (when m128
-    (defonce seq128 (ms/mk-monome-sequencer "m128" african-samples seq128-f m128-b drum-g))
+    (defonce seq128 (ms/mk-monome-sequencer 4 "m128" african-samples seq128-f m128-b drum-g))
     (defonce __dock128___ (poly/dock-fonome! m128 seq128-f ::seq128 0 0))
     (defonce __dock_pause128__ (poly/dock-fonome! m128 insta-pause128-f ::pause128 15 7))
     (defonce trigger-sampler128 (samp/mk-sampler ::trigger-sampler128 trigger-samples drum-g (nkmx :s7) 16))

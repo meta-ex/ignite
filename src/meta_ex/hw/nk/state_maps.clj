@@ -336,23 +336,37 @@
     (sm-nk-swap-flashers sm nk flashers))
   sm)
 
-(defn refresh*
+(declare update-syncs-and-flashers*)
+
+(defn- update-leds*
+  "Refresh a nk's leds. If in a manipulation mode:
+   - updates all flashers
+   - shows group
+   - turns on sync leds"
+  [sm nk]
+  (if (sm-nk-manipulation-mode? sm nk)
+    (let [group (sm-nk->current-group sm nk)
+          state (sm-nk->current-state sm nk)]
+      (nk-show-group nk group)
+      (reduce (fn [sm [id v]]
+                (if (controller-id? id )
+                  (update-syncs-and-flashers* sm nk id v)
+                  sm))
+              sm
+              state))
+    sm))
+
+(defn- refresh*
   "Refresh a nk's leds. If in a manipulation mode:
    - kills all flashers
    - shows group
    - turns on sync leds"
   [sm nk]
   (if  (sm-nk-manipulation-mode? sm nk)
-    (let [sm    (kill-all-flashers* sm nk)
-          syncs (sm-nk->syncs sm nk)
-          group (sm-nk->current-group sm nk)]
-      (nk-smr-leds-off nk)
-      (nk-show-group nk group)
-      (doseq [[id synced?] syncs]
-        (when synced?
-          (led-on nk (controller-id->sync-led-id id))))
-      sm)
-    sm))
+    (let [sm (kill-all-flashers* sm nk)
+          sm (update-leds* sm nk)]
+      sm
+    sm)))
 
 (defn- flasher-delay
   "Calculate the flasher delay. This is a function of the 'distance'
@@ -382,6 +396,23 @@
             (update-syncs-and-flashers* r nk id v))
           sm
           (remove #{nk} (sm-gk->nks sm [g k]))))
+
+(defn- emit-event
+  "Emit the appropriate v-nanoKON2 events"
+  [g k id old-state state old-val val]
+  (event [:v-nanoKON2 g k :control-change id]
+         :id id
+         :old-state old-state
+         :state state
+         :old-val old-val
+         :val val)
+
+  (event [:v-nanoKON2 g k :control-change]
+         :id id
+         :old-state old-state
+         :state state
+         :old-val old-val
+         :val val))
 
 (defn- nk-update-states-range*
   "Update the state of nk's range control (i.e. a slider or pot) with
@@ -419,20 +450,7 @@
 
       (let [flashers (if synced?
                        (do
-                         (event [:v-nanoKON2 g k :control-change id]
-                                :group g
-                                :id id
-                                :old-state old-state
-                                :state state
-                                :old-val val
-                                :val new-val)
-                         (event [:v-nanoKON2 g k :control-change]
-                                :group g
-                                :id id
-                                :old-state old-state
-                                :state state
-                                :old-val val
-                                :val new-val)
+                         (emit-event g k id old-state state val new-val)
                          (assoc flashers flasher-id nil))
 
                        (let [delay    (flasher-delay val raw)
@@ -465,8 +483,6 @@
             state      (sm-g-k->state sm g k)
             syncs      (sm-nk->syncs sm nk)
             syncs      (reduce (fn [r [id v]]
-                                 (when (= :slider0 id)
-                                   (println "hi" [id (get state id) (get latest-raw id)]))
                                  (let [synced? (= (get state id)
                                                   (get latest-raw id))]
 
@@ -524,19 +540,8 @@
      (led-on nk (controller-id->sync-led-id id))
      (led-off nk (controller-id->warmer-led-id id))
 
-     (event [:v-nanoKON2 g k :control-change k]
-            :id id
-            :old-state old-state
-            :state state
-            :old-val val
-            :val raw)
+     (emit-event g k id old-state state val raw)
 
-     (event [:v-nanoKON2 g k :control-change]
-            :id id
-            :old-state old-state
-            :state state
-            :old-val val
-            :val raw)
      (-> sm
          (sm-nk-swap-state nk state)
          (sm-nk-swap-syncs nk syncs)))
@@ -618,20 +623,22 @@
   "Update the syncs and flashers for the specific state matching nk's
    id. Does not update the raw-state of the nk."
   [sm nk id v]
-  (if  (sm-nk-controller-mode? sm nk)
+  (if  (sm-nk-manipulation-mode? sm nk)
     (let [raw-state  (sm-nk->raw-state sm nk)
           raw        (get raw-state id)
           old-syncs  (sm-nk->syncs sm nk)
-          old-sync   (get old-syncs id)
-          syncs      (assoc old-syncs id false)
+          synced?    (= v raw)
+          syncs      (assoc old-syncs id synced?)
           flashers   (sm-nk->flashers sm nk)
-          flasher    (get flashers id)]
+          flasher-id (controller-id->sync-led-id id)
+          warmer-id  (controller-id->warmer-led-id id)
+          flasher    (get flashers flasher-id)]
+      (led-off nk warmer-id)
+      (cond
+       flasher       (delay-set! flasher (flasher-delay v raw))
+       synced?       (led-on nk (controller-id->sync-led-id id))
+       (not synced?) (led-off nk (controller-id->sync-led-id id)))
 
-      (when flasher
-        (delay-set! flasher (flasher-delay v raw)))
-
-      (when old-sync
-        (led-off nk (controller-id->sync-led-id id)))
       (sm-nk-swap-syncs sm nk syncs))
     sm))
 
@@ -854,22 +861,83 @@
   [state-map-a nk]
   (send state-map-a nk-leave-switcher-mode* nk))
 
-(defn nk-save-state*
-  [sm nk state-prom]
-  (deliver state-prom (sm-nk->current-state sm nk))
-  sm)
-
-(defn nk-save-state
+(defn nk-save-current-state
   [state-map-a nk]
-  (let [state-prom (promise)]
-    (send state-map-a nk-save-state* nk state-prom)
-    @state-prom))
+  (sm-nk->current-state @state-map-a nk))
 
-(defn nk-load-state*
+(defn nk-replace-current-state*
   [sm nk new-state]
   (let [sm (sm-nk-swap-state sm nk new-state)]
     (switch-state* sm nk (sm-nk->current-gk sm nk))))
 
-(defn nk-load-state
+
+
+(defn emit-events-on-state-diff
+  [g k old-state new-state]
+  (doseq [[id v] new-state]
+    (when (controller-id? id )
+      (let [old-v (get old-state id)]
+        (emit-event g
+                    k
+                    id
+                    old-state
+                    new-state
+                    old-v
+                    v)))))
+
+(defn nk-replace-current-state
   [state-map-a nk new-state]
-  (send state-map-a nk-load-state* nk new-state))
+  (send state-map-a nk-replace-current-state* nk new-state))
+
+(defn save-state
+  [state-map-a g k]
+  (let [sm @state-map-a]
+    (sm-g-k->state sm g k)))
+
+(defn replace-state
+  [state-map-a g k state]
+  (send state-map-a
+        (fn [sm]
+          (let [old-state (sm-g-k->state g k) ]
+            (emit-events-on-state-diff g k old-state state))
+          (sm-swap-state g k state)))
+  :replaced)
+
+(defn save-group-states
+  [state-map-a g]
+  (let [sm @state-map-a]
+    (get-in sm [:states g] {})))
+
+(defn- sm-g-k-update-all-nks*
+  "Updates the smr leds on all nks associated with the specified group
+   and state key:
+
+   - unsync if synced and no longer same vals
+   - sync if unsynced and same vals
+   - update flashers
+   "
+  [sm g k]
+  (let [nks (sm-gk->nks sm [g k])]
+    (reduce (fn [r nk]
+              (update-leds* r nk) )
+            sm
+            nks)))
+
+(defn load-group-states
+  [state-map-a g new-states]
+  (send state-map-a
+        (fn [sm]
+          (let [old-states (get-in sm [:states g])]
+            (reduce (fn [sm [k s]]
+                      (let [old-state (:state s)
+                            new-state (get-in new-states [k :state])
+                            sm        (sm-swap-state sm g k new-state )]
+                        (emit-events-on-state-diff g k old-state new-state)
+                        (sm-g-k-update-all-nks* sm g k)))
+                    sm
+                    old-states))))
+  :replaced)
+
+(defn list-groups
+  [state-map-a]
+  (keys (:states @state-map-a)))

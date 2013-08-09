@@ -13,15 +13,15 @@
 
 (defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
 
-(defonce mixer-s0 (mx/add-nk-mixer :s0 default-mixer-g))
-(defonce mixer-s1 (mx/add-nk-mixer :s1 default-mixer-g))
-(defonce mixer-m0 (mx/add-nk-mixer :m0 default-mixer-g))
-(defonce mixer-m1 (mx/add-nk-mixer :m1 default-mixer-g))
-(defonce mixer-s2 (mx/add-nk-mixer :s2 default-mixer-g))
-(defonce mixer-r0 (mx/add-nk-mixer :r0 default-mixer-g))
+(defonce mixer-s0 (mx/add-nk-mixer 8 :s0 default-mixer-g))
+(defonce mixer-s1 (mx/add-nk-mixer 8 :s1 default-mixer-g))
+(defonce mixer-m0 (mx/add-nk-mixer 8 :m0 default-mixer-g))
+(defonce mixer-m1 (mx/add-nk-mixer 8 :m1 default-mixer-g))
+(defonce mixer-s2 (mx/add-nk-mixer 8 :s2 default-mixer-g))
+(defonce mixer-r0 (mx/add-nk-mixer 8 :r0 default-mixer-g))
 
 
-(defonce mixer-master (mx/add-nk-mixer :master))
+;;(defonce mixer-master (mx/add-nk-mixer 0 :master))
 
 (defonce orig-samples [(sample (freesound-path 777))   ;;kick
                        (sample (freesound-path 406))   ;;click

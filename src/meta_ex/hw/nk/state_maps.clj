@@ -21,18 +21,18 @@
 ;;                                                    :current      [0 :mixer]
 ;;                                                    :raw-state    (nk-state-map nil)
 ;;                                                    :mode         :controller
-;;                                                    :switch-group nil }}}))
+;;                                                    :switch-bank  nil }}}))
 ;; Available modes: [:controller, :clutch, :switcher]
 
-(defn- sm-g-k->state
-  "Get the state for a specific key and group"
-  [sm g k]
-  (get-in sm [:states g k :state]))
+(defn- sm-b-k->state
+  "Get the state for a specific key and bank"
+  [sm b k]
+  (get-in sm [:states b k :state]))
 
-(defn- sm-g-k->button-id
-  "Get the button-id for a specific key and group"
-  [sm g k]
-  (get-in sm [:states g k :button-id]))
+(defn- sm-b-k->button-id
+  "Get the button-id for a specific key and bank"
+  [sm b k]
+  (get-in sm [:states b k :button-id]))
 
 (defn- sm-nk->syncs
   "Get the syncs for a specific nk in the sm"
@@ -50,73 +50,73 @@
   [sm nk]
   (get-in sm [:nks nk :raw-state]))
 
-(defn- sm-nk->current-gk
-  "Get the current state-map [g k] vec for a specific nk in the sm"
+(defn- sm-nk->current-bk
+  "Get the current state-map [b k] vec for a specific nk in the sm"
   [sm nk]
   (get-in sm [:nks nk :current]))
 
 (defn- sm-nk->current-state
   "Get the current state associated with a specific nk"
   [sm nk]
-  (let [[g k] (sm-nk->current-gk sm nk) ]
-    (sm-g-k->state sm g k)))
+  (let [[b k] (sm-nk->current-bk sm nk) ]
+    (sm-b-k->state sm b k)))
 
-(defn- sm-nk->current-group
-  "Get the current group associated with a specific nk. Prefer group
-   in :switch-group key if exists."
+(defn- sm-nk->current-bank
+  "Get the current bank associated with a specific nk. Prefer bank
+   in :switch-bank key if exists."
   [sm nk]
-  (let [[g k]        (sm-nk->current-gk sm nk)
-        switch-group (get-in sm [:nks nk :switch-group])]
-    (or switch-group g)))
+  (let [[b k]        (sm-nk->current-bk sm nk)
+        switch-bank (get-in sm [:nks nk :switch-bank])]
+    (or switch-bank b)))
 
 (defn sm-nk->current-button-id
   "Returns the button-id for the current state of the nk"
   [sm nk]
-  (let [[g k] (sm-nk->current-gk sm nk)]
-    (get-in sm [:states g k :button-id])))
+  (let [[b k] (sm-nk->current-bk sm nk)]
+    (get-in sm [:states b k :button-id])))
 
 (defn- sm-nk->current-mode
   "Return the current mode for nk"
   [sm nk]
   (get-in sm [:nks nk :mode]))
 
-(defn- sm-gk->nks
-  "Get all the nks associated with a specific gk vec"
-  [sm gk]
+(defn- sm-bk->nks
+  "Get all the nks associated with a specific bk vec"
+  [sm bk]
   (let [nks (:nks sm)]
     (reduce (fn [r [k v]]
-              (if (= gk (:current v))
+              (if (= bk (:current v))
                 (conj r k)
                 r))
             #{}
             nks)))
 
-(defn- sm-g->button-ids-nks
+(defn- sm-b->button-ids-nks
   "Return a map of button-ids to lists of nks currently controlling the state
-   with that button-id for group g"
-  [sm g]
-  (let [all-states-for-g (get-in sm [:states g])
+   with that button-id for bank b"
+  [sm b]
+  (let [all-states-for-b (get-in sm [:states b])
         k->button-id     (reduce (fn [r [k state-info]]
                                    (conj r [k (:button-id state-info)]))
                                  #{}
-                                 all-states-for-g)]
+                                 all-states-for-b)]
     (reduce (fn [r [k bid]]
-              (let [nks (sm-gk->nks sm [g k])]
+              (let [nks (sm-bk->nks sm [b k])]
                 (assoc r bid nks)))
             {}
             k->button-id)))
 
-(defn sm-g-button-id->valid?
-  "Returns true if the button-id is associated with a state in group g."
-  [sm g button-id]
-  (let [available (sm-g->button-ids-nks sm g)]
+(defn sm-b-button-id->valid?
+  "Returns true if the button-id is associated with a state in bank b."
+  [sm b button-id]
+  (let [available (sm-b->button-ids-nks sm b)]
     (contains? available button-id)))
 
-(defn sm-g-button-id->k
-  "Returns the state-k for state with button-id within group g"
-  [sm g button-id]
+(defn sm-b-button-id->k
+  "Returns the state-k for state with button-id within bank b"
+  [sm b button-id]
   (ffirst (filter (fn [[k v]] (= button-id (:button-id v)))
-                  (get-in sm [:states g]))))
+                  (get-in sm [:states b]))))
 
 (defn- sm-nk-switcher-mode?
   "Returns true if the specific nk is currently in switcher mode"
@@ -150,16 +150,16 @@
   [state-id]
   (boolean (re-matches #"[smr][0-7]" (name state-id))))
 
-(defn- sm-g->valid?
-  "Returns true if g is a valid group in sm"
-  [sm g]
-  (contains? (:states sm) g))
+(defn- sm-b->valid?
+  "Returns true if b is a valid bank in sm"
+  [sm b]
+  (contains? (:states sm) b))
 
-(defn- sm-g-k->valid?
-  "Returns true if k is a valid state key within group g in sm"
-  [sm g k]
-  (and (sm-g->valid? sm g)
-       (contains? (get-in sm [:states g]) k)))
+(defn- sm-b-k->valid?
+  "Returns true if k is a valid state key within bank b in sm"
+  [sm b k]
+  (and (sm-b->valid? sm b)
+       (contains? (get-in sm [:states b]) k)))
 
 (defn- controller-id->sync-led-id
   "Given a controller id - returns the matching sync led id"
@@ -205,19 +205,19 @@
 (def delay-mul 1000)
 
 (defn- sm-nk-swap-current
-  "Return a new sm with the current gk vec replaced"
-  [sm nk g k]
-  (assoc-in sm [:nks nk :current] [g k]))
+  "Return a new sm with the current bk vec replaced"
+  [sm nk b k]
+  (assoc-in sm [:nks nk :current] [b k]))
 
-(defn- sm-nk-swap-switch-group
-  "Swap the switch-group - a key representing the new group to switch to"
-  [sm nk g]
-  (assoc-in sm [:nks nk :switch-group] g))
+(defn- sm-nk-swap-switch-bank
+  "Swap the switch-bank - a key representing the new bank to switch to"
+  [sm nk b]
+  (assoc-in sm [:nks nk :switch-bank] b))
 
 (defn- sm-swap-state
-  "Return a new sm with the state with specific group and k replaced"
-  [sm g k new-state]
-  (assoc-in sm [:states g k :state] new-state))
+  "Return a new sm with the state with specific bank and k replaced"
+  [sm b k new-state]
+  (assoc-in sm [:states b k :state] new-state))
 
 (defn- sm-nk-swap-mode
   "Return a new sm with the mode of the specific nk replaced"
@@ -227,8 +227,8 @@
 (defn- sm-nk-swap-state
   "Return a new sm with the state matching the nk replaced"
   [sm nk new-state]
-  (let [[g k] (sm-nk->current-gk sm nk)]
-    (sm-swap-state sm g k new-state)))
+  (let [[b k] (sm-nk->current-bk sm nk)]
+    (sm-swap-state sm b k new-state)))
 
 (defn- sm-nk-swap-raw-state
   "Return a new sm with the nk's raw-state replaced"
@@ -247,8 +247,8 @@
 
 (defn- sm-add-state
   "Return a new sm with the new state"
-  [sm g k s button-id]
-  (assoc-in sm [:states g k] {:state s
+  [sm b k s button-id]
+  (assoc-in sm [:states b k] {:state s
                               :button-id button-id}))
 
 (defn- sm-add-nk
@@ -259,7 +259,7 @@
                           :current nil
                           :mode :controller
                           :raw-state (nk-state-map nil)
-                          :switch-group nil}))
+                          :switch-bank nil}))
 
 (defn mk-state-map
   "Create a new state map agent used to represent a bunch of nks and
@@ -307,16 +307,16 @@
   (led-off nk :play)
   (led-off nk :record))
 
-(defn nk-show-group
-  "Turn on the rec lights specific to the group"
-  [nk group]
+(defn nk-show-bank
+  "Turn on the rec lights specific to the bank"
+  [nk bank]
   (nk-rec-leds-off nk)
   (cond
-   (= 0 group)  (led-on nk :record)
-   (= 2 group)  (led-on nk :play)
-   (= 4 group)  (led-on nk :stop)
-   (= 8 group)  (led-on nk :fast-forward)
-   (= 16 group) (led-on nk :rewind)))
+   (= 0 bank)  (led-on nk :record)
+   (= 2 bank)  (led-on nk :play)
+   (= 4 bank)  (led-on nk :stop)
+   (= 8 bank)  (led-on nk :fast-forward)
+   (= 16 bank) (led-on nk :rewind)))
 
 (defn kill-all-flashers*
   "Kill all the flashers on a specific nk"
@@ -341,13 +341,13 @@
 (defn- update-leds*
   "Refresh a nk's leds. If in a manipulation mode:
    - updates all flashers
-   - shows group
+   - shows bank
    - turns on sync leds"
   [sm nk]
   (if (sm-nk-manipulation-mode? sm nk)
-    (let [group (sm-nk->current-group sm nk)
+    (let [bank (sm-nk->current-bank sm nk)
           state (sm-nk->current-state sm nk)]
-      (nk-show-group nk group)
+      (nk-show-bank nk bank)
       (reduce (fn [sm [id v]]
                 (if (controller-id? id )
                   (update-syncs-and-flashers* sm nk id v)
@@ -359,7 +359,7 @@
 (defn- refresh*
   "Refresh a nk's leds. If in a manipulation mode:
    - kills all flashers
-   - shows group
+   - shows bank
    - turns on sync leds"
   [sm nk]
   (if  (sm-nk-manipulation-mode? sm nk)
@@ -389,25 +389,25 @@
 (declare update-syncs-and-flashers*)
 
 (defn- sm-nk-unsync-other-nks*
-  "Update syncs and flashers associated with the specific group, state
+  "Update syncs and flashers associated with the specific bank, state
    key and id for all other registered nks in sm other than this specific nk"
-  [sm nk g k id v]
+  [sm nk b k id v]
   (reduce (fn [r nk]
             (update-syncs-and-flashers* r nk id v))
           sm
-          (remove #{nk} (sm-gk->nks sm [g k]))))
+          (remove #{nk} (sm-bk->nks sm [b k]))))
 
 (defn- emit-event
   "Emit the appropriate v-nanoKON2 events"
-  [g k id old-state state old-val val]
-  (event [:v-nanoKON2 g k :control-change id]
+  [b k id old-state state old-val val]
+  (event [:v-nanoKON2 b k :control-change id]
          :id id
          :old-state old-state
          :state state
          :old-val old-val
          :val val)
 
-  (event [:v-nanoKON2 g k :control-change]
+  (event [:v-nanoKON2 b k :control-change]
          :id id
          :old-state old-state
          :state state
@@ -419,7 +419,7 @@
   specific id to new raw value."
   [sm nk id raw]
   (if (sm-nk-manipulation-mode? sm nk)
-    (let [[g k]         (sm-nk->current-gk sm nk)
+    (let [[b k]         (sm-nk->current-bk sm nk)
           raw-state     (sm-nk->raw-state sm nk)
           old-raw       (get raw-state id)
           old-state     (sm-nk->current-state sm nk)
@@ -440,7 +440,7 @@
           state         (assoc old-state id new-val)
           new-raw-state (assoc raw-state id raw)
           sm            (if synced?
-                          (sm-nk-unsync-other-nks* sm nk g k id new-val)
+                          (sm-nk-unsync-other-nks* sm nk b k id new-val)
                           sm)]
 
       (when (and (not was-synced?) synced?)
@@ -450,7 +450,7 @@
 
       (let [flashers (if synced?
                        (do
-                         (emit-event g k id old-state state val new-val)
+                         (emit-event b k id old-state state val new-val)
                          (assoc flashers flasher-id nil))
 
                        (let [delay    (flasher-delay val raw)
@@ -472,15 +472,15 @@
     sm))
 
 (defn switch-state*
-  "Switch the state of the nk to state with k in group g"
-  [sm nk g k]
-  (if (sm-g-k->valid? sm g k)
+  "Switch the state of the nk to state with k in bank b"
+  [sm nk b k]
+  (if (sm-b-k->valid? sm b k)
     (do
       (nk-smr-leds-off nk)
 
       (let [sm         (kill-all-flashers* sm nk)
             latest-raw (sm-nk->raw-state sm nk)
-            state      (sm-g-k->state sm g k)
+            state      (sm-b-k->state sm b k)
             syncs      (sm-nk->syncs sm nk)
             syncs      (reduce (fn [r [id v]]
                                  (let [synced? (= (get state id)
@@ -491,11 +491,11 @@
                                    (assoc r id synced?)))
                                {}
                                syncs)]
-        (nk-show-group nk g)
+        (nk-show-bank nk b)
         (-> sm
-            (sm-nk-swap-current nk g k)
+            (sm-nk-swap-current nk b k)
             (sm-nk-swap-syncs nk syncs)
-            (sm-nk-swap-switch-group nk nil)
+            (sm-nk-swap-switch-bank nk nil)
             (sm-nk-swap-mode nk :controller))))
     sm))
 
@@ -528,19 +528,19 @@
      sm)
 
    (controller-id? id)
-   (let [[g k]           (sm-nk->current-gk sm nk)
+   (let [[b k]           (sm-nk->current-bk sm nk)
          old-state       (sm-nk->current-state sm nk)
          state           (assoc old-state id raw)
          syncs           (sm-nk->syncs sm nk)
          syncs           (assoc syncs id true)
          sm              (sm-nk-kill-flasher* sm nk (controller-id->sync-led-id id))
-         sm              (sm-nk-unsync-other-nks* sm nk g k id raw)
+         sm              (sm-nk-unsync-other-nks* sm nk b k id raw)
          val             (get old-state id)]
 
      (led-on nk (controller-id->sync-led-id id))
      (led-off nk (controller-id->warmer-led-id id))
 
-     (emit-event g k id old-state state val raw)
+     (emit-event b k id old-state state val raw)
 
      (-> sm
          (sm-nk-swap-state nk state)
@@ -548,7 +548,7 @@
 
    :else sm))
 
-(defn- group-button-id->group
+(defn- bank-button-id->bank
   "Use powers of two to eventually support binary notation across the
    record row of buttons."
   [id]
@@ -559,7 +559,7 @@
    (= :fast-forward id) 8
    (= :rewind id) 16))
 
-(defn- group-button?
+(defn- bank-button?
   [id]
   (or (= :record id)
       (= :play id)
@@ -579,29 +579,29 @@
    value.
    "
   [sm nk id raw]
-  (let [g         (sm-nk->current-group sm nk )
+  (let [b         (sm-nk->current-bank sm nk )
         raw-state (sm-nk->raw-state sm nk)]
     (cond
 
-     ;; switch group (within switcher mode)
+     ;; switch bank (within switcher mode)
      (and (= 1.0 raw)
           (sm-nk-switcher-mode? sm nk)
-          (group-button? id))
-     (let [g (group-button-id->group id)]
+          (bank-button? id))
+     (let [b (bank-button-id->bank id)]
        (-> sm
-           (sm-nk-swap-switch-group nk g)
+           (sm-nk-swap-switch-bank nk b)
            (nk-enter-switcher-mode* nk)))
 
      ;; switch state
      (and (= 0.0 raw)
           (sm-nk-switcher-mode? sm nk)
-          (sm-g-button-id->valid? sm g id))
-     (let [state-k (sm-g-button-id->k sm g id)]
+          (sm-b-button-id->valid? sm b id))
+     (let [state-k (sm-b-button-id->k sm b id)]
        (led-off nk :cycle)
        (-> sm
            (kill-all-flashers* nk)
-           (switch-state* nk g state-k)
-           (sm-nk-swap-switch-group nk nil)
+           (switch-state* nk b state-k)
+           (sm-nk-swap-switch-bank nk nil)
            (sm-nk-swap-raw-state nk (assoc raw-state id raw))))
 
      ;; force sync
@@ -668,9 +668,9 @@
 ;;   (when-not (button? k)))
 
 (defn switch-state
-  "Switch nk to state matching g state-k"
-  [state-a nk g state-k]
-  (send state-a switch-state* nk g state-k))
+  "Switch nk to state matching b state-k"
+  [state-a nk b state-k]
+  (send state-a switch-state* nk b state-k))
 
 (defn refresh
   "Refresh the leds of the specific nk (i.e. stops all flashers)"
@@ -686,35 +686,35 @@
                    (<= v 1)))
           "State value must be a number between 0 and 1 inclusively"))
 
-(defn ensure-valid-group!
+(defn ensure-valid-bank!
   [k]
   (assert (and (integer? k)
                (<= 0 k)
                (<= k 8))
-          "State group must be a number between 0 and 8 inclusively"))
+          "State bank must be a number between 0 and 8 inclusively"))
 
 ;; Fix me
 ;; (defn update-state*
-;;   [sm g k v]
-;;   (if (contains? (get-in sm [:states g]) k)
-;;     (let [old-state (sm-g-k->state sm g k)
+;;   [sm b k v]
+;;   (if (contains? (get-in sm [:states b]) k)
+;;     (let [old-state (sm-b-k->state sm b k)
 ;;           state     (assoc old-state k v)
-;;           button-id (sm-g-k->button-id sm g k)
+;;           button-id (sm-b-k->button-id sm b k)
 
 ;;           []
 ;;           sm        (reduce (fn [r nk]
 ;;                               (update-syncs-and-flashers* r nk button-id v))
 ;;                             sm
-;;                             (sm-gk->nks sm g k))]
+;;                             (sm-bk->nks sm b k))]
 ;;       (sm-swap-state sm k state))
 ;;     sm))
 
 ;; (defn update-state
-;;   "update the state associated with group g, state key k to value v"
-;;   [state-a g k v]
+;;   "update the state associated with bank b, state key k to value v"
+;;   [state-a b k v]
 ;;   (ensure-valid-val! v)
 
-;;   (send state-a update-state* g state-k v))
+;;   (send state-a update-state* b state-k v))
 
 (defn- add-nk*
   [sm nk]
@@ -726,32 +726,32 @@
   (send state-a add-nk* nk))
 
 (defn- add-state*
-  [sm group state-k state button-id]
-  (sm-add-state sm group state-k state button-id))
+  [sm bank state-k state button-id]
+  (sm-add-state sm bank state-k state button-id))
 
 (defn add-state
-  ([state-a group button-id init-val-or-state-map]
-     (add-state state-a group button-id button-id init-val-or-state-map))
-  ([state-a group state-k button-id init-val-or-state-map]
+  ([state-a bank button-id init-val-or-state-map]
+     (add-state state-a bank button-id button-id init-val-or-state-map))
+  ([state-a bank state-k button-id init-val-or-state-map]
      (ensure-valid-val! init-val-or-state-map)
-     (ensure-valid-group! group)
+     (ensure-valid-bank! bank)
      (let [state (if (number? init-val-or-state-map)
                    (nk-state-map init-val-or-state-map)
                    init-val-or-state-map)]
-       (send state-a add-state* group state-k state button-id)
-       (str "Added state " group ", " state-k ", " button-id))))
+       (send state-a add-state* bank state-k state button-id)
+       (str "Added state " bank ", " state-k ", " button-id))))
 
 (defn nk-enter-switcher-mode*
   [sm nk]
   (let [sm             (kill-all-flashers* sm nk)
         sm             (sm-nk-swap-mode sm nk :switcher)
-        g              (sm-nk->current-group sm nk)
-        available      (sm-g->button-ids-nks sm g)
+        b              (sm-nk->current-bank sm nk)
+        available      (sm-b->button-ids-nks sm b)
         flashers       (sm-nk->flashers sm nk)
         curr-button-id (sm-nk->current-button-id sm nk)]
 
     (nk-smr-leds-off nk)
-    (nk-show-group nk g)
+    (nk-show-bank nk b)
     (led-on nk :cycle)
 
     (let [flashers (reduce (fn [r [k v]]
@@ -775,10 +775,10 @@
         state   (sm-nk->current-state sm nk)
         syncs   (sm-nk->syncs sm nk)
         ctl-ids (filter controller-id? (keys state))
-        group    (sm-nk->current-group sm nk)]
+        bank    (sm-nk->current-bank sm nk)]
 
     (nk-smr-leds-off nk)
-    (nk-show-group nk group)
+    (nk-show-bank nk bank)
     (reduce (fn [r ctl-id]
               (let [val      (get state ctl-id)
                     sync-led (controller-id->sync-led-id ctl-id)
@@ -817,9 +817,9 @@
 
 (defn nk-leave-switcher-mode*
   [sm nk]
-  (let [[g k] (sm-nk->current-gk sm nk)]
+  (let [[b k] (sm-nk->current-bk sm nk)]
     (led-off nk :cycle)
-    (switch-state* sm nk g k)))
+    (switch-state* sm nk b k)))
 
 (defn nk-switcher-mode*
   [sm nk]
@@ -868,16 +868,16 @@
 (defn nk-replace-current-state*
   [sm nk new-state]
   (let [sm (sm-nk-swap-state sm nk new-state)]
-    (switch-state* sm nk (sm-nk->current-gk sm nk))))
+    (switch-state* sm nk (sm-nk->current-bk sm nk))))
 
 
 
 (defn emit-events-on-state-diff
-  [g k old-state new-state]
+  [b k old-state new-state]
   (doseq [[id v] new-state]
     (when (controller-id? id )
       (let [old-v (get old-state id)]
-        (emit-event g
+        (emit-event b
                     k
                     id
                     old-state
@@ -890,54 +890,56 @@
   (send state-map-a nk-replace-current-state* nk new-state))
 
 (defn save-state
-  [state-map-a g k]
+  [state-map-a b k]
   (let [sm @state-map-a]
-    (sm-g-k->state sm g k)))
+    (sm-b-k->state sm b k)))
 
 (defn replace-state
-  [state-map-a g k state]
+  [state-map-a b k state]
   (send state-map-a
         (fn [sm]
-          (let [old-state (sm-g-k->state g k) ]
-            (emit-events-on-state-diff g k old-state state))
-          (sm-swap-state g k state)))
+          (let [old-state (sm-b-k->state b k) ]
+            (emit-events-on-state-diff b k old-state state))
+          (sm-swap-state b k state)))
   :replaced)
 
-(defn save-group-states
-  [state-map-a g]
+(defn save-bank-states
+  [state-map-a b]
   (let [sm @state-map-a]
-    (get-in sm [:states g] {})))
+    (get-in sm [:states b] {})))
 
-(defn- sm-g-k-update-all-nks*
-  "Updates the smr leds on all nks associated with the specified group
+(defn- sm-b-k-update-all-nks*
+  "Updates the smr leds on all nks associated with the specified bank
    and state key:
 
    - unsync if synced and no longer same vals
    - sync if unsynced and same vals
    - update flashers
    "
-  [sm g k]
-  (let [nks (sm-gk->nks sm [g k])]
+  [sm b k]
+  (let [nks (sm-bk->nks sm [b k])]
     (reduce (fn [r nk]
               (update-leds* r nk) )
             sm
             nks)))
 
-(defn load-group-states
-  [state-map-a g new-states]
+(defn load-bank-states
+  [state-map-a b new-states]
   (send state-map-a
         (fn [sm]
-          (let [old-states (get-in sm [:states g])]
+          (let [old-states (get-in sm [:states b])]
             (reduce (fn [sm [k s]]
                       (let [old-state (:state s)
-                            new-state (get-in new-states [k :state])
-                            sm        (sm-swap-state sm g k new-state )]
-                        (emit-events-on-state-diff g k old-state new-state)
-                        (sm-g-k-update-all-nks* sm g k)))
+                            new-state (get-in new-states [k :state])]
+                        (when new-state
+                          (emit-events-on-state-diff b k old-state new-state)
+                          (-> sm
+                              (sm-swap-state b k new-state)
+                              (sm-b-k-update-all-nks* b k)))))
                     sm
                     old-states))))
   :replaced)
 
-(defn list-groups
+(defn list-banks
   [state-map-a]
   (keys (:states @state-map-a)))

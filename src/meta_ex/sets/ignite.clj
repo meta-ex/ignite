@@ -11,14 +11,24 @@
    [meta-ex.server.nrepl]
    [meta-ex.touch]))
 
+(defn nk-bank
+  "Returns the nk bank number for the specified bank key"
+  [bank-k]
+  (case bank-k
+    :master 0
+    :64 2
+    :128 4
+    :synths 8))
+
+
 (defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
 
-(defonce mixer-s0 (mx/add-nk-mixer 8 :s0 default-mixer-g))
-(defonce mixer-s1 (mx/add-nk-mixer 8 :s1 default-mixer-g))
-(defonce mixer-m0 (mx/add-nk-mixer 8 :m0 default-mixer-g))
-(defonce mixer-m1 (mx/add-nk-mixer 8 :m1 default-mixer-g))
-(defonce mixer-s2 (mx/add-nk-mixer 8 :s2 default-mixer-g))
-(defonce mixer-r0 (mx/add-nk-mixer 8 :r0 default-mixer-g))
+(defonce mixer-s0 (mx/add-nk-mixer (nk-bank :synths) :s0 default-mixer-g))
+(defonce mixer-s1 (mx/add-nk-mixer (nk-bank :synths) :s1 default-mixer-g))
+(defonce mixer-m0 (mx/add-nk-mixer (nk-bank :synths) :m0 default-mixer-g))
+(defonce mixer-m1 (mx/add-nk-mixer (nk-bank :synths) :m1 default-mixer-g))
+(defonce mixer-s2 (mx/add-nk-mixer (nk-bank :synths) :s2 default-mixer-g))
+(defonce mixer-r0 (mx/add-nk-mixer (nk-bank :synths) :r0 default-mixer-g))
 
 
 ;;(defonce mixer-master (mx/add-nk-mixer 0 :master))
@@ -140,28 +150,28 @@
   ;; allows us to specify which nk button to bind the location and also
   ;; which event key to use.
   (do
-    (nksm/add-state nk-conn/state-maps 8 :s0 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 8 :s1 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 8 :m0 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 8 :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m1 mixer-init-state)
 
-    (nksm/add-state nk-conn/state-maps 4 "m128-0" :s3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 4 "m128-1" :m3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 4 "m128-2" :r3 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 4 "m128-3" :s4 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 4 "m128-4" :m4 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 "m128-5" :r6 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-0" :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-1" :m0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-2" :r0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-3" :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-4" :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-5" :r1 mixer-init-state)
 
-    (nksm/add-state nk-conn/state-maps 2 "m64-0" :s5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 2 "m64-1" :m5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 2 "m64-2" :r5 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 2 "m64-3" :s6 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 2 "m64-4" :m6 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 2 "m64-5" :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-0" :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-1" :m0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-2" :r0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-3" :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-4" :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-5" :r1 mixer-init-state)
 
-    (nksm/add-state nk-conn/state-maps 0 :s7 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :m7 mixer-init-state)
-    (nksm/add-state nk-conn/state-maps 0 :r7 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :master) :s7 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :master) :m7 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :master) :r7 mixer-init-state)
 
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-2" :r3 mixer-init-state)
     ;;(nksm/add-state nk-conn/state-maps 0 "m64-3" :s4 mixer-init-state)

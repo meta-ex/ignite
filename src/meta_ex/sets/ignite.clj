@@ -161,6 +161,7 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-3" :s1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-4" :m1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-5" :r1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :128) "m128-triggers" :s3 mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-0" :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-1" :m0 mixer-init-state)
@@ -168,6 +169,7 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-3" :s1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-4" :m1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-5" :r1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :64) "m64-triggers" :s3 mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :master) :s7 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :master) :m7 mixer-init-state)

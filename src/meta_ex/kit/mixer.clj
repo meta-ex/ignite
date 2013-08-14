@@ -309,8 +309,9 @@
   (:mixer-g (get @korg-nano-kontrol-mixers k)))
 
 (defn nkmx
-  [k]
-  (:in-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
+  ([k] (nkmx 8 k)) ;; TODO replace 8 with a more sensible call i.e. nk-bank
+  ([bank k]
+     (:in-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 bank k :control-change]))))
 
 (defn nkmx-out
   [k]

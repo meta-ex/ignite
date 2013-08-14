@@ -50,11 +50,11 @@
 (defn bass-map-keyboard-off [] (rhyth/map-keyboard-off))
 
 (defn data-riff-load-bass
-  ([notes] (data-riff-load-bf1 notes 0))
+  ([notes] (data-riff-load-bass notes 0))
   ([notes shift] (rhyth/data-riff-load-bf1 notes shift)))
 
 (defn data-riff-load-mid-hi
-  ([notes] (data-riff-load-bf2 notes 0))
+  ([notes] (data-riff-load-mid-hi notes 0))
   ([notes shift] (rhyth/data-riff-load-bf2 notes shift)))
 
 (defn bass-rate [rate] (rhyth/set-saw-s1 rate))

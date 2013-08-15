@@ -16,8 +16,8 @@
   [bank-k]
   (case bank-k
     :master 0
-    :64 2
-    :128 4
+    :m64 2
+    :m128 4
     :synths 8))
 
 

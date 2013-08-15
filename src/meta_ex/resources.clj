@@ -7,7 +7,7 @@
 (defonce __MAKE-RESOURCES-DIR___
   (.mkdirs (io/file "resources/overtone-store")))
 
-(defonce stores (agent {}))
+(defonce edn-stores (agent {}))
 
 (defn- safe-store-k
   [store-k]
@@ -24,7 +24,7 @@
 (defn- find-store
   [store-k create-store?]
   (let [store-p (promise)]
-    (send stores
+    (send edn-stores
           (fn [s]
             (let [store (or (get s store-k)
                             (and create-store?
@@ -35,20 +35,20 @@
                 s))))
     @store-p))
 
-(defn store-set!
+(defn edn-save
   "Set store-k's key k to value v. Creates new store if necessary."
   [store-k k v]
   (let [store (find-store store-k true)]
     (swap! store assoc k v)))
 
-(defn store-get
+(defn edn-load
   "Get store-k's val at key k."
-  ([store-k k] (store-get store-k k nil))
+  ([store-k k] (edn-load store-k k nil))
   ([store-k k not-found]
      (when-let [store (find-store store-k false)]
-       (get store k not-found))))
+       (get @store k not-found))))
 
-(defn store-rm!
+(defn edn-delete
   "Remove store-k's val at key k."
   [store-k k]
   (when-let [store (find-store store-k false)]

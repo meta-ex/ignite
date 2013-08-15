@@ -3,7 +3,8 @@
             [meta-ex.hw.nk.state-maps :as nksm]
             [meta-ex.hw.nk.connected :as nk-connected]
             [meta-ex.resources :as resources]
-            [meta-ex.kit.monome-sequencer :as mseq]))
+            [meta-ex.kit.monome-sequencer :as mseq]
+            [meta-ex.hw.fonome :as fon]))
 
 (defn- nk-bank
   "Returns the nk bank number for the specified bank key"
@@ -42,4 +43,27 @@
     (if states
       (do (nksm/load-bank-states nk-connected/state-maps bank states)
           :loaded)
+      :failed)))
+
+
+(defn save-sequencer
+  [sequencer-k store k]
+  (let [sequencer-k (name sequencer-k)
+        fonome      (:fonome (get @mseq/m-sequencers sequencer-k))
+        state       @(:state fonome)
+        leds        (:leds state)
+        ]
+    (resources/edn-save store k leds)
+    :saved))
+
+(defn load-sequencer
+  [sequencer-k store k]
+  (let [sequencer-k (name sequencer-k)
+        fonome      (:fonome (get @mseq/m-sequencers sequencer-k))
+        leds        (resources/edn-load store k)
+        ]
+    (if leds
+      (do
+        (fon/set-led-state! fonome leds)
+        :loaded)
       :failed)))

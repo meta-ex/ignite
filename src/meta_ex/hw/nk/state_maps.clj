@@ -924,22 +924,37 @@
             nks)))
 
 (defn load-bank-states
-  [state-map-a b new-states]
+  "Load in previously saved bank states to the specified bank. This
+  works by matching the states by :button-id not key. Keys are left
+  unaffected, and states with matching :button-id are updated to the
+  states found in new-banks-states."
+  [state-map-a b new-bank-states]
   (send state-map-a
         (fn [sm]
           (let [old-states (get-in sm [:states b])]
-            (reduce (fn [sm [k s]]
-                      (let [old-state (:state s)
-                            new-state (get-in new-states [k :state])]
-                        (when new-state
-                          (emit-events-on-state-diff b k old-state new-state)
-                          (-> sm
-                              (sm-swap-state b k new-state)
-                              (sm-b-k-update-all-nks* b k)))))
+            (reduce (fn [sm [k info]]
+                      (let [new-state-btn-id (:button-id info)
+                            old-state-k      (ffirst (filter (fn [[o-k o-info]]
+                                                              (= new-state-btn-id
+                                                                 (:button-id o-info)))
+                                                            old-states))
+                            old-state        (get old-states old-state-k)
+                            new-state        (:state info)]
+                        (if old-state-k
+                          (do
+                            (emit-events-on-state-diff b k old-state new-state)
+                            (-> sm
+                                (sm-swap-state b k new-state)
+                                (sm-b-k-update-all-nks* b k)))
+                          sm)))
                     sm
-                    old-states))))
+                    new-bank-states))))
   :replaced)
 
 (defn list-banks
   [state-map-a]
   (keys (:states @state-map-a)))
+
+(defn list-bank-states
+  [state-map-a bank]
+  (keys  (get-in @state-map-a [:states bank])))

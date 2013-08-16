@@ -23,8 +23,8 @@
 
 (do
 
-  (defsynth basic-mixer [amp 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
-    (out out-bus (* (lag amp clamp-down-t) (in:ar in-bus 2))))
+  (defsynth basic-mixer [boost 0 amp 1 mute 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
+    (out out-bus (* (+ boost 1) amp (lag mute clamp-down-t) (in:ar in-bus 2))))
 
   (defonce drum-g             (group))
   (defonce drum-trigger-mix-g (group :after drum-g))
@@ -40,8 +40,8 @@
   (defonce insta-pause128-f  (fon/mk-fonome ::pauser128 1 1))
   (defonce insta-pause-all-f (fon/mk-fonome ::pauser-all 1 1))
 
-  (defonce bas-mix-s64  (basic-mixer [:head drum-basic-mixer-g] :in-bus m64-b :amp 0))
-  (defonce bas-mix-s128 (basic-mixer [:head drum-basic-mixer-g] :in-bus m128-b :amp 0))
+  (defonce bas-mix-s64  (basic-mixer [:head drum-basic-mixer-g] :in-bus m64-b :mute 0))
+  (defonce bas-mix-s128 (basic-mixer [:head drum-basic-mixer-g] :in-bus m128-b :mute 0))
 
   (defonce trig128-mixer (mx/add-nk-mixer (nk-bank :m128) "m128-triggers" drum-trigger-mix-g m128-b))
   (defonce trig64-mixer  (mx/add-nk-mixer (nk-bank :m64) "m64-triggers" drum-trigger-mix-g m64-b))
@@ -65,8 +65,8 @@
             (fn [{:keys [x y new-leds]}]
               (let [on? (get new-leds [x y])]
                 (if on?
-                  (ctl bas-mix-s64 :amp 1)
-                  (ctl bas-mix-s64 :amp 0))))
+                  (ctl bas-mix-s64 :mute 1)
+                  (ctl bas-mix-s64 :mute 0))))
             ::seq64)
 
   (on-event [:fonome :press (:id insta-pause64-f)]
@@ -79,15 +79,36 @@
             (fn [{:keys [x y new-leds]}]
               (let [on? (get new-leds [x y])]
                 (if on?
-                  (ctl bas-mix-s128 :amp 1)
-                  (ctl bas-mix-s128 :amp 0))))
+                  (ctl bas-mix-s128 :mute 1)
+                  (ctl bas-mix-s128 :mute 0))))
             ::seq128)
 
   (on-event [:fonome :press (:id insta-pause128-f)]
             (fn [{:keys [x y fonome]}]
               (fon/toggle-led fonome x y)
               )
-            ::seq128-press))
+            ::seq128-press)
+
+  (on-latest-event [:v-nanoKON2 (nk-bank :m64) "m64-master" :control-change :slider7]
+            (fn [{:keys [val]}]
+              (ctl bas-mix-s64 :amp val))
+            ::m64-master-amp)
+
+  (on-latest-event [:v-nanoKON2 (nk-bank :m64) "m64-master" :control-change :slider6]
+            (fn [{:keys [val]}]
+              (ctl bas-mix-s64 :boost val))
+            ::m64-master-boost)
+
+  (on-latest-event [:v-nanoKON2 (nk-bank :m128) "m128-master" :control-change :slider7]
+            (fn [{:keys [val]}]
+              (ctl bas-mix-s128 :amp val))
+            ::m128-master-amp)
+
+  (on-latest-event [:v-nanoKON2 (nk-bank :m128) "m128-master" :control-change :slider6]
+            (fn [{:keys [val]}]
+              (ctl bas-mix-s128 :boost val))
+            ::m128-master-boost))
+
 
 (comment
   (defn get-sin-ctl

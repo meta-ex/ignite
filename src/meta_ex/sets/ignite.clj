@@ -168,6 +168,7 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s2 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :r0 mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s1 mixer-init-state)

@@ -903,6 +903,16 @@
           (sm-swap-state b k state)))
   :replaced)
 
+(defn save-state-by-button-id
+  [state-map-a b button-id]
+  (let [k (sm-b-button-id->k)]
+    (save-state state-map-a b k)))
+
+(defn replace-state-by-button-id
+  [state-map-a b button-id state]
+  (let [k (sm-b-button-id->k)]
+    (replace-state state-map-a b k state)))
+
 (defn save-bank-states
   [state-map-a b]
   (let [sm @state-map-a]

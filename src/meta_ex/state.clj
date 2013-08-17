@@ -68,3 +68,20 @@
         (fon/set-led-state! fonome leds)
         :loaded)
       :failed)))
+
+(defn save-nk
+  [bank button-id store k]
+  (let [bank (resolve-bank-k bank)
+        state (nksm/save-state-by-button-id nk-connected/state-maps bank button-id)]
+    (resources/edn-save store k state)
+    :saved))
+
+(defn load-nk
+  [bank button-id store k]
+  (let [bank (resolve-bank-k bank)
+        state (resources/edn-load store k)]
+    (if state
+      (do
+        (nksm/replace-state-by-button-id nk-connected/state-maps bank button-id state)
+        :loaded)
+      :failed)))

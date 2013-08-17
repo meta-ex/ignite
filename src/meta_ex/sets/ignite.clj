@@ -145,6 +145,10 @@
                                  {:pot6 1}
                                  {:pot7 0.5}))
 
+(defonce basic-mixer-init-state (merge (nksd/nk-state-map 0)
+                                       {:slider7 0.5
+                                        :slider6 0}))
+
 (defonce __ADD-STATE-MAPS__
   ;; Adds a new set of state-maps to the initial nk state-maps. This
   ;; allows us to specify which nk button to bind the location and also
@@ -162,6 +166,7 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-4" :m1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-5" :r1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-triggers" :s3 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-master" :r7 basic-mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-0" :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-1" :m0 mixer-init-state)
@@ -170,6 +175,7 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-4" :m1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-5" :r1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-triggers" :s3 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :m64) "m64-master" :r7 basic-mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :master) :s7 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :master) :m7 mixer-init-state)

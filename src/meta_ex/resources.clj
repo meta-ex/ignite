@@ -22,34 +22,31 @@
     (.getAbsolutePath (io/file (str "resources/overtone-store/" store-k ".clj")))))
 
 (defn- find-store
-  [store-k create-store?]
+  [store-k]
   (let [store-p (promise)]
     (send edn-stores
           (fn [s]
             (let [store (or (get s store-k)
-                            (and create-store?
-                                 (fstore/live-file-store (store-path store-k))))]
+                            (fstore/live-file-store (store-path store-k)))]
               (deliver store-p store)
-              (if create-store?
-                (assoc s store-k store)
-                s))))
+              (assoc s store-k store))))
     @store-p))
 
 (defn edn-save
-  "Set store-k's key k to value v. Creates new store if necessary."
+  "Set store-k's key k to value v."
   [store-k k v]
-  (let [store (find-store store-k true)]
+  (let [store (find-store store-k)]
     (swap! store assoc k v)))
 
 (defn edn-load
   "Get store-k's val at key k."
   ([store-k k] (edn-load store-k k nil))
   ([store-k k not-found]
-     (when-let [store (find-store store-k false)]
+     (when-let [store (find-store store-k)]
        (get @store k not-found))))
 
 (defn edn-delete
   "Remove store-k's val at key k."
   [store-k k]
-  (when-let [store (find-store store-k false)]
+  (when-let [store (find-store store-k)]
     (swap! store dissoc k)))

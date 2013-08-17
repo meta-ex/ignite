@@ -155,7 +155,7 @@
                                  {:pot7 0.5}))
 
 (defonce basic-mixer-init-state (merge (nksd/nk-state-map 0)
-                                       {:slider7 0.5
+                                       {:slider7 1
                                         :slider6 0}))
 
 (defonce __ADD-STATE-MAPS__

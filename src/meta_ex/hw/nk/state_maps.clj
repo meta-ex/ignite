@@ -684,14 +684,14 @@
            (and (number? v)
                    (<= 0 v)
                    (<= v 1)))
-          "State value must be a number between 0 and 1 inclusively"))
+          (str "State value must be a number between 0 and 1 inclusively, got: " v)))
 
 (defn ensure-valid-bank!
   [k]
   (assert (and (integer? k)
                (<= 0 k)
-               (<= k 8))
-          "State bank must be a number between 0 and 8 inclusively"))
+               (<= k 16))
+          (str "State bank must be a number between 0 and 16 inclusively, got: " k)))
 
 ;; Fix me
 ;; (defn update-state*

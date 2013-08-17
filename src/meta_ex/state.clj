@@ -19,7 +19,7 @@
 (defn- validate-bank-k!
   [k]
   (assert (number? k) (str "bank key should be a number, got: " k))
-  (assert (contains? #{0 2 4 8} k) (str "currently supported bank keys are: 0, 2, 4, 8. Got: " k)))
+  (assert (contains? #{0 2 4 8 16} k) (str "currently supported bank keys are: 0, 2, 4, 8. Got: " k)))
 
 (defn- resolve-bank-k
   [bank-k]

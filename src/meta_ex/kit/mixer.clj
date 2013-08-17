@@ -309,18 +309,18 @@
   (:mixer-g (get @korg-nano-kontrol-mixers k)))
 
 (defn nkmx
-  ([k] (nkmx 8 k)) ;; TODO replace 8 with a more sensible call i.e. nk-bank
+  ([k] (nkmx 16 k)) ;; TODO replace 16 with a more sensible call i.e. nk-bank
   ([bank k]
      (:in-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 bank k :control-change]))))
 
 (defn nkmx-out
   [k]
-  (:out-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
+  (:out-bus (get @korg-nano-kontrol-mixers [:v-nanoKON2 16 k :control-change])))
 
 (defn nkmx-synth
   [k]
-  (:mixer (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
+  (:mixer (get @korg-nano-kontrol-mixers [:v-nanoKON2 16 k :control-change])))
 
 (defn nkmx-sctl
   [k]
-  (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 8 k :control-change])))
+  (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 16 k :control-change])))

@@ -143,9 +143,9 @@
                               (map (fn [midi-note] (+ -12 midi-note))
                                    (repeat 16 (hz->midi @bass-note))))) )
 
-(defonce hi   (beepy    [:head rhythm-bass-g] :amp 0 :out-bus (nkmx :s0)))
-(defonce mid  (foo      [:head rhythm-bass-g] :amp 0 :out-bus (nkmx :s1)))
-(defonce bass (foo-bass [:head rhythm-bass-g] :amp 0 :out-bus (nkmx :m0)))
+(defonce hi   (beepy    [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :s0)))
+(defonce mid  (foo      [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :s1)))
+(defonce bass (foo-bass [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :m0)))
 
 (defn hi-amp   [amp] (ctl hi   :amp amp))
 (defn mid-amp  [amp] (ctl mid  :amp amp))

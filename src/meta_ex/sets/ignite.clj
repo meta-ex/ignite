@@ -31,6 +31,14 @@
 (defonce mixer-s2 (mx/add-nk-mixer (nk-bank :synths) :s2 default-mixer-g))
 (defonce mixer-r0 (mx/add-nk-mixer (nk-bank :synths) :r0 default-mixer-g))
 
+(defonce mixer-riff-s0 (mx/add-nk-mixer (nk-bank :riffs) :s0 default-mixer-g))
+(defonce mixer-riff-s1 (mx/add-nk-mixer (nk-bank :riffs) :s1 default-mixer-g))
+(defonce mixer-riff-m0 (mx/add-nk-mixer (nk-bank :riffs) :m0 default-mixer-g))
+(defonce mixer-riff-m1 (mx/add-nk-mixer (nk-bank :riffs) :m1 default-mixer-g))
+(defonce mixer-riff-s2 (mx/add-nk-mixer (nk-bank :riffs) :s2 default-mixer-g))
+(defonce mixer-riff-r0 (mx/add-nk-mixer (nk-bank :riffs) :r0 default-mixer-g))
+
+
 
 ;;(defonce mixer-master (mx/add-nk-mixer 0 :master))
 

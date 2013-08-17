@@ -122,7 +122,6 @@
 
 (on-event [:fonome :press (:id satie-keys)]
           (fn [{:keys [x y fonome]}]
-            (println "hi")
             (fon/toggle-led fonome x y)
             )
           ::fonome-led)

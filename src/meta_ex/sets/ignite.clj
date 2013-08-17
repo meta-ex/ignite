@@ -18,7 +18,8 @@
     :master 0
     :m64 2
     :m128 4
-    :synths 8))
+    :riffs 8
+    :synths 16))
 
 
 (defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
@@ -156,8 +157,14 @@
   (do
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :s2 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m1 mixer-init-state)
+
+    (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :m0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :m1 mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-0" :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-1" :m0 mixer-init-state)

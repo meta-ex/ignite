@@ -13,7 +13,8 @@
     :master 0
     :m64 2
     :m128 4
-    :synths 8))
+    :riffs 8
+    :synths 16))
 
 (defn- validate-bank-k!
   [k]

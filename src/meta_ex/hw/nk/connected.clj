@@ -62,21 +62,5 @@
 ;; *
 
 ;; To help debug:
+;;
 ;;(.printStackTrace (agent-error state-maps))
-
-(comment
-
-(:s0 @(:state (first nano-kons)))
-
-;;(def s (nksm/nk-save-state state-maps (first nano-kons)))
-;; s
-
-
-(nksm/add-state state-maps 0  :s2 0)
-(nksm/add-state state-maps 0  :s3 0)
-
-(nksm/switch-state state-maps (first nano-kons) 0 :s2)
-
-
-
-)

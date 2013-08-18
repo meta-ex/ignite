@@ -60,7 +60,7 @@
      :note 28
      :hi-man  0
      :lo-man 1
-     :deci-man 0
+     :deci-man 1
      :amp 0.4
      :out-bus (nkmx :s1))
 ;;(kill dub-g)

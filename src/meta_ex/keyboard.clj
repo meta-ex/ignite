@@ -45,7 +45,7 @@
 
 (def cs (syn/cs80 :out-bus (nkmx :s2) :freq (midi->hz (note :g1))))
 
-(ctl cs :out-bus (nkmx :s1) :freq (midi->hz (note :g1)) :vibrate 4 :dtune 0.002)
+(ctl cs :out-bus (nkmx :s2) :freq (midi->hz (note :g1)) :vibrate 4 :dtune 0.002)
 (ctl cs :freq-lag 0.3 :amp 0.7)
 (kill cs)
 

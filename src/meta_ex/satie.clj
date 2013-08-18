@@ -97,7 +97,7 @@
   (let [idx (swap! cur-pitch-rh inc)
         pitch (nth (cycle rh-pitches) idx)]
 ;;    (swap! num-petals-to-draw* inc)
-    (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus (nkmx :r0))))
+    (sampled-piano (- pitch 12) (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0))))
 
 (defn play-next-lh
   [vol]
@@ -105,8 +105,8 @@
         pitch (nth (cycle lh-pitches) idx)]
     (if (sequential? pitch)
       (doseq [p pitch]
-        (sampled-piano p (/ (vol-mul vol) 2) :out-bus (nkmx :r0)))
-      (sampled-piano pitch (/ (vol-mul vol) 2) :out-bus (nkmx :r0)))))
+        (sampled-piano p (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0)))
+      (sampled-piano pitch (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0)))))
 
 
 (defonce satie-keys (fon/mk-fonome ::satie 8 8))

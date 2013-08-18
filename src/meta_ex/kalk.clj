@@ -1,6 +1,6 @@
 (ns meta-ex.kalk
   (:use [overtone.core]
-        [meta-ex.mixer]))
+        [meta-ex.kit.mixer]))
 
 
 (def snap1 (sample (freesound-path 158615)))
@@ -14,14 +14,14 @@
 (do
   (let [n (+ (now) 20)]
     (at n
-        (snap1 :out-bus (mx)))
-    (at (+ n 80)
-        (snap1 :out-bus (mx) :vol 0.5) )))
+        (snap1 :out-bus 0))
+    (at (+ n 30 (rand 20))
+        (snap1 :out-bus 0 :vol 0.5) )))
 
 
 (do
   (let [n (+ (now) 20)]
     (at n
-        (snap3 :out-bus (mx)))
+        (snap3 :out-bus 0))
     (at (+ n (+ 30 (rand 10)))
-        (snap3 :out-bus (mx)  :vol 0.5) )))
+        (snap3 :out-bus 0  :vol 0.5) )))

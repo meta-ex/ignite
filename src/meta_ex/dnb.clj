@@ -19,10 +19,10 @@
 (def foo (drumnbass :loop? true))
 (ctl foo :rate 0.5)
 (stop)
-(def dnb (drumnbass [:head dnb-g] :loop? true :out-bus (nkmx :s0) :rate 0.1))
-(c)
-(def tibet2 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m0)))
-
+(def dnb (drumnbass [:head dnb-g] :loop? true :out-bus (nkmx :s2) :rate 0.5))
+(ctl dnb :rate 1)
+(def tibet2 (tibetanchant [:head dnb-g] :loop? 1 :out-bus 0 :rate (/ 4 3) :out-bus (nkmx :m1)))
+(kill dnb-g)
 (kill foo)
 (stop)
 
@@ -77,7 +77,7 @@
 (ctl tibet2 :rate 0.5)
 (ctl dnb :amp 0)
 (kill dnb)
-(def alien (alienwhisper [:head dnb-g] :rate 5 :out-bus (nkmx :s1)))
+(def alien (alienwhisper [:head dnb-g] :rate 1 :out-bus (nkmx :s2)))
 (ctl alien :out-bus (nkmx :s0))
 (grenade :amp 2 :rate 1 :out-bus (nkmx :s0))
 

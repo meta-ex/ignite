@@ -140,6 +140,14 @@
   [control-id]
   (boolean (-> nk-config :interfaces :leds :controls control-id)))
 
+(def control-ids "A set of control ids for this device"
+  (into #{} (keys (-> nk-config :interfaces :input-controls :controls))))
+
+(defn valid-control-id?
+  "Returns true if control-id is valid for this device"
+  [control-id]
+  (contains? control-ids control-id))
+
 (defn- led-on*
   [rcvr id]
   (if-let [led-id (-> nk-config :interfaces :leds :controls id :note)]

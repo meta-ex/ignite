@@ -885,6 +885,39 @@
                     old-v
                     v)))))
 
+(defn valid-state?
+  "Returns true if state is a valid nk state map"
+  [state]
+  (try
+    (reduce (fn [res [k v]]
+              (and res
+                   (valid-control-id? k)
+                   (number? v)
+                   (if (button? k)
+                     (or
+                      (= v 0)
+                      (= v 1))
+                     (and
+                      (<= v 1)
+                      (>= v 0)))))
+            true
+            state)
+    (catch Exception e
+      false)))
+
+(defn valid-bank-states?
+  "Returns true if bank-states is a valid set of bank states"
+  [bank-states]
+  (try
+    (reduce (fn [res [k v]]
+              (and res
+                   (button? (:button-id v))
+                   (valid-state? (:state v))))
+            true
+            bank-states)
+    (catch Exception e
+      false)))
+
 (defn nk-replace-current-state
   [state-map-a nk new-state]
   (send state-map-a nk-replace-current-state* nk new-state))
@@ -896,6 +929,7 @@
 
 (defn replace-state
   [state-map-a b k state]
+  (assert (valid-state? state) (str "Invalid state" ) )
   (send state-map-a
         (fn [sm]
           (let [old-state (sm-b-k->state b k) ]
@@ -939,6 +973,7 @@
   unaffected, and states with matching :button-id are updated to the
   states found in new-banks-states."
   [state-map-a b new-bank-states]
+  (assert (valid-bank-states? new-bank-states) "Invalid bank states")
   (send state-map-a
         (fn [sm]
           (let [old-states (get-in sm [:states b])]

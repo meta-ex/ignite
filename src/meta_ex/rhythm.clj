@@ -13,8 +13,8 @@
 
 (defonce rhythm-g (group "Rhythm" :after tim/timing-g))
 
-(defonce saw-bf1 (buffer 16 "TIM Saw Buffer"))
-(defonce saw-bf2 (buffer 16 "TIM Saw Buffer 2"))
+(defonce saw-bf1 (buffer 256))
+(defonce saw-bf2 (buffer 256 "TIM Saw Buffer 2"))
 
 ;;  (defcbus saw-x-b1 1 "Tim Saw")
 
@@ -84,7 +84,7 @@
   [notes shift bf]
   (buffer-write! bf (map midi->hz
                          (map (fn [midi-note] (+ shift midi-note))
-                              (take 16 (cycle (map note notes))))))  )
+                              (take 256 (cycle (map note notes))))))  )
 
 (defn data-riff-load-bf1
   ([notes] (data-riff-load-bf1 notes 0))
@@ -99,17 +99,17 @@
 
 ;;[:D3 :D0 :D3 :C3 :C3 :C5 :C4 :D4]
 
-;; (buffer-write! saw-bf2 (map midi->hz
-;;                             (map (fn [midi-note] (+ 0 midi-note))
-;;                                  (map note [:C3 :E4 :C6 :D4 :F6 :E5 :D5 :D3 :C3 :C4 :E3 :D4 :C4 :E4 :D5 :D5]))))
+(buffer-write! saw-bf2 (map midi->hz
+                            (map (fn [midi-note] (+ 0 midi-note))
+                                 (map note [:C3 :E4 :C6 :D4 :F6 :E5 :D5 :D3 :C3 :C4 :E3 :D4 :C4 :E4 :D5 :D5]))))
 
-;; (buffer-write! saw-bf1 (map midi->hz
-;;                            (map (fn [midi-note] (+ 0 midi-note))
-;;                                 (map note (repeat 8 :c5)))))
+(buffer-write! saw-bf1 (map midi->hz
+                           (map (fn [midi-note] (+ 0 midi-note))
+                                (map note (repeat 8 :c5)))))
 
-;; (buffer-write! saw-bf2 (map midi->hz
-;;                            (map (fn [midi-note] (+ -24 midi-note))
-;;                                 (map note (repeat 16 :d5)))))
+(buffer-write! saw-bf2 (map midi->hz
+                           (map (fn [midi-note] (+ -24 midi-note))
+                                (map note (repeat 16 :d5)))))
 
 
 (defn map-keyboard-on
@@ -118,7 +118,7 @@
             (fn [m]
               (buffer-write! saw-bf1 (map midi->hz
                                           (map (fn [midi-note] (+ -12 midi-note))
-                                               (repeat 16 (:note m))))))
+                                               (repeat 256 (:note m))))))
             ::phat-bass-keyboard))
 
 (defn map-keyboard-off
@@ -138,14 +138,15 @@
 (defn giorgio [idx]
   (modify-bufs
    [saw-bf2 ]
-   (map midi->hz (take 16 (drop (* idx 16) meta-ex.giorgio/score))))
+   (map midi->hz (flatten (repeat 16 (take 16 (drop (* idx 16) meta-ex.giorgio/score))))))
   (buffer-write! saw-bf1 (map midi->hz
                               (map (fn [midi-note] (+ -12 midi-note))
-                                   (repeat 16 (hz->midi @bass-note))))) )
+                                   (repeat 256 (hz->midi @bass-note))))) )
 
 (defonce hi   (beepy    [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :s0)))
 (defonce mid  (foo      [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :s1)))
 (defonce bass (foo-bass [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :m0)))
+
 
 (defn hi-amp   [amp] (ctl hi   :amp amp))
 (defn mid-amp  [amp] (ctl mid  :amp amp))

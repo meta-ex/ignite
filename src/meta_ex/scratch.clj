@@ -4,7 +4,7 @@
         [meta-ex.kit.mixer]
         [meta-ex.synths.synths]
         [meta-ex.state])
-  (:requlire [meta-ex.drums :as drums])
+  (:require [meta-ex.drums :as drums])
   (:import [java.net URL]
            [java.io File]))
 

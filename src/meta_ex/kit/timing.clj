@@ -1,7 +1,8 @@
 (ns meta-ex.kit.timing
   (:use [overtone.core]
         [overtone.synth.timing]
-        [overtone.gui.scope]))
+;;        [overtone.gui.scope]
+        ))
 
 (defonce timing-g (group "M-x timing" :tgt (foundation-safe-pre-default-group)))
 

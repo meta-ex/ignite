@@ -1,10 +1,12 @@
 (ns meta-ex.hw.nk.state-maps
   (:use [meta-ex.lib.timed]
         [meta-ex.hw.nk.stateful-device]
-        [overtone.core]
+        [overtone.algo.fn :only [cycle-fn]]
+        [overtone.algo.scaling :only [scale-range]]
         [overtone.helpers.doc :only [fs]]
-
-        [overtone.helpers.ref :only [swap-returning-prev!]]))
+        [overtone.helpers.ref :only [swap-returning-prev!]]
+        [overtone.libs.event :only [event]])
+  (:require [overtone.sc.protocols :as protocols]))
 
 ;; new state-map
 ;; (def state-maps (agent {:states {0 {:mixer    {:state (nk-state-map 0)
@@ -325,7 +327,7 @@
         flashers        (sm-nk->flashers sm nk)
         flashers        (reduce (fn [r [k v]]
                                   (when (and v (live? v))
-                                    (kill v)
+                                    (protocols/kill* v)
                                     (led-off nk k))
                                   (assoc r k nil))
                                 {}
@@ -412,6 +414,16 @@
          :old-state old-state
          :state state
          :old-val old-val
+         :val val)
+
+  (event [:v-nanoKON2]
+         :bank b
+         :key k
+         :type :control-change
+         :id id
+         :old-state old-state
+         :state state
+         :old-val old-val
          :val val))
 
 (defn- nk-update-states-range*
@@ -444,7 +456,7 @@
                           sm)]
 
       (when (and (not was-synced?) synced?)
-        (when flasher (kill flasher))
+        (when flasher (protocols/kill* flasher))
         (led-on nk flasher-id)
         (led-off nk warmer-id))
 
@@ -507,7 +519,7 @@
         flashers (assoc flashers id nil)]
 
     (when flasher
-      (kill flasher))
+      (protocols/kill* flasher))
 
     (sm-nk-swap-flashers sm nk flashers)))
 

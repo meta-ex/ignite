@@ -1,9 +1,13 @@
 (ns meta-ex.hw.nk.stateful-device
   (:use [meta-ex.lib.timed]
-        [overtone.core]
+        [overtone.libs.event]
+        [overtone.music.time :only [periodic stop-player]]
+        [overtone.algo.fn :only [cycle-fn]]
         [overtone.helpers.lib :only [uuid]]
         [overtone.helpers.doc :only [fs]]
-        [overtone.helpers.ref :only [swap-returning-prev!]]))
+        [overtone.helpers.ref :only [swap-returning-prev!]])
+  (:require
+   [overtone.studio.midi :as midi]))
 
 (defrecord NanoKontrol2 [rcv dev interfaces state])
 
@@ -151,7 +155,7 @@
 (defn- led-on*
   [rcvr id]
   (if-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
-    (midi-control rcvr led-id 127)))
+    (midi/midi-control rcvr led-id 127)))
 
 (defn led-on
   "Turn a led on. Usage: (led-on nk :r2)"
@@ -162,7 +166,7 @@
 (defn- led-off*
   [rcvr id]
   (if-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
-    (midi-control rcvr led-id 0)))
+    (midi/midi-control rcvr led-id 0)))
 
 (defn led-off
   "Turn a led off. Usage: (led-off nk :r2)"
@@ -246,8 +250,8 @@
   ""
   [dev]
   (let [interfaces (-> nk-config :interfaces)
-        dev-key    (midi-full-device-key dev)
-        dev-num    (midi-device-num dev)
+        dev-key    (midi/midi-full-device-key dev)
+        dev-num    (midi/midi-device-num dev)
         state      (atom (nk-state-map nil))]
     (doseq [[k v] (-> nk-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
@@ -271,8 +275,8 @@
   [dev rcv idx]
   (let [nk (map->NanoKontrol2 (assoc dev :rcv rcv))
         interfaces (:interfaces dev)
-        dev-key    (midi-full-device-key (:dev dev))
-        dev-num    (midi-device-num (:dev dev))
+        dev-key    (midi/midi-full-device-key (:dev dev))
+        dev-num    (midi/midi-device-num (:dev dev))
         state      (:state dev)]
     (doseq [[k v] (-> nk-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
@@ -343,7 +347,7 @@
     (when (match-button-pattern state bts)
       col)))
 
-(defn- watch-for-col
+(defn- add-watch-for-col
   [nk idx f k]
   (add-watch (:state nk)
              k
@@ -361,7 +365,7 @@
 
 (defn- pair-nano-kons
   "We are in the situation where we have multiple nanoKONTROL2 devices
-   connected. Unfortunately, we dont' have enough information to pair
+   connected. Unfortunately, we don't have enough information to pair
    the dev and rcvr objects for each physical MIDI device. We therefore
    need to get the user to pair the devices for us. In order to achieve
    this, we will display a different set of lights on each device and
@@ -377,7 +381,7 @@
                                  (let [dev-prom (promise)
                                        w-key    (uuid)]
                                    (doseq [dev devs]
-                                     (watch-for-col dev
+                                     (add-watch-for-col dev
                                                     idx
                                                     (fn [m-dev]
                                                       (deliver dev-prom m-dev))
@@ -392,20 +396,16 @@
     ;; wait for all devs to be paired:
     (dorun
      (map (fn [i-rcv prom]
-            (println "creating future")
             (future
-              (println "i'm a future")
               (let [dev (deref (:dev i-rcv))]
 
                       (stop-player (:flasher i-rcv))
                       (remove-watch (:state dev) (:watcher-key i-rcv))
                       (intromation (:rcv i-rcv))
-                      (println "yo yo yo")
                       (deliver prom (mk-nk dev (:rcv i-rcv) (:idx i-rcv))))))
           idxd-rcvs
           proms))
-
-    (doall (map (fn [p] (println "dereffing" p) (deref p))  proms))))
+    (doseq [p proms] (deref p))))
 
 (defn merge-nano-kons
   [rcvs stateful-devs]

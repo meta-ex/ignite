@@ -1,6 +1,7 @@
 (ns meta-ex.lib.timed
-  (:use [overtone.core]
-        [overtone.helpers.ref]))
+  (:use [overtone.helpers.ref])
+  (:require [overtone.music.time :as time]
+            [overtone.sc.protocols :as protocols]))
 
 (defonce running-patterns* (atom #{}))
 
@@ -8,7 +9,7 @@
   []
   (let [[ops _] (reset-returning-prev! running-patterns* #{})]
     (doseq [p ops]
-      (kill p))))
+      (protocols/kill* p))))
 
 ;;(kill-all-running-patterns)
 
@@ -24,7 +25,7 @@
 ;;   (start [this] "Start this object"))
 
 (defrecord ScheduledTimedRange [desc continue? fun]
-  IKillable
+  protocols/IKillable
   (kill* [this]
     (swap! running-patterns* disj this)
     (reset! (:continue? this) false)
@@ -33,7 +34,7 @@
   (live? [this] @(:continue? this)))
 
 (defrecord ScheduledPattern [desc continue? delay]
-  IKillable
+  protocols/IKillable
   (kill* [this]
     (swap! running-patterns* disj this)
     (reset! (:continue? this) false)
@@ -85,8 +86,8 @@
               (f val)
               (catch Exception e
                 (.printStackTrace e)))
-            (apply-at  (+ t time-diff) t-rec [(+ t time-diff) (+ val val-inc) val-inc end])))
-        [(now) start val-inc end])
+            (time/apply-at  (+ t time-diff) t-rec [(+ t time-diff) (+ val val-inc) val-inc end])))
+        [(time/now) start val-inc end])
        pattern)))
 
 (defn temporal
@@ -95,7 +96,7 @@
   ([f delay args desc]
      (let [cont?    (atom true)
            delay-a  (atom delay)
-           t        (now)
+           t        (time/now)
            pattern  (ScheduledPattern. desc cont? delay-a)
            recur-fn (fn rf [t & args]
                       (when @cont?
@@ -103,7 +104,7 @@
                               res (if (sequential? res) res [])]
                           (let [d  @delay-a
                                 nt (+ d t)]
-                            (apply-at nt rf nt args)))))]
-       (apply-at (+ t delay) recur-fn (+ t delay) args)
+                            (time/apply-at nt rf nt args)))))]
+       (time/apply-at (+ t delay) recur-fn (+ t delay) args)
        (swap! running-patterns* conj pattern)
        pattern)))

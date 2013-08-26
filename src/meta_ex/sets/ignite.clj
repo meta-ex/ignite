@@ -1,15 +1,17 @@
 (ns meta-ex.sets.ignite
-  (:use [overtone.live])
+  (:use [overtone.live]
+        [meta-ex.synths.mixers :only [basic-mixer]])
   (:require
+   [meta-ex.kit.timing :as tim]
+   [meta-ex.kit.mixer :as mx]
+   [meta-ex.hw.nk.stateful-device :as nksd]
+   [meta-ex.hw.nk.state-maps :as nksm]
+   [meta-ex.hw.nk.connected :as nk-conn]
+   [meta-ex.server.nrepl]
+   [meta-ex.touch]
    [meta-ex.hw.monomes :as mon]
    [meta-ex.hw.polynome :as poly]
-   [meta-ex.kit.timing :as tim]
-   [meta-ex.hw.nk.connected :as nk-conn]
-   [meta-ex.kit.mixer :as mx]
-   [meta-ex.hw.nk.state-maps :as nksm]
-   [meta-ex.hw.nk.stateful-device :as nksd]
-   [meta-ex.server.nrepl]
-   [meta-ex.touch]))
+   [clojure.edn :as edn]))
 
 (defn nk-bank
   "Returns the nk bank number for the specified bank key"
@@ -21,22 +23,38 @@
     :riffs 8
     :synths 16))
 
-
 (defonce default-mixer-g (group :tail (foundation-safe-post-default-group)))
 
-(defonce mixer-s0 (mx/add-nk-mixer (nk-bank :synths) :s0 default-mixer-g))
-(defonce mixer-s1 (mx/add-nk-mixer (nk-bank :synths) :s1 default-mixer-g))
-(defonce mixer-m0 (mx/add-nk-mixer (nk-bank :synths) :m0 default-mixer-g))
-(defonce mixer-m1 (mx/add-nk-mixer (nk-bank :synths) :m1 default-mixer-g))
-(defonce mixer-s2 (mx/add-nk-mixer (nk-bank :synths) :s2 default-mixer-g))
-(defonce mixer-r0 (mx/add-nk-mixer (nk-bank :synths) :r0 default-mixer-g))
+(defonce synth-bus (audio-bus 2))
+(defonce riffs-bus (audio-bus 2))
 
-(defonce mixer-riff-s0 (mx/add-nk-mixer (nk-bank :riffs) :s0 default-mixer-g))
-(defonce mixer-riff-s1 (mx/add-nk-mixer (nk-bank :riffs) :s1 default-mixer-g))
-(defonce mixer-riff-m0 (mx/add-nk-mixer (nk-bank :riffs) :m0 default-mixer-g))
-(defonce mixer-riff-m1 (mx/add-nk-mixer (nk-bank :riffs) :m1 default-mixer-g))
-(defonce mixer-riff-s2 (mx/add-nk-mixer (nk-bank :riffs) :s2 default-mixer-g))
-(defonce mixer-riff-r0 (mx/add-nk-mixer (nk-bank :riffs) :r0 default-mixer-g))
+(defonce mixer-s0 (mx/add-nk-mixer (nk-bank :synths) :s0 default-mixer-g synth-bus))
+(defonce mixer-s1 (mx/add-nk-mixer (nk-bank :synths) :s1 default-mixer-g synth-bus))
+(defonce mixer-m0 (mx/add-nk-mixer (nk-bank :synths) :m0 default-mixer-g synth-bus))
+(defonce mixer-m1 (mx/add-nk-mixer (nk-bank :synths) :m1 default-mixer-g synth-bus))
+(defonce mixer-s2 (mx/add-nk-mixer (nk-bank :synths) :s2 default-mixer-g synth-bus))
+(defonce mixer-r0 (mx/add-nk-mixer (nk-bank :synths) :r0 default-mixer-g synth-bus))
+
+
+(defonce basic-synth-mix (basic-mixer [:after default-mixer-g] :in-bus synth-bus))
+(defonce basic-riffs-mix (basic-mixer [:after default-mixer-g] :in-bus riffs-bus))
+
+(defonce mixer-riff-s0 (mx/add-nk-mixer (nk-bank :riffs) :s0 default-mixer-g riffs-bus))
+(defonce mixer-riff-s1 (mx/add-nk-mixer (nk-bank :riffs) :s1 default-mixer-g riffs-bus))
+(defonce mixer-riff-m0 (mx/add-nk-mixer (nk-bank :riffs) :m0 default-mixer-g riffs-bus))
+(defonce mixer-riff-m1 (mx/add-nk-mixer (nk-bank :riffs) :m1 default-mixer-g riffs-bus))
+(defonce mixer-riff-s2 (mx/add-nk-mixer (nk-bank :riffs) :s2 default-mixer-g riffs-bus))
+(defonce mixer-riff-r0 (mx/add-nk-mixer (nk-bank :riffs) :r0 default-mixer-g riffs-bus))
+
+(on-latest-event [:v-nanoKON2 (nk-bank :synths) :r7 :control-change :slider7]
+                 (fn [{:keys [val]}]
+                   (ctl basic-synth-mix :amp val))
+                 ::synths-master-amp)
+
+(on-latest-event [:v-nanoKON2 (nk-bank :riffs) :r7 :control-change :slider7]
+                 (fn [{:keys [val]}]
+                   (ctl basic-riffs-mix :amp val))
+                 ::riffs-master-amp)
 
 
 
@@ -169,11 +187,13 @@
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :m1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :synths) :r0 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :synths) :r7 basic-mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :s1 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :m0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :m1 mixer-init-state)
+    (nksm/add-state nk-conn/state-maps (nk-bank :riffs) :r7 basic-mixer-init-state)
 
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-0" :s0 mixer-init-state)
     (nksm/add-state nk-conn/state-maps (nk-bank :m128) "m128-1" :m0 mixer-init-state)
@@ -204,13 +224,23 @@
 
     ;; give each nk an initial state
     (doseq [nk nk-conn/nano-kons]
-      (nksm/switch-state nk-conn/state-maps nk 0 :s7))
-    )
-
-  )
+      (nksm/switch-state nk-conn/state-maps nk 0 :s7))))
 
 (def m64 (mon/find-monome "/dev/tty.usbserial-m64-0790"))
 (def m128 (mon/find-monome "/dev/tty.usbserial-m128-115"))
 (def m256 (mon/find-monome "/dev/tty.usbserial-m256-203"))
 
-(ctl tim/root-s :rate 4)
+(ctl tim/root-s :rate 3)
+
+(defonce nano-kontrol-dev (osc-server 4499))
+
+(osc-handle nano-kontrol-dev
+            "/nk-event/simple"
+            (fn [m]
+              (let [payload (edn/read-string (first (:args m)))]
+                (event [:v-nanoKON2
+                        (:bank payload)
+                        (:key payload)
+                        :control-change
+                        (:id payload)]
+                       payload))))

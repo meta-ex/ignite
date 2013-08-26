@@ -1,7 +1,8 @@
 (ns meta-ex.drums
   (:use [overtone.live]
         [meta-ex.sets.ignite]
-        [meta-ex.kit.mixer])
+        [meta-ex.kit.mixer]
+        [meta-ex.synths.mixers :only [basic-mixer]])
   (:require [meta-ex.sets.ignite]
             [meta-ex.kit.monome-sequencer :as ms]
             [meta-ex.kit.sequencer :as seq]
@@ -22,9 +23,6 @@
 (declare trigger-sampler64)
 
 (do
-
-  (defsynth basic-mixer [boost 0 amp 1 mute 1 in-bus 0 out-bus 0 clamp-down-t 0.05]
-    (out out-bus (* (+ boost 1) amp (lag mute clamp-down-t) (in:ar in-bus 2))))
 
   (defonce drum-g             (group))
   (defonce drum-trigger-mix-g (group :after drum-g))
@@ -47,7 +45,7 @@
   (defonce trig64-mixer  (mx/add-nk-mixer (nk-bank :m64) "m64-triggers" drum-trigger-mix-g m64-b))
 
   (when m64
-    (defonce seq64 (ms/mk-monome-sequencer (nk-bank :m64) "m64" transition-samples seq64-f m64-b drum-g))
+    (defonce seq64 (ms/mk-monome-sequencer (nk-bank :m64) "m64" orig-samples seq64-f m64-b drum-g))
     (defonce __dock64__ (poly/dock-fonome! m64 seq64-f ::seq64 0 0))
     (defonce __dock_pause64__ (poly/dock-fonome! m64 insta-pause64-f ::pause64 7 7))
     (defonce trigger-sampler64 (samp/mk-sampler ::trigger-sampler64 trigger-samples drum-g (nkmx (nk-bank :m64) "m64-triggers") 8))
@@ -132,7 +130,7 @@
   (ms/swap-samples! seq64 ambient-drum-samples)
   (ms/swap-samples! seq64 orig-samples)
   (ms/swap-samples! seq64 mouth-samples)
-  (ms/swap-samples! seq64 transition-samples)b
+  (ms/swap-samples! seq64 transition-samples)
 
   (ms/swap-samples! seq128 african-samples)
   (ms/swap-samples! seq128 ambient-drum-samples)

@@ -81,3 +81,8 @@
         output (normalizer (rlpf output (* freq fil-mul) rq))]
 
     (out out-bus (* amp output (line 1 0 10 FREE)))))
+
+(defsynth guitar
+  [amp 1 out-bus 0 in-bus 1]
+  (let [src (sound-in in-bus)]
+    (out out-bus  (* amp src))))

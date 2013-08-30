@@ -405,7 +405,8 @@
                       (deliver prom (mk-nk dev (:rcv i-rcv) (:idx i-rcv))))))
           idxd-rcvs
           proms))
-    (doseq [p proms] (deref p))))
+    (doall (map (fn [p] (deref p)) proms))))
+
 
 (defn merge-nano-kons
   [rcvs stateful-devs]

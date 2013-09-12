@@ -377,7 +377,7 @@
   [val raw]
   (if (and (number? val)
            (number? raw))
-    (* (Math/abs (- val raw)) delay-mul)
+    (* (+ 0.01 (Math/abs (- val raw))) delay-mul)
 
     ;;broken vals: choose an arbitrarily large value
     2000))
@@ -881,8 +881,6 @@
   [sm nk new-state]
   (let [sm (sm-nk-swap-state sm nk new-state)]
     (switch-state* sm nk (sm-nk->current-bk sm nk))))
-
-
 
 (defn emit-events-on-state-diff
   [b k old-state new-state]

@@ -230,7 +230,7 @@
 (def m128 (mon/find-monome "/dev/tty.usbserial-m128-115"))
 (def m256 (mon/find-monome "/dev/tty.usbserial-m256-203"))
 
-(ctl tim/root-s :rate 3)
+(ctl tim/root-s :rate 5)
 
 (defonce nano-kontrol-dev (osc-server 4499))
 

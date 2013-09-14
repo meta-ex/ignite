@@ -456,14 +456,15 @@
                           sm)]
 
       (when (and (not was-synced?) synced?)
-        (when flasher (protocols/kill* flasher))
         (led-on nk flasher-id)
         (led-off nk warmer-id))
 
       (let [flashers (if synced?
                        (do
                          (emit-event b k id old-state state val new-val)
-                         (assoc flashers flasher-id nil))
+                         (when flasher (protocols/kill* flasher))
+                         (assoc flashers flasher-id nil)
+                         )
 
                        (let [delay    (flasher-delay val raw)
                              flasher (if (and flasher (live? flasher))

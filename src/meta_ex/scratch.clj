@@ -4,12 +4,22 @@
         [meta-ex.kit.mixer]
         [meta-ex.synths.synths]
         [meta-ex.state])
-  (:require [meta-ex.drums :as drums])
+
+  (:require [meta-ex.drums :as drums]
+;;            [meta-ex.leap :as leap]
+            )
   (:import [java.net URL]
            [java.io File]))
 
 (defonce s (spacey :out-bus (nkmx :s0)))
-
+;; (leap/on-frame (fn [f]
+;;             (let [h (leap/frontmost-hand f)
+;;                   pv (leap/palm-position h)]
+;;               ;;              (println (.isValid h))
+;;               (when (.isValid h )
+;;                 (let [y (.getY pv)
+;;                       y (/ y 50)]
+;;                   (ctl s :amp y)))) ) ::foo)
 (kill s)
 
 (defonce cs (cs80 :out-bus (nkmx :s0) :freq (midi->hz (note :g1))))

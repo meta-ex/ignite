@@ -11,13 +11,16 @@
                  [compojure "1.1.1"]
                  [org.clojure/data.json "0.1.2"]
                  [seesaw "1.4.3"]
-                 [org.lwjgl.lwjgl/lwjgl "2.8.5"]
-                 [org.lwjgl.lwjgl/lwjgl_util "2.8.5"]
-                 [org.lwjgl.lwjgl/lwjgl-platform "2.8.5"
-                  :classifier "natives-osx"]
+                 [rogerallen/leaplib "0.8.1"]
+                 [rogerallen/leaplib-natives "0.8.1"]
+                 [shadertone "0.2.1"]
                  [watchtower "0.1.1"]
+                 [prismatic/schema "0.1.1"]
+                 [org.clojure/core.async "0.1.0-SNAPSHOT"]
+
                  ]
-  :jvm-opts [
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
+  :jvm-opts ^:replace [
 ;;             "-agentpath:/Applications/YourKit_Java_Profiler_12.0.5.app/bin/mac/libyjpagent.jnilib"
     "-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
     "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with

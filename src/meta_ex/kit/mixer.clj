@@ -322,5 +322,6 @@
   (:mixer (get @korg-nano-kontrol-mixers [:v-nanoKON2 16 k :control-change])))
 
 (defn nkmx-sctl
-  [k]
-  (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 16 k :control-change])))
+  ([k] (nkmx-sctl k 16))
+  ([k bank-id]
+     (:sin-ctl (get @korg-nano-kontrol-mixers [:v-nanoKON2 bank-id k :control-change]))))

@@ -1,9 +1,10 @@
 (ns meta-ex.arpegios
   (:use [overtone.live])
   (:require [clojure.set]
-            [meta-ex.mixer]
-            [meta-ex.timing :as tim]
-            [meta-ex.sequencer :as s]))
+            [meta-ex.kit.mixer :as nk]
+            [meta-ex.kit.timing :as tim]
+            [meta-ex.kit.sequencer :as s]
+            ))
 
 (defonce num-notes-bs (control-bus))
 ;; WE ARE META-EX!!
@@ -108,15 +109,15 @@
 
 (comment
   (def mx2
-    ((speech-buffer "we. are. meta x. lyve" :voice :boing) :rate 1 :loop? true :out-bus 10))
+    ((speech-buffer "we. are. meta x. lyve" :voice :boing) :rate 1 :loop? true :out-bus (nkmx :s0)))
 
   (def mx
     ((speech-buffer "we. are. meta x. lyve" :voice :zarvox) :rate 1 :loop? true :out-bus 10))
 
   (def mx
-    ((speech-buffer "open source" :voice :boing) :rate 1 :loop? true :out-bus 10))
+    ((speech-buffer "hello dagstuhl" :voice :boing) :rate 1 :loop? true :out-bus (nk/nkmx :s0)))
 
-  (ctl mx :vol 3)
+  (ctl mx :rate 0.25)
   (kill mx)
   (kill s)
   (stop)

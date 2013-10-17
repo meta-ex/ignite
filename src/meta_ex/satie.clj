@@ -3,18 +3,7 @@
         [overtone.live]
         [overtone.synth sampled-piano]
         [meta-ex.kit.mixer]
-        [meta-ex.sets.ignite])
-  (:require
-
-   [meta-ex.hw.fonome :as fon]
-   [meta-ex.hw.polynome :as poly]))
-
-
-;; hat = Klank.ar(`[ [ 6563, 9875 ],
-;;                [ 0.6, 0.5 ],
-;;                [ 0.002, 0.003] ], PinkNoise.ar(1));
-;;     hatOut = Pan2.ar(hat*env3, pan2, hatLevel);
-
+        [meta-ex.sets.ignite]))
 
 ;;Erik Satie Gnossienne No. 1
 (def phrase1a [:iii :v :iv# :iii :iii :ii# :iii :ii#])
@@ -32,7 +21,6 @@
 (def phrase2-bass [:iii-- [:iii- :vii-- :v--] [:iii- :vii-- :v--]])
 
 (def phrase3-bass [:ii--- [:vi-- :ii- :iv-] [:vi-- :ii- :iv-]])
-
 
 (def right-hand-degrees (concat phrase1a phrase1b phrase1c
                                 phrase1a phrase1b phrase1c
@@ -52,7 +40,6 @@
                                 phrase3
                                 phrase2
                                 phrase2))
-
 
 (def left-hand-degrees (concat (apply concat (repeat 6 phrase1-bass))  ;;A
                                phrase2-bass                            ;;B
@@ -96,8 +83,7 @@
   [vol]
   (let [idx (swap! cur-pitch-rh inc)
         pitch (nth (cycle rh-pitches) idx)]
-;;    (swap! num-petals-to-draw* inc)
-    (sampled-piano (- pitch 12) (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0))))
+    (sampled-piano (- pitch 0) (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0))))
 
 (defn play-next-lh
   [vol]
@@ -108,33 +94,16 @@
         (sampled-piano p (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0)))
       (sampled-piano pitch (/ (vol-mul vol) 0.25) :out-bus (nkmx :r0)))))
 
+(play-next-rh 2)
+(play-next-lh 5)
 
-(defonce satie-keys (fon/mk-fonome ::satie 8 8))
-(defonce __dock_satie__ (poly/dock-fonome! m64 satie-keys ::satie 0 0))
+(reset-pos)
 
-(on-event [:fonome :press (:id satie-keys)]
-          (fn [{:keys [x y]}]
-            (match [x y]
-                   [7 _] (reset-pos)
-                   [_ 5] (play-next-lh (+ (rand-int 5) (* 12 (+ x 4))))
-                   [_ 7] (play-next-rh (+ (rand-int 5) (* 12 (+ x 4))))))
-          ::fonome-press)
-
-(on-event [:fonome :press (:id satie-keys)]
-          (fn [{:keys [x y fonome]}]
-            (fon/toggle-led fonome x y)
+(on-event [:midi :note-on]
+          (fn [msg]
+            (let [amp (* 50 (:velocity-f msg ))]
+              (if (= 48 (:note msg))
+                (play-next-lh amp)
+                (play-next-rh amp)))
             )
-          ::fonome-led)
-;;(boot-external-server)
-
-;;(play-next-lh 8)
-
-;;(poly/remove-all-callbacks m)
-;;(poly/disconnect m)
-
-
-(comment   (def wwii (sample-player (sample (freesound-path 43807)) :loop? true :out-bus (mx :grumbles)))
-           (def windy (sample-player (sample (freesound-path 17553)) :loop? true :out-bus (mx :grumbles)))
-           (ctl wwii :rate 0.5)
-           (stop))
-;;(event-debug-off)
+          ::satie)

@@ -5,6 +5,8 @@
 
 (defonce running-patterns* (atom #{}))
 
+;;(kill-all-running-patterns)
+
 (defn kill-all-running-patterns
   []
   (let [[ops _] (reset-returning-prev! running-patterns* #{})]
@@ -24,20 +26,22 @@
 ;;   (pause [this] "Pause this object")
 ;;   (start [this] "Start this object"))
 
-(defrecord ScheduledTimedRange [desc continue? fun]
+(defrecord ScheduledTimedRange [desc continue? fun kill-sync-prom]
   protocols/IKillable
   (kill* [this]
     (swap! running-patterns* disj this)
     (reset! (:continue? this) false)
+    @kill-sync-prom
     this)
   ILive
   (live? [this] @(:continue? this)))
 
-(defrecord ScheduledPattern [desc continue? delay]
+(defrecord ScheduledPattern [desc continue? delay kill-sync-prom]
   protocols/IKillable
   (kill* [this]
     (swap! running-patterns* disj this)
     (reset! (:continue? this) false)
+    @kill-sync-prom
     this)
   IDelaySet
   (delay-set! [this t]
@@ -72,21 +76,23 @@
            val-inc     (/ diff (/ (* time 1000) time-diff))
            cont?       (atom true)
            current-val (atom true)
-           pattern     (ScheduledTimedRange. desc cont? f)]
+           kill-sync   (promise)
+           pattern     (ScheduledTimedRange. desc cont? f kill-sync)]
        (swap! running-patterns* conj pattern)
        (apply
         (fn t-rec [t val val-inc end]
-          (when (and
-                 @cont?
-                 (or (and (pos? diff)
-                          (< val end))
-                     (> val end)))
-            (try
-              (reset! current-val val)
-              (f val)
-              (catch Exception e
-                (.printStackTrace e)))
-            (time/apply-at  (+ t time-diff) t-rec [(+ t time-diff) (+ val val-inc) val-inc end])))
+          (if (and
+               @cont?
+               (or (and (pos? diff)
+                        (< val end))
+                   (> val end)))
+            (do (try
+                  (reset! current-val val)
+                  (f val)
+                  (catch Exception e
+                    (.printStackTrace e)))
+                (time/apply-at  (+ t time-diff) t-rec [(+ t time-diff) (+ val val-inc) val-inc end ]))
+            (deliver kill-sync true)))
         [(time/now) start val-inc end])
        pattern)))
 
@@ -97,14 +103,16 @@
      (let [cont?    (atom true)
            delay-a  (atom delay)
            t        (time/now)
-           pattern  (ScheduledPattern. desc cont? delay-a)
+           kill-sync (promise)
+           pattern  (ScheduledPattern. desc cont? delay-a kill-sync)
            recur-fn (fn rf [t & args]
-                      (when @cont?
+                      (if @cont?
                         (let [res (apply f args)
                               res (if (sequential? res) res [])]
                           (let [d  @delay-a
                                 nt (+ d t)]
-                            (time/apply-at nt rf nt args)))))]
+                            (time/apply-at nt rf nt args)))
+                        (deliver kill-sync true)))]
        (time/apply-at (+ t delay) recur-fn (+ t delay) args)
        (swap! running-patterns* conj pattern)
        pattern)))

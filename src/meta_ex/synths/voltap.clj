@@ -8,6 +8,8 @@
 
 (defonce v (vol [:tail g]))
 
+(defonce curr-vol-atom (get-in v [:taps "system-vol"]))
+
 (defn curr-vol
   []
-  @(get-in v [:taps "system-vol"]))
+  @curr-vol-atom)

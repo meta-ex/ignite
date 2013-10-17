@@ -1,8 +1,6 @@
 (ns meta-ex.kit.timing
   (:use [overtone.core]
-        [overtone.synth.timing]
-;;        [overtone.gui.scope]
-        ))
+        [overtone.synth.timing]))
 
 (defonce timing-g (group "M-x timing" :tgt (foundation-safe-pre-default-group)))
 
@@ -97,11 +95,60 @@
    (kill get-beat-s))
  )
 
-
 ;; ;;(run (poll (impulse:kr 10) (/ (+ 1 (* -1 (lf-saw:kr 1))) 2)))
 
  (defsynth foo [freq 100]
    (out 0 (pan2 (normalizer (lpf (mix (saw [freq (+ freq 1)])) (* 200 (+ 1 (in:kr sin-b))))))))
+
+;; get metro trigger events
+
+(defonce trig-uid (trig-id))
+
+(defsynth zero-cross-trigger
+  [in-bus 0  trig-id 0 rate 10]
+  (let [src (in:kr in-bus)]
+    (send-trig (* -1 src) trig-id src)))
+
+(defsynth mx-beat-trigger
+  [in-bus 0  beat-bus 0 beat-count-bus 0 trig-id 0 rate 10]
+  (let [src  (in:kr in-bus)
+        beat (in:kr beat-bus)
+        cnt  (in:kr beat-count-bus)]
+    (send-reply (* -1 src) "/m-x/beat-trigger/" [beat cnt] trig-id)))
+
+(defonce b-trigger (mx-beat-trigger [:after (foundation-monitor-group)]
+                                    :in-bus root-b
+                                    :beat-bus beat-b
+                                    :beat-count-bus beat-count-b
+                                    :trig-id trig-uid))
+
+
+
+
+
+(on-event "/m-x/beat-trigger/"
+          (let [last-beat (atom (now ))]
+            (fn [val]
+              (let [n   (now)
+                    dur (- n @last-beat) ]
+                (reset! last-beat n)
+                (event [:mx :beat] {:beat (nth (:args val) 3)
+                                    :dur dur}))))
+
+          ::beat-trig)
+
+
+;; (on-event [:mx :beat]
+;;           (fn [m]
+;; ;;            (ping)
+;; ;;            (at (+ (now) (/ (:dur m) 2)) (ping))
+;; ;;            (at (+ (now) (/ (:dur m) 4)) (ping))
+;; ;;            (println "bye" m))
+;;           ::beatt)
+
+
+
+
 
 ;; (def f (foo))
 ;; (ctl f :freq 100)
@@ -134,7 +181,6 @@
 ;; (bus-get beat-count-b)
 
 ;; (bus-get sin-b)
-
-(ctl root-s :rate 6)
+(ctl root-s :rate 5)
 
 ;;(bus-get beat-count-b)

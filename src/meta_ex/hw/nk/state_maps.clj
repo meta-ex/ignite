@@ -27,12 +27,12 @@
 ;; Available modes: [:controller, :clutch, :switcher]
 
 (defn- sm-b-k->state
-  "Get the state for a specific key and bank"
+  "Get the state for a specific key within the given bank"
   [sm b k]
   (get-in sm [:states b k :state]))
 
 (defn- sm-b-k->button-id
-  "Get the button-id for a specific key and bank"
+  "Get the button-id for a specific key within the given bank"
   [sm b k]
   (get-in sm [:states b k :button-id]))
 
@@ -67,7 +67,7 @@
   "Get the current bank associated with a specific nk. Prefer bank
    in :switch-bank key if exists."
   [sm nk]
-  (let [[b k]        (sm-nk->current-bk sm nk)
+  (let [[b k]       (sm-nk->current-bk sm nk)
         switch-bank (get-in sm [:nks nk :switch-bank])]
     (or switch-bank b)))
 
@@ -83,7 +83,7 @@
   (get-in sm [:nks nk :mode]))
 
 (defn- sm-bk->nks
-  "Get all the nks associated with a specific bk vec"
+  "Get all the nks currently associated with a specific bk vec"
   [sm bk]
   (let [nks (:nks sm)]
     (reduce (fn [r [k v]]
@@ -143,12 +143,14 @@
       (sm-nk-clutch-mode? sm nk)))
 
 (defn- controller-id?
-  "Returns true if state-id represents a controller (pot or slider)"
+  "Returns true if state-id represents a controller (pot or slider). The
+  state-id is typically the key within a state-map"
   [state-id]
   (boolean (re-matches #"(slider|pot)[0-7]" (name state-id))))
 
 (defn- sync-id?
-  "Returns true if state-id represents a sync button (smr buttons)"
+  "Returns true if state-id represents a sync button (smr buttons). The
+  state-id is typically the key within a state-map"
   [state-id]
   (boolean (re-matches #"[smr][0-7]" (name state-id))))
 
@@ -193,7 +195,7 @@
    i.e. distance can represented by the warmth led through relative
    flashing speeds (slow for far, quick for near)."
   [id]
-  (let [n (name id)
+  (let [n   (name id)
         idx (re-find #"[0-7]" n)]
     (keyword (str "m" idx))))
 
@@ -206,54 +208,54 @@
 
 (def delay-mul 1000)
 
-(defn- sm-nk-swap-current
+(defn- sm-nk-swap-current!
   "Return a new sm with the current bk vec replaced"
   [sm nk b k]
   (assoc-in sm [:nks nk :current] [b k]))
 
-(defn- sm-nk-swap-switch-bank
+(defn- sm-nk-swap-switch-bank!
   "Swap the switch-bank - a key representing the new bank to switch to"
   [sm nk b]
   (assoc-in sm [:nks nk :switch-bank] b))
 
-(defn- sm-swap-state
+(defn- sm-swap-state!
   "Return a new sm with the state with specific bank and k replaced"
   [sm b k new-state]
   (assoc-in sm [:states b k :state] new-state))
 
-(defn- sm-nk-swap-mode
+(defn- sm-nk-swap-mode!
   "Return a new sm with the mode of the specific nk replaced"
   [sm nk mode]
   (assoc-in sm [:nks nk :mode] mode))
 
-(defn- sm-nk-swap-state
+(defn- sm-nk-swap-state!
   "Return a new sm with the state matching the nk replaced"
   [sm nk new-state]
   (let [[b k] (sm-nk->current-bk sm nk)]
-    (sm-swap-state sm b k new-state)))
+    (sm-swap-state! sm b k new-state)))
 
-(defn- sm-nk-swap-raw-state
+(defn- sm-nk-swap-raw-state!
   "Return a new sm with the nk's raw-state replaced"
   [sm nk new-raw-state]
   (assoc-in sm [:nks nk :raw-state] new-raw-state))
 
-(defn- sm-nk-swap-flashers
+(defn- sm-nk-swap-flashers!
   "Return a new sm with the flashers replaced"
   [sm nk flashers]
   (assoc-in sm [:nks nk :flashers] flashers))
 
-(defn- sm-nk-swap-syncs
+(defn- sm-nk-swap-syncs!
   "Return a new sm with the syncs replaced"
   [sm nk syncs]
   (assoc-in sm [:nks nk :syncs] syncs))
 
-(defn- sm-add-state
+(defn- sm-add-state!
   "Return a new sm with the new state"
   [sm b k s button-id]
   (assoc-in sm [:states b k] {:state s
                               :button-id button-id}))
 
-(defn- sm-add-nk
+(defn- sm-add-nk!
   "Add a new nk to the statemap"
   [sm nk]
   (assoc-in sm [:nks nk] {:syncs (nk-state-map false)
@@ -271,7 +273,7 @@
      (let [sm {:states {}
                :nks {}}]
        (agent (reduce (fn [r nk]
-                        (sm-add-nk r nk))
+                        (sm-add-nk! r nk))
                       sm
                       nks)))))
 
@@ -323,8 +325,7 @@
 (defn kill-all-flashers*
   "Kill all the flashers on a specific nk"
   [sm nk]
-  (let [state-map       (sm-nk->current-state sm nk)
-        flashers        (sm-nk->flashers sm nk)
+  (let [flashers        (sm-nk->flashers sm nk)
         flashers        (reduce (fn [r [k v]]
                                   (when (and v (live? v))
                                     (protocols/kill* v)
@@ -335,7 +336,7 @@
     (doseq [i (range 8)]
       (led-off nk (keyword (str "m" i))))
 
-    (sm-nk-swap-flashers sm nk flashers))
+    (sm-nk-swap-flashers! sm nk flashers))
   sm)
 
 (declare update-syncs-and-flashers*)
@@ -386,7 +387,7 @@
   "Creates a ScheduledPattern which will flash a specific led id for nk
    with a specified delay time in ms."
   [nk id delay]
-  (temporal (mk-blink-led nk id) delay))
+  (temporal (mk-blink-led nk id) delay [] "NK Flasher"))
 
 (declare update-syncs-and-flashers*)
 
@@ -478,10 +479,10 @@
                            (led-off nk warmer-id))
                          (assoc flashers flasher-id flasher)))]
         (-> sm
-            (sm-nk-swap-syncs nk syncs)
-            (sm-nk-swap-flashers nk flashers)
-            (sm-nk-swap-state nk state)
-            (sm-nk-swap-raw-state nk new-raw-state))))
+            (sm-nk-swap-syncs! nk syncs)
+            (sm-nk-swap-flashers! nk flashers)
+            (sm-nk-swap-state! nk state)
+            (sm-nk-swap-raw-state! nk new-raw-state))))
     sm))
 
 (defn switch-state*
@@ -506,10 +507,10 @@
                                syncs)]
         (nk-show-bank nk b)
         (-> sm
-            (sm-nk-swap-current nk b k)
-            (sm-nk-swap-syncs nk syncs)
-            (sm-nk-swap-switch-bank nk nil)
-            (sm-nk-swap-mode nk :controller))))
+            (sm-nk-swap-current! nk b k)
+            (sm-nk-swap-syncs! nk syncs)
+            (sm-nk-swap-switch-bank! nk nil)
+            (sm-nk-swap-mode! nk :controller))))
     sm))
 
 (defn sm-nk-kill-flasher*
@@ -522,7 +523,7 @@
     (when flasher
       (protocols/kill* flasher))
 
-    (sm-nk-swap-flashers sm nk flashers)))
+    (sm-nk-swap-flashers! sm nk flashers)))
 
 (defn nk-force-sync*
   "Force the state value assocated with the nk's id to the new raw
@@ -556,8 +557,8 @@
      (emit-event b k id old-state state val raw)
 
      (-> sm
-         (sm-nk-swap-state nk state)
-         (sm-nk-swap-syncs nk syncs)))
+         (sm-nk-swap-state! nk state)
+         (sm-nk-swap-syncs! nk syncs)))
 
    :else sm))
 
@@ -602,7 +603,7 @@
           (bank-button? id))
      (let [b (bank-button-id->bank id)]
        (-> sm
-           (sm-nk-swap-switch-bank nk b)
+           (sm-nk-swap-switch-bank! nk b)
            (nk-enter-switcher-mode* nk)))
 
      ;; switch state
@@ -614,8 +615,8 @@
        (-> sm
            (kill-all-flashers* nk)
            (switch-state* nk b state-k)
-           (sm-nk-swap-switch-bank nk nil)
-           (sm-nk-swap-raw-state nk (assoc raw-state id raw))))
+           (sm-nk-swap-switch-bank! nk nil)
+           (sm-nk-swap-raw-state! nk (assoc raw-state id raw))))
 
      ;; force sync
      (and (= 1.0 raw)
@@ -626,11 +627,11 @@
            ctl-raw       (get raw-state controller-id)]
        (-> sm
            (nk-force-sync* nk controller-id ctl-raw)
-           (sm-nk-swap-raw-state nk (assoc raw-state id raw))))
+           (sm-nk-swap-raw-state! nk (assoc raw-state id raw))))
 
      ;; do nothing except register button press in raw-state
      :else (-> sm
-               (sm-nk-swap-raw-state nk (assoc raw-state id raw))))))
+               (sm-nk-swap-raw-state! nk (assoc raw-state id raw))))))
 
 (defn- update-syncs-and-flashers*
   "Update the syncs and flashers for the specific state matching nk's
@@ -652,7 +653,7 @@
        synced?       (led-on nk (controller-id->sync-led-id id))
        (not synced?) (led-off nk (controller-id->sync-led-id id)))
 
-      (sm-nk-swap-syncs sm nk syncs))
+      (sm-nk-swap-syncs! sm nk syncs))
     sm))
 
 (defn nk-update-states
@@ -719,7 +720,7 @@
 ;;                               (update-syncs-and-flashers* r nk button-id v))
 ;;                             sm
 ;;                             (sm-bk->nks sm b k))]
-;;       (sm-swap-state sm k state))
+;;       (sm-swap-state! sm k state))
 ;;     sm))
 
 ;; (defn update-state
@@ -731,7 +732,7 @@
 
 (defn- add-nk*
   [sm nk]
-  (sm-add-nk sm nk))
+  (sm-add-nk! sm nk))
 
 (defn add-nk
   "add a new nk to the statemap agent"
@@ -740,7 +741,7 @@
 
 (defn- add-state*
   [sm bank state-k state button-id]
-  (sm-add-state sm bank state-k state button-id))
+  (sm-add-state! sm bank state-k state button-id))
 
 (defn add-state
   ([state-a bank button-id init-val-or-state-map]
@@ -757,7 +758,7 @@
 (defn nk-enter-switcher-mode*
   [sm nk]
   (let [sm             (kill-all-flashers* sm nk)
-        sm             (sm-nk-swap-mode sm nk :switcher)
+        sm             (sm-nk-swap-mode! sm nk :switcher)
         b              (sm-nk->current-bank sm nk)
         available      (sm-b->button-ids-nks sm b)
         flashers       (sm-nk->flashers sm nk)
@@ -779,12 +780,12 @@
                                         (assoc r k (mk-flasher nk k 50))))))
                            {}
                            flashers)]
-      (sm-nk-swap-flashers sm nk flashers))))
+      (sm-nk-swap-flashers! sm nk flashers))))
 
 (defn nk-absolute-val-viz-on*
   [sm nk]
   (let [sm      (kill-all-flashers* sm nk)
-        sm      (sm-nk-swap-mode sm nk :viz)
+        sm      (sm-nk-swap-mode! sm nk :viz)
         state   (sm-nk->current-state sm nk)
         syncs   (sm-nk->syncs sm nk)
         ctl-ids (filter controller-id? (keys state))
@@ -804,7 +805,7 @@
                         delay    (scale-range val 0 1 500 10)
                         flasher  (mk-flasher nk sync-led delay)
                         flashers (assoc flashers sync-led flasher)]
-                    (sm-nk-swap-flashers r nk flashers)))))
+                    (sm-nk-swap-flashers! r nk flashers)))))
             sm
             ctl-ids)))
 
@@ -849,14 +850,14 @@
   (let [mode (if (sm-nk-switcher-mode? sm nk)
                :switcher
                :clutch)]
-    (sm-nk-swap-mode sm nk mode)))
+    (sm-nk-swap-mode! sm nk mode)))
 
 (defn- clutch-off*
   [sm nk]
   (let [mode (if (sm-nk-switcher-mode? sm nk)
                :switcher
                :controller )]
-    (sm-nk-swap-mode sm nk mode)))
+    (sm-nk-swap-mode! sm nk mode)))
 
 (defn nk-clutch-on
   [state-a nk]
@@ -880,7 +881,7 @@
 
 (defn nk-replace-current-state*
   [sm nk new-state]
-  (let [sm (sm-nk-swap-state sm nk new-state)]
+  (let [sm (sm-nk-swap-state! sm nk new-state)]
     (switch-state* sm nk (sm-nk->current-bk sm nk))))
 
 (defn emit-events-on-state-diff
@@ -945,7 +946,7 @@
         (fn [sm]
           (let [old-state (sm-b-k->state b k) ]
             (emit-events-on-state-diff b k old-state state))
-          (sm-swap-state b k state)))
+          (sm-swap-state! b k state)))
   :replaced)
 
 (defn save-state-by-button-id
@@ -1000,7 +1001,7 @@
                           (do
                             (emit-events-on-state-diff b k old-state new-state)
                             (-> sm
-                                (sm-swap-state b k new-state)
+                                (sm-swap-state! b k new-state)
                                 (sm-b-k-update-all-nks* b k)))
                           sm)))
                     sm

@@ -22,21 +22,23 @@
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
   :jvm-opts ^:replace [
 ;;             "-agentpath:/Applications/YourKit_Java_Profiler_12.0.5.app/bin/mac/libyjpagent.jnilib"
-    "-Xms512m" "-Xmx1g"           ; Minimum and maximum sizes of the heap
-    "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with
-    "-XX:+UseConcMarkSweepGC"     ;  the concurrent garbage collector
-    "-XX:+CMSConcurrentMTEnabled" ; Enable multi-threaded concurrent gc work (ParNewGC)
-    "-XX:MaxGCPauseMillis=20"     ; Specify a target of 20ms for max gc pauses
-    "-XX:+CMSIncrementalMode"     ; Do many small GC cycles to minimize pauses
-    "-XX:MaxNewSize=257m"         ; Specify the max and min size of the new
-    "-XX:NewSize=256m"            ;  generation to be small
+    "-Xms6g" "-Xmx7g"           ; Minimum and maximum sizes of the heap
+;    "-XX:+UseParNewGC"            ; Use the new parallel GC in conjunction with
+;    "-XX:+UseConcMarkSweepGC"     ;  the concurrent garbage collector
+;    "-XX:+CMSConcurrentMTEnabled" ; Enable multi-threaded concurrent gc work (ParNewGC)
+    "-XX:MaxGCPauseMillis=1000"     ; Specify a target of 20ms for max gc pauses
+;    "-XX:+CMSIncrementalMode"     ; Do many small GC cycles to minimize pauses
+ ;   "-XX:MaxNewSize=257m"         ; Specify the max and min size of the new
+;    "-XX:NewSize=256m"            ;  generation to be small
     "-XX:+UseTLAB"                ; Uses thread-local object allocation blocks. This
                                   ;  improves concurrency by reducing contention on
-                                  ;  the shared heap lock.
-    "-XX:MaxTenuringThreshold=0"
-;;    "-XX:+PrintGC"                ; Print GC info to stdout
-;;    "-XX:+PrintGCDetails"         ;  - with details
-;;    "-XX:+PrintGCTimeStamps"
+                                        ;  the shared heap lock.
+
+    "-XX:+UseG1GC"
+;    "-XX:MaxTenuringThreshold=0"
+;    "-XX:+PrintGC"                ; Print GC info to stdout
+;    "-XX:+PrintGCDetails"         ;  - with details
+;    "-XX:+PrintGCTimeStamps"
     ] ; Makes the full NewSize available to
                                   ;  every NewGC cycle, and reduces the
                                   ;  pause time by not evaluating

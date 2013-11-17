@@ -24,9 +24,9 @@
 
 (do
 
-  (defonce drum-g             (group))
-  (defonce drum-trigger-mix-g (group :after drum-g))
-  (defonce drum-basic-mixer-g (group :after default-mixer-g))
+  (defonce drum-g             (group "M-x Drums"))
+  (defonce drum-trigger-mix-g (group "M-x Drum Trg Mix" :after drum-g))
+  (defonce drum-basic-mixer-g (group "M-x Drum Basic Mix" :after default-mixer-g))
 
   (defonce m64-b  (audio-bus 2 "m64 basic-mixer"))
   (defonce m128-b (audio-bus 2 "m128 basic-mixer"))

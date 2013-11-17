@@ -88,24 +88,24 @@
             ::seq128-press)
 
   (on-latest-event [:v-nanoKON2 (nk-bank :m64) "m64-master" :control-change :slider7]
-            (fn [{:keys [val]}]
-              (ctl bas-mix-s64 :amp val))
-            ::m64-master-amp)
+                   (fn [{:keys [val]}]
+                     (ctl bas-mix-s64 :amp val))
+                   ::m64-master-amp)
 
   (on-latest-event [:v-nanoKON2 (nk-bank :m64) "m64-master" :control-change :slider6]
-            (fn [{:keys [val]}]
-              (ctl bas-mix-s64 :boost val))
-            ::m64-master-boost)
+                   (fn [{:keys [val]}]
+                     (ctl bas-mix-s64 :boost val))
+                   ::m64-master-boost)
 
   (on-latest-event [:v-nanoKON2 (nk-bank :m128) "m128-master" :control-change :slider7]
-            (fn [{:keys [val]}]
-              (ctl bas-mix-s128 :amp val))
-            ::m128-master-amp)
+                   (fn [{:keys [val]}]
+                     (ctl bas-mix-s128 :amp val))
+                   ::m128-master-amp)
 
   (on-latest-event [:v-nanoKON2 (nk-bank :m128) "m128-master" :control-change :slider6]
-            (fn [{:keys [val]}]
-              (ctl bas-mix-s128 :boost val))
-            ::m128-master-boost))
+                   (fn [{:keys [val]}]
+                     (ctl bas-mix-s128 :boost val))
+                   ::m128-master-boost))
 
 
 (comment

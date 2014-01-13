@@ -35,7 +35,7 @@
 
 (defsynth foo [attack 0.01 sustain 0.03 release 0.1 amp 0.8 out-bus 0 ]
   (let [freq (/ (in:kr phasor-b2) 2)
-        env  (env-gen (lin-env attack sustain release) 1 1 0 1)
+        env  (env-gen (lin attack sustain release) 1 1 0 1)
         src  (mix (saw [freq (* 1.01 freq)]))
         src  (lpf src (mouse-y 100 20000))
         sin  (sin-osc (* 1 freq))
@@ -61,9 +61,9 @@
                                                             (sin-osc (/ freq))
                                                             (sin-osc (/ freq 0.25))
                                                             (square (* 2 freq))
-                                                            (saw freq)
+                                                            (mix (saw [freq (* freq (+ 1 (mouse-y 0 0.2)))]))
                                                             ])
-                                                      (* lpf-mul ct-saw lpf-f))))))))
+                                                      (* lpf-mul ct-saw (mouse-x 100 10000)))))))))
 
 (defn set-saw-s1
   "bass-rate"
@@ -147,6 +147,10 @@
 (defonce mid  (foo      [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :s1)))
 (defonce bass (foo-bass [:head rhythm-bass-g] :amp 0 :out-bus (nkmx 8 :m0)))
 
+(comment
+  (kill bass)
+  (def b-old bass)
+  (kill b-old))
 
 (defn hi-amp   [amp] (ctl hi   :amp amp))
 (defn mid-amp  [amp] (ctl mid  :amp amp))

@@ -141,13 +141,18 @@
 ;;(ms/stop-sequencer seq64)
 ;;  (.printStackTrace (agent-error (:state (:fonome seq128))))
 ;; (def c-sequencer (seq/mk-sequencer "m128" african-samples 16 drum-g tim/beat-b tim/beat-count-b 0))
-;;(def c-sequencer4 (seq/mk-sequencer 16 "yo5" orig-samples 8 drum-g tim/beat-b tim/beat-count-b 0))
+;;(def c-sequencer4 (seq/mk-sequencer 16 "yo5" orig-samples 8 drum-g (atom tim/main-beat) 0))
+
 
 (comment
-  (seq/sequencer-write! c-sequencer4 0 [1 1 1 1 1 1 1 1])
-  (seq/sequencer-write! c-sequencer4 1 (repeat 8 0))
-  (seq/sequencer-write! c-sequencer4 3 [0  0 0 0 0 0 0 0])
-  (seq/sequencer-write! c-sequencer4 0 [0 1 0 1 0 1 0 1]))
+  (seq/swap-samples! c-sequencer4 ambient-drum-samples)
+  (seq/swap-beat-bus! c-sequencer4 tim/beat-3th)
+
+  (seq/sequencer-write! c-sequencer4 0 [1 0 1 0 1 0 1 0])
+  (seq/sequencer-write! c-sequencer4 3 (repeat 8 1))
+  (seq/sequencer-write! c-sequencer4 2 [1 0 0 0 1 0 0 0])
+  (seq/sequencer-write! c-sequencer4 0 [0 1 0 1 0 1 0 1])
+  )
 
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer) 0)
 ;; (seq/sequencer-set-out-bus! (:sequencer sequencer2) 0)

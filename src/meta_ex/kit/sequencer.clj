@@ -1,6 +1,7 @@
 (ns meta-ex.kit.sequencer
   (:use [overtone.core]
-        [meta-ex.kit.mixer]))
+        [meta-ex.kit.mixer])
+  (:require [meta-ex.kit.timing :as tim]))
 
 (defsynth orig-mono-sequencer
   "Plays a single channel audio buffer."
@@ -26,8 +27,9 @@
         bar-trg  (and (buf-rd:kr 1 pattern cnt)
                       (= beat-num (mod cnt num-steps))
                       beat-trg)
-        vol      (set-reset-ff bar-trg)]
-    (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg)))))
+
+        amp      (set-reset-ff bar-trg)]
+    (out out-bus (* amp (scaled-play-buf 1 buf rate bar-trg)))))
 
 (defn- mk-sequencer-patterns
   [samples num-steps]
@@ -58,10 +60,15 @@
   "Creates a sequencer that resides at the tail of the target group with
    synths to play each sample with the specified number of steps using
    clock busses"
-  ([nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus]
-     (mk-sequencer nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus true))
-  ([nk-group handle samples num-steps tgt-group beat-trg-bus beat-cnt-bus out-bus with-mixers?]
-     (let [desc            (str "M-x Sequencer " handle)
+  ([nk-group handle samples num-steps tgt-group beat-bus-a out-bus]
+     (mk-sequencer nk-group handle samples num-steps tgt-group beat-bus-a out-bus true))
+  ([nk-group handle samples num-steps tgt-group beat-bus-a out-bus with-mixers?]
+
+     (let [beat-bus        @beat-bus-a
+           _               (assert (tim/beat-bus? beat-bus))
+           desc            (str "M-x Sequencer " handle)
+           beat-trg-bus    (:beat beat-bus)
+           beat-cnt-bus    (:count beat-bus)
            num-samps       (count samples)
            container-group (group handle :tail tgt-group)
            seq-group       (group "m-x-sequencer" :head container-group)
@@ -71,9 +78,15 @@
            mixers          (when with-mixers?
                              (doall (map #(add-nk-mixer nk-group % mixer-group out-bus) mixer-handles)))
            synths          (start-synths samples patterns mixers num-steps seq-group beat-cnt-bus beat-trg-bus out-bus)]
+       (add-watch beat-bus-a ::update-beat-busses
+                  (fn [k r o n]
+                    (println "updating beat-bus to: " n)
+                    (let [beat-trg-bus (:beat n)
+                          beat-cnt-bus (:count n)]
+                      (println seq-group :beat-cnt-bus beat-cnt-bus :beat-trg-bus beat-trg-bus)
+                      (ctl seq-group :beat-cnt-bus beat-cnt-bus :beat-trg-bus beat-trg-bus))))
        (with-meta {:num-samps     num-samps
-                   :beat-trg-bus  beat-trg-bus
-                   :beat-cnt-bus  beat-cnt-bus
+                   :beat-bus      beat-bus-a
                    :patterns      patterns
                    :synths        (agent synths)
                    :num-steps     num-steps
@@ -88,52 +101,70 @@
                    :tgt-group     tgt-group}
          {:type ::sequencer}))))
 
+(defn sequencer?
+  [o]
+  (isa? (type o) ::sequencer))
+
+(defn swap-beat-bus! [sequencer beat-bus]
+  (assert (tim/beat-bus? beat-bus))
+  (assert (sequencer? sequencer))
+  (reset! (:beat-bus sequencer) beat-bus))
+
 (defn swap-samples! [sequencer samples]
+  (assert (sequencer? sequencer))
   (send (:synths sequencer)
         (fn [synths]
           (kill (:seq-group sequencer))
-          (start-synths (take (:num-samps sequencer) samples)
-                        (:patterns sequencer)
-                        (:mixers sequencer)
-                        (:num-steps sequencer)
-                        (:seq-group sequencer)
-                        (:beat-cnt-bus sequencer)
-                        (:beat-trg-bus sequencer)
-                        (:out-bus sequencer)))))
+          (let [beat-bus @(:beat-bus sequencer )]
+            (start-synths (take (:num-samps sequencer) samples)
+                          (:patterns sequencer)
+                          (:mixers sequencer)
+                          (:num-steps sequencer)
+                          (:seq-group sequencer)
+                          (:count beat-bus)
+                          (:beat beat-bus)
+                          (:out-bus sequencer))))))
 
 (defn sequencer-write!
   [sequencer idx pattern]
+  (assert (sequencer? sequencer))
   (let [buf (:pattern-buf (nth (:patterns sequencer) idx))]
     (buffer-write! buf pattern)))
 
 (defn sequencer-pattern
   "Returns the current state of the sequencer pattern with index idx"
   [sequencer idx]
+  (assert (sequencer? sequencer))
   (let [buf (:pattern-buf (nth (:patterns sequencer) idx))]
-    (seq (buffer-data buf))))
+    (seq (buffer-read buf))))
 
 (defn sequencer-patterns
   "Returns a sequence of the current state of all the patterns in
    sequencer"
   [sequencer]
+  (assert (sequencer? sequencer))
   (doall (map (fn [i] (sequencer-pattern sequencer i)) (range (:num-steps sequencer)))))
 
 (defn sequencer-pause
   [s]
+  (assert (sequencer? s))
   (node-pause (:group s)))
 
 (defn sequencer-play
   [s]
+  (assert (sequencer? s))
   (node-start (:group s)))
 
 (defn sequencer-kill
   [s]
+  (assert (sequencer? s))
   (group-free (:group s))
   (doseq [mixer (:mixers s)]
     (kill-mixer mixer)))
 
 (defn sequencer-set-out-bus!
   [s out-bus]
+  (assert (sequencer? s))
   (if (:mixers s)
     (ctl (:mixer-group s) :out-bus out-bus)
     (ctl (:seq-group s) :out-bus out-bus)))

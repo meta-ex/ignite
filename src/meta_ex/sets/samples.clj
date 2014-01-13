@@ -46,10 +46,6 @@
 
 (defonce devoxx (sample "~/Dropbox/jon-n-sam/audio-files/devoxx.wav"))
 
-
-
-
-(defonce hickey-he-man (sample "~/Dropbox/jon-n-sam/audio-files/hickey-he-man.wav"))
 (defonce hickey-no-to-complexity (sample "~/Dropbox/jon-n-sam/audio-files/hickey-no-to-complexity.wav"))
 
 
@@ -60,14 +56,11 @@
   (def h2 (hickey-no-to-complexity :amp 10 :out-bus (nkmx :s2)))
   (def h2 (hickey-no-to-complexity :amp 10 :out-bus (nkmx :s0)))
 
-
   (kill h1)
   (kill h2)
   (kill h0)
 
-
-
-(volume 0.8)
+  (volume 0.8)
   (def dv (devoxx :loop? 1 :out-bus (nkmx :s0)) )
 
   (bendy-guitar :rate 0.8)
@@ -80,10 +73,14 @@
   (drone3)
   (drone4 :rate 0.5)
   (drone5)
-
+  (kill bendy-guitar)
   (echo-hiss :rate 0.5)
 
   (train-leaving)
-  (transitional-whoosh)
-
-)
+  )
+(comment
+  (future
+    (dorun (for [x (range 6 0 -0.4)]
+             (do
+               (transitional-whoosh :rate x :amp 0.5)
+               (Thread/sleep 1500))))))

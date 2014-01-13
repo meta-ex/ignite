@@ -5,7 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [aleph "0.3.0-beta7"]
-                 [overtone "0.9.0-SNAPSHOT"]
+                 [rhizome "0.2.0"]
+                 [overtone "0.9.1"]
                  [polynome "0.3.0-SNAPSHOT"]
                  [quil "1.6.0"]
                  [compojure "1.1.1"]
@@ -13,12 +14,23 @@
                  [seesaw "1.4.3"]
                  [rogerallen/leaplib "0.8.1"]
                  [rogerallen/leaplib-natives "0.8.1"]
-                 [shadertone "0.2.1"]
+                 [shadertone "0.2.2"]
                  [watchtower "0.1.1"]
                  [prismatic/schema "0.1.1"]
+                 [http-kit "2.1.13"]
+                 [clj-time "0.6.0"]
                  [org.clojure/core.async "0.1.0-SNAPSHOT"]
-
+                 [org.clojure/core.match "0.2.0"]
+                 [org.clojure/clojurescript "0.0-1934"]
                  ]
+
+  :plugins [[lein-cljsbuild "0.3.3"]]
+  :source-paths ["cljs-src" "src"]
+  :cljsbuild {
+              :builds [{:source-paths ["cljs-src"]
+                        :compiler {:output-to "resources/web/js/cljs-main.js"
+                                   :optimizations :whitespace
+}}]}
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
   :jvm-opts ^:replace [
 ;;             "-agentpath:/Applications/YourKit_Java_Profiler_12.0.5.app/bin/mac/libyjpagent.jnilib"

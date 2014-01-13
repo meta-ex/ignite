@@ -39,7 +39,6 @@
 (defn rate [r]
   (ctl tim/root-s :rate r))
 
-
 (defn hi-amp [amp] (rhyth/hi-amp amp))
 (defn mid-amp [amp] (rhyth/mid-amp amp))
 (defn bass-amp [amp] (rhyth/bass-amp amp))

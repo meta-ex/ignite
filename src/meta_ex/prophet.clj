@@ -21,9 +21,9 @@
    frequency) and its LFO has a little bit of randomisation thrown into
    its frequency component for that extra bit of variety."
 
-  [amp 1 freq 440 cutoff-freq 12000 rq 0.3  attack 1 decay 2 out-bus 0 beat-b (:id tim/inv-root-b) beat-cnt-b (:id tim/count-b) rhyth-bf 0 rhyth-bf-size 16]
+  [amp 1 freq 440 slide 2 cutoff-freq 12000 rq 0.3  attack 1 decay 2 out-bus 0 beat-b (:id tim/inv-root-b) beat-cnt-b (:id tim/count-b) rhyth-bf 0 rhyth-bf-size 16]
 
-  (let [freq (lag freq 2)
+  (let [freq (lag freq slide)
         snd  (pan2 (mix [(pulse freq (* 0.1 (/ (+ 1.2 (sin-osc:kr 1)) )))
                          (pulse freq (* 0.8 (/ (+ 1.2 (sin-osc:kr 0.3) 0.7) 2)))
                          (pulse freq (* 0.8 (/ (+ 1.2 (lf-tri:kr 0.4 )) 2)))
@@ -46,6 +46,8 @@
 
   (def rhyth (buffer 16))
   (buffer-write! rhyth [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0])
+  (buffer-write! rhyth [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1])
+  (buffer-write! rhyth [1 1 1 1 1 1 1 1 0 1 1 1 1 0 1 1])
   (def bb (tim/beat-bus 1/16))
 
 
@@ -54,7 +56,7 @@
   (let [n  (note :a1)
         d 10
         rq 0.6
-        a 0.3
+        a 3
         amp 0.5
         cf 1000]
     (def p  (prophet2 [:head proph-g] :freq (midi->hz n)  :decay d :rq rq :attack a :cutoff-freq cf :beat-b (:beat bb) :beat-cnt-b (:count bb) :rhyth-bf rhyth :out-bus (nkmx :s1)) )
@@ -65,19 +67,32 @@
   )
 (volume 0.5)
 
-(ctl proph-g :cutoff-freq 2000 :amp 1)
+(let [d 0.2
+      a 0.01
+      rq 0.9
+      bb tim/beat-2th
+      amp 3
+      cf 1000]
+  (ctl proph-g :cutoff-freq cf :amp amp :decay d :attack a :rq 0.6 :beat-b (:beat bb) :beat-cnt-b (:count bb)))
 
-(let [n (note :a2)
-      f (midi->hz n)
-      f2 (midi->hz (- n 12))
-      f3 (midi->hz (+ 7 n))]
-  (ctl p :freq f :out-bus (nkmx :m0))
-  (ctl p2 :freq f2 :out-bus (nkmx :m0))
-  (ctl p3 :freq f3 :out-bus (nkmx :m0)))
+(on-event [:midi :note-on]
+          (fn [msg]
+
+            (let [n (:note msg)
+                  f (midi->hz n)
+                  f2 (midi->hz (- n 12))
+                  f3 (midi->hz (+ 7 n))]
+              (ctl p :freq f :out-bus (nkmx :m0))
+              (ctl p2 :freq f2 :out-bus (nkmx :m0))
+              (ctl p3 :freq f3 :out-bus (nkmx :m0))))
+          ::phoph-control)
+
+
+
 
 (kill p p2 p3)
 (stop)
-
+(kill proph-g)
 
 (do
 

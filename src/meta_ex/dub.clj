@@ -42,15 +42,15 @@
 
 
 
-(def ssaw-rq 0.5)
-(def ssaw-fil-mul 3)
+(def ssaw-rq 1)
+(def ssaw-fil-mul 8)
 
 ;; get the dubstep bass involved
 (dubstep [:head dub-g]
-         :note 45
+         :note 28
          :hi-man 0
          :amp 0.5
-         :out-bus (nkmx :s1))
+         :out-bus (nkmx :s2))
 
 ;;(ctl dubstep :out-bus 10)
 ;;(kill dub-g)
@@ -58,32 +58,22 @@
 
 (ctl dub-g
      :note 28
-     :hi-man  0
+     :hi-man  1
      :lo-man 1
      :deci-man 1
-     :amp 0.4
-     :out-bus (nkmx :s1))
-;;(kill dub-g)
-
-;; Bring in the supersaws!
-
-(def ssaw-rq 0.5)
-(def ssaw-fil-mul 8)
+     :amp 0
+     :out-bus (nkmx :s2))
 
 
-(supersaw2 (midi->hz (note :c2)) :amp 3 :fil-mul ssaw-fil-mul :rq ssaw-rqbbb)
-
-
-;; Fire at will...
 (supersaw2 (midi->hz 28) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 (supersaw2 (midi->hz 40) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 (supersaw2 (midi->hz 45) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 (supersaw2 (midi->hz 48) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 (supersaw2 (midi->hz 52) :amp 2 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 
-(supersaw2 (midi->hz 57) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s1))
-(supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))
-(supersaw2 (midi->hz 64) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :m0))
+(supersaw2 (midi->hz 57) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 60) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
+(supersaw2 (midi->hz 64) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq :out-bus (nkmx :s0))
 
 (supersaw2 (midi->hz 67) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
 (supersaw2 (midi->hz 69) :amp 1 :fil-mul ssaw-fil-mul :rq ssaw-rq)
